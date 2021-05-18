@@ -1,7 +1,8 @@
 # Snowflake Powershell Extensions
 Snowflake Powershell Extensions wrap Snowsight features that do not have API or SQL alternatives, such as manipulating Dashboards and Worksheets.
 
-Written by Daniel Odievich (daniel.odievich@snowflake.com), Senior Solution Architect at Snowflake Professional Services.
+Written by Daniel Odievich (daniel.odievich@snowflake.com)
+Senior Solution Architect at Snowflake Professional Services.
 
 # Install
 ## Install PowerShell
