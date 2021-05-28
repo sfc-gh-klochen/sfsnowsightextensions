@@ -5,14 +5,14 @@
     <AssemblyName>SnowflakePS</AssemblyName>
     <RootNamespace>Snowflake.Powershell</RootNamespace>
 
-    <Version>2021.5.18.0</Version>
-    <FileVersion>2021.5.18.0</FileVersion>
-    <AssemblyVersion>2021.5.18.0</AssemblyVersion>
+    <Version>2021.5.27.0</Version>
+    <FileVersion>2021.5.27.0</FileVersion>
+    <AssemblyVersion>2021.5.27.0</AssemblyVersion>
     <Authors>Daniel Odievich (daniel.odievich@snowflake.com)</Authors>
     <Company>Snowflake Computing</Company>
     <Product>Snowflake Powershell Extensions</Product>
     <NeutralLanguage>en</NeutralLanguage>
-    <Description>Snowflake Powershell Extensions provide access to Snowflake features from command line</Description>
+    <Description>Snowflake Powershell Extensions provide access to Snowflake and Snowsight features from command line</Description>
     <Copyright>Copyright © 2021</Copyright>
     <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl></PackageProjectUrl>

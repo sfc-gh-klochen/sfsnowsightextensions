@@ -249,7 +249,7 @@ namespace Snowflake.Powershell
 
                 #region Classic UI Authentication
 
-                loggerConsole.Info("Authenticating user '{0}' in account '{1}' to Classic UI", appUserContext.UserName, appUserContext.AccountName);
+                loggerConsole.Info("Authenticating user {0} in account {1} to Classic UI", appUserContext.UserName, appUserContext.AccountName);
 
                 if (this.SSO.IsPresent == false)
                 {
@@ -413,7 +413,7 @@ namespace Snowflake.Powershell
 
                 // Authenticate to Snowsight second, using APIs we've implemented
 
-                loggerConsole.Info("Authenticating user '{0}' in account '{1}' to Snowsight", appUserContext.UserName, appUserContext.AccountName);
+                loggerConsole.Info("Authenticating user {0} in account {1} to Snowsight", appUserContext.UserName, appUserContext.AccountName);
 
                 if (this.SSO.IsPresent == false)
                 {
@@ -466,7 +466,7 @@ namespace Snowflake.Powershell
                     // Previous Classic UI authentication would have filled in masterToken, so nothing to do
                 }
 
-                loggerConsole.Info("Validating master token for user '{0}' in account '{1}'", appUserContext.UserName, appUserContext.AccountName);
+                loggerConsole.Info("Validating master token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 2, Validating OAuth Token into OAuth Client Redirect
                 string oAuthTokenFromMasterTokenResult = SnowflakeDriver.GetOAuthRedirectFromOAuthToken(appUserContext.AccountUrl, appUserContext.ClientID, appUserContext.AuthTokenMaster);
@@ -510,7 +510,7 @@ namespace Snowflake.Powershell
 
                 logger.Info("OAuth Redirect Code={0}", oAuthRedirectCode);
 
-                loggerConsole.Info("Converting redirect token to authentication token for user '{0}' in account '{1}'", appUserContext.UserName, appUserContext.AccountName);
+                loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 3, Converting OAuth redirect into authentication cookie
                 appUserContext.AuthTokenSnowsight = SnowflakeDriver.GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode);
@@ -544,7 +544,7 @@ namespace Snowflake.Powershell
                 logger.Info("OrganizationID={0}", appUserContext.OrganizationID);
                 logger.Info("CSRFToken={0}", appUserContext.CSRFToken);
 
-                loggerConsole.Info("Successfully authenticated '{0}' ({1}) in account '{2}' ({3})", appUserContext.UserName, appUserContext.UserID, appUserContext.AccountName, appUserContext.OrganizationID);
+                loggerConsole.Info("Successfully authenticated {0} ({1}) in account {2} ({3})", appUserContext.UserName, appUserContext.UserID, appUserContext.AccountName, appUserContext.OrganizationID);
                
                 #endregion
 

@@ -90,7 +90,7 @@ namespace Snowflake.Powershell
 
                         foreach (Chart chart in worksheet.Charts)
                         {
-                            loggerConsole.Trace("Getting information about Chart {0} ({1}) in {2} ({3})", chart.ChartName, chart.ChartID, worksheet.WorksheetName, worksheet.WorksheetID);
+                            loggerConsole.Trace("Worksheet {0} ({1}), details of Chart {2} ({3})", worksheet.WorksheetName, worksheet.WorksheetID, chart.ChartName, chart.ChartID);
                             
                             // Get chart details
                             string chartDetailApiResult = SnowflakeDriver.GetChart(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, chart.WorksheetID, chart.ChartID);

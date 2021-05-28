@@ -139,12 +139,12 @@ namespace Snowflake.Powershell
                 }
 
                 logger.Info("Number of Worksheets to Delete={0}", worksheetsToDeleteList.Count);
-                loggerConsole.Info("Deleting '{0}' Worksheets", worksheetsToDeleteList.Count);
+                loggerConsole.Info("Deleting {0} Worksheets", worksheetsToDeleteList.Count);
 
                 foreach (Worksheet worksheet in worksheetsToDeleteList)
                 {
                     logger.Info("Deleting {0}", worksheet);
-                    loggerConsole.Trace("Deleting Worksheet '{0} ({1})'", worksheet.WorksheetName, worksheet.WorksheetID);
+                    loggerConsole.Trace("Deleting Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
                     
                     // Delete the Worksheet
                     string worksheetDeleteApiResult = SnowflakeDriver.DeleteWorksheet(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, worksheet.WorksheetID);

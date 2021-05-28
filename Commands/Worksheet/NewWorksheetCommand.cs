@@ -57,6 +57,14 @@ namespace Snowflake.Powershell
         [ValidateSet ("Overwrite", "CreateNew", "Skip")]
         public string ActionIfExists { get; set; } = "Skip";
 
+        [Parameter(
+            Mandatory = false,
+            Position = 3,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Should the Worksheet be executed")]
+        public SwitchParameter Execute { get; set; }
+
         protected override void BeginProcessing()
         {
             stopWatch.Start();
@@ -175,14 +183,14 @@ namespace Snowflake.Powershell
                     switch (this.ActionIfExists)
                     {
                         case "Overwrite":
-                            logger.Info("Found {0} to overwrite and ActionIfExists=1{0}1, will overwrite", targetWorksheetToReplace, this.ActionIfExists);
-                            loggerConsole.Info("Existing Worksheet '{0}' in Folder '{1}' will be overwritten because ActionIfExists is '{2}'", targetWorksheetToReplace.WorksheetName, targetWorksheetToReplace.FolderName, this.ActionIfExists);
+                            logger.Info("Found {0} to overwrite and ActionIfExists={1}, will overwrite", targetWorksheetToReplace, this.ActionIfExists);
+                            loggerConsole.Info("Existing Worksheet {0} ({1}) in Folder {2} will be overwritten because ActionIfExists is {2}", targetWorksheetToReplace.WorksheetName, targetWorksheetToReplace.WorksheetID, targetWorksheetToReplace.FolderName, this.ActionIfExists);
                             
                             break;
                         
                         case "CreateNew":
                             logger.Info("Found {0} to overwrite but ActionIfExists={1}, will instead create new", targetWorksheetToReplace, this.ActionIfExists);
-                            loggerConsole.Info("Existing Worksheet '{0}' in Folder '{1}' will be ignored and new Worksheet will be created because ActionIfExists is '{2}'", targetWorksheetToReplace.WorksheetName, targetWorksheetToReplace.FolderName, this.ActionIfExists);
+                            loggerConsole.Info("Existing Worksheet {0} ({1}) in Folder {2} will be ignored and new Worksheet will be created because ActionIfExists is {3}", targetWorksheetToReplace.WorksheetName, targetWorksheetToReplace.WorksheetID, targetWorksheetToReplace.FolderName, this.ActionIfExists);
 
                             targetWorksheetToReplace = null;
                         
@@ -190,7 +198,7 @@ namespace Snowflake.Powershell
 
                         case "Skip":
                             logger.Info("Found {0} to overwrite but ActionIfExists={1}, will skip", targetWorksheetToReplace, this.ActionIfExists);
-                            loggerConsole.Info("Existing Worksheet '{0}' in Folder '{1}' will be ignored and nothing will be done because ActionIfExists is '{2}'", targetWorksheetToReplace.WorksheetName, targetWorksheetToReplace.FolderName, this.ActionIfExists);
+                            loggerConsole.Info("Existing Worksheet {0} ({1}) in Folder {2} will be ignored and nothing will be done because ActionIfExists is {3}", targetWorksheetToReplace.WorksheetName, targetWorksheetToReplace.WorksheetID, targetWorksheetToReplace.FolderName, this.ActionIfExists);
                         
                             return;
 
@@ -201,7 +209,7 @@ namespace Snowflake.Powershell
                 else
                 {
                     logger.Info("No match for {0}, new one will be created", this.Worksheet);
-                    loggerConsole.Info("Creating new Worksheet '{0}'", this.Worksheet.WorksheetName);
+                    loggerConsole.Info("Creating new Worksheet {0}", this.Worksheet.WorksheetName);
 }
 
                 Worksheet createdOrUpdatedWorksheet = null;
@@ -259,7 +267,18 @@ namespace Snowflake.Powershell
                     logger.Info("Returning new {0}", createdOrUpdatedWorksheet);
                 }
 
-                loggerConsole.Info("Returning Worksheet '{0} ({1})'", createdOrUpdatedWorksheet.WorksheetName, createdOrUpdatedWorksheet.WorksheetID);
+                if (this.Execute.IsPresent == true)
+                {
+                    logger.Info("Running Worksheet {0}", createdOrUpdatedWorksheet);
+                    loggerConsole.Trace("Running Worksheet {0} ({1})", createdOrUpdatedWorksheet.WorksheetName, createdOrUpdatedWorksheet.WorksheetID);
+
+                    string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(
+                        this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        createdOrUpdatedWorksheet.WorksheetID, createdOrUpdatedWorksheet.Query, this.Worksheet.Parameters.ToString(Newtonsoft.Json.Formatting.None),
+                        createdOrUpdatedWorksheet.Role, createdOrUpdatedWorksheet.Warehouse, createdOrUpdatedWorksheet.Database, createdOrUpdatedWorksheet.Schema);
+                }
+
+                loggerConsole.Info("Returning Worksheet {0} ({1})", createdOrUpdatedWorksheet.WorksheetName, createdOrUpdatedWorksheet.WorksheetID);
 
                 WriteObject(createdOrUpdatedWorksheet);
             }

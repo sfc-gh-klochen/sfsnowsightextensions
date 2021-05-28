@@ -29,6 +29,7 @@ namespace Snowflake.Powershell
 
         // Query 
         public string Query { get; set; }
+        public JArray Parameters { get; set; } = new JArray();
 
         public List<Chart> Charts { get; set; } = new List<Chart>();
 
@@ -138,6 +139,10 @@ namespace Snowflake.Powershell
                 this.Schema = JSONHelper.getStringValueFromJToken(entityDetailObject["queryContext"], "schema");
 
                 this.Query = JSONHelper.getStringValueFromJToken(entityDetailObject, "query");
+                if (JSONHelper.isTokenPropertyNull(entityDetailObject, "paramRefs") == false)
+                {
+                    this.Parameters = (JArray)entityDetailObject["paramRefs"];
+                }
 
                 if (JSONHelper.isTokenPropertyNull(entityDetailObject, "drafts") == false)
                 {
@@ -256,6 +261,10 @@ namespace Snowflake.Powershell
                 this.Schema = JSONHelper.getStringValueFromJToken(entityDetailObject["queryContext"], "schema");
 
                 this.Query = JSONHelper.getStringValueFromJToken(entityDetailObject, "query");
+                if (JSONHelper.isTokenPropertyNull(entityDetailObject, "paramRefs") == false)
+                {
+                    this.Parameters = (JArray)entityDetailObject["paramRefs"];
+                }
 
                 if (JSONHelper.isTokenPropertyNull(entityDetailObject, "drafts") == false)
                 {

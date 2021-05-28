@@ -371,9 +371,11 @@ NAME
     New-SFWorksheet
 
 SYNTAX
-    New-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetFile] <string> [[-ActionIfExists] {Overwrite | CreateNew | Skip}] [<CommonParameters>]
+    New-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetFile] <string> [[-ActionIfExists] {Overwrite | CreateNew | Skip}] [[-Execute]]
+    [<CommonParameters>]
 
-    New-SFWorksheet [-AuthContext] <AppUserContext> [-Worksheet] <Worksheet> [[-ActionIfExists] {Overwrite | CreateNew | Skip}] [<CommonParameters>]
+    New-SFWorksheet [-AuthContext] <AppUserContext> [-Worksheet] <Worksheet> [[-ActionIfExists] {Overwrite | CreateNew | Skip}] [[-Execute]]
+    [<CommonParameters>]
 ```
 
 ### New-SFWorksheet Parameter - AuthContext
@@ -393,6 +395,9 @@ Option | Result
 Overwrite | Update existing Worksheet with the same name or ID
 CreateNew | Create new Worksheet with the same name but new ID
 Skip | Skip creating Worksheet (Default) 
+
+### New-SFWorksheet Parameter - Execute
+If passed, Worksheet is executed in addition to being created or updates.
 
 ### New-SFWorksheet - Create or Update Worksheet From List of Worksheets
 Create or update Worksheet from one of the Worksheet objects in `$worksheets` array:

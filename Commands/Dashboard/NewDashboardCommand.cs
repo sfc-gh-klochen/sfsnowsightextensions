@@ -149,7 +149,7 @@ namespace Snowflake.Powershell
                     }
                 }
 
-                // If didn't find it by the entity ID.
+                // If didnt find it by the entity ID.
                 // Second, try to find it by the Dashboard name
                 if (targetDashboardToReplace == null)
                 {
@@ -178,14 +178,14 @@ namespace Snowflake.Powershell
                     switch (this.ActionIfExists)
                     {
                         case "Overwrite":
-                            logger.Info("Found {0} to overwrite and ActionIfExists=1{0}, will overwrite", targetDashboardToReplace, this.ActionIfExists);
-                            loggerConsole.Info("Existing Dashboard '{0}' will be overwritten because ActionIfExists is '{1}'", targetDashboardToReplace.DashboardName, this.ActionIfExists);
+                            logger.Info("Found {0} to overwrite and ActionIfExists={1}, will overwrite", targetDashboardToReplace, this.ActionIfExists);
+                            loggerConsole.Info("Existing Dashboard {0} ({1}) will be overwritten because ActionIfExists is {2}", targetDashboardToReplace.DashboardName, targetDashboardToReplace.DashboardID, this.ActionIfExists);
                             
                             break;
                         
                         case "CreateNew":
                             logger.Info("Found {0} to overwrite but ActionIfExists={1}, will instead create new", targetDashboardToReplace, this.ActionIfExists);
-                            loggerConsole.Info("Existing Dashboard '{0}' will be ignored and new Dashboard will be created because ActionIfExists is '{1}'", targetDashboardToReplace.DashboardName, this.ActionIfExists);
+                            loggerConsole.Info("Existing Dashboard {0} ({1}) will be ignored and new Dashboard will be created because ActionIfExists is {2}", targetDashboardToReplace.DashboardName, targetDashboardToReplace.DashboardID, this.ActionIfExists);
 
                             targetDashboardToReplace = null;
                         
@@ -193,7 +193,7 @@ namespace Snowflake.Powershell
 
                         case "Skip":
                             logger.Info("Found {0} to overwrite but ActionIfExists={1}, will skip", targetDashboardToReplace, this.ActionIfExists);
-                            loggerConsole.Info("Existing Dashboard '{0}' will be ignored and nothing will be done because ActionIfExists is '{1}'", targetDashboardToReplace.DashboardName, this.ActionIfExists);
+                            loggerConsole.Info("Existing Dashboard {0} ({1}) will be ignored and nothing will be done because ActionIfExists is {1}", targetDashboardToReplace.DashboardName, targetDashboardToReplace.DashboardID, this.ActionIfExists);
                         
                             return;
 
@@ -204,7 +204,7 @@ namespace Snowflake.Powershell
                 else
                 {
                     logger.Info("No match for {0}, new one will be created", this.Dashboard);
-                    loggerConsole.Info("Creating new Dashboard '{0}'", this.Dashboard.DashboardName);
+                    loggerConsole.Info("Creating new Dashboard {0}", this.Dashboard.DashboardName);
 }
 
                 Dashboard createdOrUpdatedDashboard = null;
@@ -314,7 +314,7 @@ namespace Snowflake.Powershell
                                         string displayMode = JSONHelper.getStringValueFromJToken(cellObject, "displayMode");
 
                                         logger.Info("Inserting {0} into cell ({1}, {2}) from Worksheet {3}", displayMode, rowIndex, cellIndex, worksheetCreated);
-                                        loggerConsole.Trace("Inserting {0} into cell ({1}, {2}) from worksheet Worksheet {3} ({4})", displayMode, rowIndex, cellIndex, worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
+                                        loggerConsole.Trace("Inserting {0} into cell ({1}, {2}) from Worksheet {3} ({4})", displayMode, rowIndex, cellIndex, worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
                                         
                                         if (cellIndex == 0)
                                         {
@@ -350,7 +350,8 @@ namespace Snowflake.Powershell
 
                             string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(
                                 this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
-                                worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
+                                worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetToCreate.Parameters.ToString(Newtonsoft.Json.Formatting.None),
+                                worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
                         }
                     }
 
@@ -371,7 +372,7 @@ namespace Snowflake.Powershell
                     logger.Info("Returning new Dashboard {0}", createdOrUpdatedDashboard);
                 }
 
-                loggerConsole.Info("Returning Dashboard '{0} ({1})'", createdOrUpdatedDashboard.DashboardName, createdOrUpdatedDashboard.DashboardID);
+                loggerConsole.Info("Returning Dashboard {0} ({1})", createdOrUpdatedDashboard.DashboardName, createdOrUpdatedDashboard.DashboardID);
 
                 WriteObject(createdOrUpdatedDashboard);
             }

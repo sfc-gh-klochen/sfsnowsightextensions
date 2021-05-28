@@ -139,12 +139,12 @@ namespace Snowflake.Powershell
                 }
 
                 logger.Info("Number of Dashboards to Delete={0}", dashboardsToDeleteList.Count);
-                loggerConsole.Info("Deleting '{0}' Dashboards", dashboardsToDeleteList.Count);
+                loggerConsole.Info("Deleting {0} Dashboards", dashboardsToDeleteList.Count);
 
                 foreach (Dashboard dashboard in dashboardsToDeleteList)
                 {
                     logger.Info("Deleting {0}", dashboard);
-                    loggerConsole.Trace("Deleting Dashboard '{0} ({1})'", dashboard.DashboardName, dashboard.DashboardID);
+                    loggerConsole.Trace("Deleting Dashboard {0} ({1})", dashboard.DashboardName, dashboard.DashboardID);
                     
                     // Delete the Worksheet
                     string dashboardDeleteApiResult = SnowflakeDriver.DeleteDashboard(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);

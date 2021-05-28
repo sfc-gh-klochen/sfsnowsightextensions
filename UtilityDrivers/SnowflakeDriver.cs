@@ -281,11 +281,11 @@ namespace Snowflake.Powershell
             );
         }
 
-        public static string ExecuteWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string queryText, string role, string warehouse, string database, string schema)
+        public static string ExecuteWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string queryText, string paramRefs, string role, string warehouse, string database, string schema)
         {
             string executionContextParam = String.Format("{{\"role\":\"{0}\",\"warehouse\":\"{1}\",\"database\":\"{2}\",\"schema\":\"{3}\"}}", role, warehouse, database, schema);
 
-            string requestBody = String.Format("action=execute&projectId={0}&executionContext={1}&query={2}", worksheetID, HttpUtility.UrlEncode(executionContextParam), HttpUtility.UrlEncode(queryText));
+            string requestBody = String.Format("action=execute&projectId={0}&executionContext={1}&query={2}&paramRefs={3}", worksheetID, HttpUtility.UrlEncode(executionContextParam), HttpUtility.UrlEncode(queryText), HttpUtility.UrlEncode(paramRefs));
 
             return apiPOST(
                 appServerUrl,
