@@ -10,13 +10,13 @@ using System.Management.Automation;
 namespace Snowflake.Powershell
 {
     [Cmdlet
-        (VerbsCommon.Remove,
+        (VerbsLifecycle.Invoke,
         "SFWorksheet",
         DefaultParameterSetName="WorksheetName",
         SupportsPaging=false,
         SupportsShouldProcess=false)]
     [OutputType(typeof(String))]
-    public class RemoveWorksheetCommand : PSCmdlet
+    public class InvokeWorksheetCommand : PSCmdlet
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
@@ -36,7 +36,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Name of Worksheet to delete",
+            HelpMessage = "Name of Worksheet to execute",
             ParameterSetName = "WorksheetName")]
         public string WorksheetName { get; set; }
 
@@ -45,7 +45,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "ID of Worksheet to delete",
+            HelpMessage = "ID of Worksheet to execute",
             ParameterSetName = "WorksheetID")]
         public string WorksheetID { get; set; }
 
@@ -54,7 +54,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Worksheet object of Worksheet to delete",
+            HelpMessage = "Worksheet object of Worksheet to execute",
             ParameterSetName = "WorksheetObject")]
         public Worksheet Worksheet { get; set; }
 
@@ -63,7 +63,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "File representation of Worksheet to delete",
+            HelpMessage = "File representation of Worksheet to execute",
             ParameterSetName = "WorksheetFile")]
         public string WorksheetFile { get; set; }
 
@@ -140,8 +140,7 @@ namespace Snowflake.Powershell
                 }
                 logger.Info("Number of Entities={0}", entitiesArray.Count);
 
-                List<Worksheet> worksheetsToDeleteList = new List<Worksheet>(entitiesArray.Count);
-
+                List<Worksheet> worksheetsToExecuteList = new List<Worksheet>(entitiesArray.Count);
                 foreach (JObject entityObject in entitiesArray)
                 {
                     // Only deal with "query" objects, which are worksheets
@@ -156,7 +155,7 @@ namespace Snowflake.Powershell
                             {
                                 logger.Info("Found Match by Name: {0}={1}", this.WorksheetName, potentialTargetWorksheet);
                                 
-                                worksheetsToDeleteList.Add(potentialTargetWorksheet);
+                                worksheetsToExecuteList.Add(potentialTargetWorksheet);
                             }
                             break;
 
@@ -165,7 +164,7 @@ namespace Snowflake.Powershell
                             {
                                 logger.Info("Found Match by ID: {0}={1}", this.WorksheetID, potentialTargetWorksheet);
 
-                                worksheetsToDeleteList.Add(potentialTargetWorksheet);
+                                worksheetsToExecuteList.Add(potentialTargetWorksheet);
                             }
                             break;
 
@@ -175,13 +174,13 @@ namespace Snowflake.Powershell
                             {
                                 logger.Info("Found Match by ID: {0}={1}", this.Worksheet.WorksheetID, potentialTargetWorksheet);
 
-                                worksheetsToDeleteList.Add(potentialTargetWorksheet);
+                                worksheetsToExecuteList.Add(potentialTargetWorksheet);
                             }
                             else if (String.Compare(this.Worksheet.WorksheetName, potentialTargetWorksheet.WorksheetName, true) == 0) 
                             {
                                 logger.Info("Found Match by Name: {0}={1}", this.Worksheet.WorksheetName, potentialTargetWorksheet);
                                 
-                                worksheetsToDeleteList.Add(potentialTargetWorksheet);
+                                worksheetsToExecuteList.Add(potentialTargetWorksheet);
                             }
                             break;
 
@@ -190,23 +189,66 @@ namespace Snowflake.Powershell
                     }
                 }
 
-                logger.Info("Number of Worksheets to Delete={0}", worksheetsToDeleteList.Count);
-                loggerConsole.Info("Deleting {0} Worksheets", worksheetsToDeleteList.Count);
+                logger.Info("Number of Worksheets to Execute={0}", worksheetsToExecuteList.Count);
+                loggerConsole.Info("Executing {0} Worksheets", worksheetsToExecuteList.Count);
 
-                foreach (Worksheet worksheet in worksheetsToDeleteList)
+                foreach (Worksheet worksheet in worksheetsToExecuteList)
                 {
-                    logger.Info("Deleting {0}", worksheet);
-                    loggerConsole.Trace("Deleting Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
+                    logger.Info("Running {0}", worksheet);
+                    loggerConsole.Trace("Running Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
+
+                    // Execute the worksheet
+                    string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(
+                        this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        worksheet.WorksheetID, worksheet.Query, worksheet.Parameters.ToString(Newtonsoft.Json.Formatting.None),
+                        worksheet.Role, worksheet.Warehouse, worksheet.Database, worksheet.Schema);
+
+                    // Check results
+                    JObject executeWorksheetPayloadObject = JObject.Parse(executeWorksheetApiResult);
                     
-                    // Delete the Worksheet
-                    string worksheetDeleteApiResult = SnowflakeDriver.DeleteWorksheet(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, worksheet.WorksheetID);
-                    if (worksheetDeleteApiResult.Length == 0)
+                    JObject queriesObject = new JObject();
+                    if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queries") == false)
                     {
-                        throw new ItemNotFoundException("Invalid response from deleting worksheet entity");
+                        queriesObject = (JObject)executeWorksheetPayloadObject["models"]["queries"];
+                    }
+                    JObject queryResultsObject = new JObject();
+                    if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queryResults") == false)
+                    {
+                        queryResultsObject = (JObject)executeWorksheetPayloadObject["models"]["queryResults"];
+                    }
+
+                    JObject queryResultObject = (JObject)JSONHelper.getJTokenValueFromJToken(queryResultsObject, worksheet.WorksheetID);
+                    if (queryResultObject != null)
+                    {
+                        string queryID = JSONHelper.getStringValueFromJToken(queryResultObject, "snowflakeQueryId");
+
+                        DateTime dateTimeValue = DateTime.MinValue;
+                        dateTimeValue = JSONHelper.getDateTimeValueFromJToken(queryResultObject, "modified");
+                        if (dateTimeValue == DateTime.MinValue)
+                        {
+                            if (DateTime.TryParse(JSONHelper.getStringValueFromJToken(queryResultObject, "modified"), out dateTimeValue) == true) dateTimeValue = dateTimeValue.ToUniversalTime();
+                        }
+                        else
+                        {
+                            dateTimeValue = dateTimeValue.ToUniversalTime();
+                        }
+
+                        if (JSONHelper.isTokenNull(queryResultObject["error"]) == true)
+                        {
+                            logger.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                            loggerConsole.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                        }
+                        else
+                        {
+                            string errorMessage = JSONHelper.getStringValueFromJToken(queryResultObject["error"], "message");
+
+                            logger.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                            loggerConsole.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                        }
                     }
                 }
 
-                WriteObject(String.Format("Deleted {0} objects", worksheetsToDeleteList.Count));
+                WriteObject(String.Format("Executed {0} objects", worksheetsToExecuteList.Count));
             }
             catch (Exception ex)
             {

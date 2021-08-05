@@ -502,6 +502,24 @@ namespace Snowflake.Powershell
             );
         }
 
+        public static string ExecuteDashboard(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID)
+        {
+            string requestBody = "action=refresh&drafts={}";
+
+            return apiPOST(
+                appServerUrl,
+                String.Format("v0/folders/{0}", dashboardID),
+                "application/json",
+                requestBody,
+                "application/x-www-form-urlencoded",
+                String.Format("{0}::{1}", userName, accountUrl),
+                "https://app.snowflake.com/",
+                snowSightAuthToken,
+                String.Empty
+            );
+        }
+
+
         #endregion
 
         #region Snowsight Charts

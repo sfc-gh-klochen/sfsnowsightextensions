@@ -234,10 +234,12 @@ namespace Snowflake.Powershell
                     Dictionary<string, Worksheet> oldToNewWorksheetsDictionary = new Dictionary<string, Worksheet>();
 
                     // Create new Worksheets and Charts
-                    foreach (Worksheet worksheetToCreate in this.Dashboard.Worksheets)
+                    for (int i = 0; i < this.Dashboard.Worksheets.Count; i++)
                     {
+                        Worksheet worksheetToCreate = this.Dashboard.Worksheets[i];
+
                         logger.Info("Creating new Worksheet for {0}", worksheetToCreate);
-                        loggerConsole.Trace("Creating new Worksheet for {0} ({1})", worksheetToCreate.WorksheetName, worksheetToCreate.WorksheetID);
+                        loggerConsole.Trace("{0}/{1}: Creating new Worksheet for {2} ({3})", i + 1, this.Dashboard.Worksheets.Count, worksheetToCreate.WorksheetName, worksheetToCreate.WorksheetID);
 
                         // Creating new worksheet
                         string createWorksheetApiResult = SnowflakeDriver.CreateWorksheet(
@@ -352,6 +354,50 @@ namespace Snowflake.Powershell
                                 this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
                                 worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetToCreate.Parameters.ToString(Newtonsoft.Json.Formatting.None),
                                 worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
+
+                            // Check results
+                            JObject executeWorksheetPayloadObject = JObject.Parse(executeWorksheetApiResult);
+                            
+                            JObject queriesObject = new JObject();
+                            if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queries") == false)
+                            {
+                                queriesObject = (JObject)executeWorksheetPayloadObject["models"]["queries"];
+                            }
+                            JObject queryResultsObject = new JObject();
+                            if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queryResults") == false)
+                            {
+                                queryResultsObject = (JObject)executeWorksheetPayloadObject["models"]["queryResults"];
+                            }
+
+                            JObject queryResultObject = (JObject)JSONHelper.getJTokenValueFromJToken(queryResultsObject, worksheetCreated.WorksheetID);
+                            if (queryResultObject != null)
+                            {
+                                string queryID = JSONHelper.getStringValueFromJToken(queryResultObject, "snowflakeQueryId");
+
+                                DateTime dateTimeValue = DateTime.MinValue;
+                                dateTimeValue = JSONHelper.getDateTimeValueFromJToken(queryResultObject, "modified");
+                                if (dateTimeValue == DateTime.MinValue)
+                                {
+                                    if (DateTime.TryParse(JSONHelper.getStringValueFromJToken(queryResultObject, "modified"), out dateTimeValue) == true) dateTimeValue = dateTimeValue.ToUniversalTime();
+                                }
+                                else
+                                {
+                                    dateTimeValue = dateTimeValue.ToUniversalTime();
+                                }
+
+                                if (JSONHelper.isTokenNull(queryResultObject["error"]) == true)
+                                {
+                                    logger.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                                    loggerConsole.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                                }
+                                else
+                                {
+                                    string errorMessage = JSONHelper.getStringValueFromJToken(queryResultObject["error"], "message");
+
+                                    logger.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                                    loggerConsole.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                                }
+                            }                                
                         }
                     }
 

@@ -12,7 +12,7 @@
 RootModule = 'SnowflakePS.dll'
 
 # Version number of this module.
-ModuleVersion = '2021.5.18.0'
+ModuleVersion = '2021.8.4.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -72,7 +72,7 @@ FormatsToProcess = @("SnowflakePS.format.ps1xml")
 FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @("Connect-SFApp", "Get-SFWorksheets", "New-SFWorksheet", "Remove-SFWorksheet", "Get-SFFolders", "Get-SFDashboards", "New-SFDashboard", "Remove-SFDashboard")
+CmdletsToExport = @("Connect-SFApp", "Get-SFWorksheets", "New-SFWorksheet", "Remove-SFWorksheet", "Invoke-SFWorksheet", "Get-SFFolders", "Get-SFDashboards", "New-SFDashboard", "Remove-SFDashboard", "Invoke-SFDashboard")
 
 # Variables to export from this module
 VariablesToExport = '*'

@@ -33,9 +33,10 @@ namespace Snowflake.Powershell
         private static readonly byte[] SUCCESS_RESPONSE = System.Text.Encoding.UTF8.GetBytes(
             "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/>" +
             "<title> SAML Response for Snowflake </title></head>" +
-            "<body>Your identity was confirmed and propagated to Snowflake Powershell. You can close this window now and go back where you started from." +
+            "<body>Your identity was confirmed and propagated to Snowflake Powershell. You can close this window now and go back to where you started from." +
             "</body></html>;"
             );
+            
         Stopwatch stopWatch = new Stopwatch();
 
         [Parameter(

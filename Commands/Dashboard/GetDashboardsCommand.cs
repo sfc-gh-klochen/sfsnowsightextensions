@@ -80,12 +80,17 @@ namespace Snowflake.Powershell
 
                     Dashboard dashboard = new Dashboard(entityObject, dashboardsPayloadObject, this.AuthContext);
 
+                    logger.Info(dashboard);
+                    loggerConsole.Trace("Found Dashboard {0} ({1}) with {2} Worksheets", dashboard.DashboardName, dashboard.DashboardID, dashboard.Worksheets.Count);
+
                     // Fill in the chart information
-                    foreach (Worksheet worksheet in dashboard.Worksheets)
+                    for (int i = 0; i < dashboard.Worksheets.Count; i++)
                     {
+                        Worksheet worksheet = dashboard.Worksheets[i];
+
                         if (worksheet.Charts.Count > 0)
                         {
-                            loggerConsole.Trace("Worksheet {0} ({1}) has {2} charts", worksheet.WorksheetName, worksheet.WorksheetID, worksheet.Charts.Count);
+                            loggerConsole.Trace("{0}/{1}: Worksheet {2} ({3}) has {4} charts", i + 1, dashboard.Worksheets.Count, worksheet.WorksheetName, worksheet.WorksheetID, worksheet.Charts.Count);
                         }
 
                         foreach (Chart chart in worksheet.Charts)
@@ -105,9 +110,6 @@ namespace Snowflake.Powershell
                             chart.AddConfigurationDetails(chartDetailPayloadObject);                    
                         }
                     }
-
-                    logger.Info(dashboard);
-                    loggerConsole.Trace("Found Dashboard {0} ({1})", dashboard.DashboardName, dashboard.DashboardID);
 
                     dashboardsList.Add(dashboard);
                 }

@@ -3,20 +3,22 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 
 namespace Snowflake.Powershell
 {
     [Cmdlet
-        (VerbsCommon.Remove,
+        (VerbsLifecycle.Invoke,
         "SFDashboard",
         DefaultParameterSetName="DashboardName",
         SupportsPaging=false,
         SupportsShouldProcess=false)]
     [OutputType(typeof(String))]
-    public class RemoveDashboardCommand : PSCmdlet
+    public class InvokeDashboardCommand : PSCmdlet
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
@@ -36,7 +38,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Name of Dashboard to delete",
+            HelpMessage = "Name of Dashboard to execute",
             ParameterSetName = "DashboardName")]
         public string DashboardName { get; set; }
 
@@ -45,7 +47,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "ID of Dashboard to delete",
+            HelpMessage = "ID of Dashboard to execute",
             ParameterSetName = "DashboardID")]
         public string DashboardID { get; set; }
 
@@ -54,7 +56,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Dashboard object of Dashboard to delete",
+            HelpMessage = "Dashboard object of Dashboard to execute",
             ParameterSetName = "DashboardObject")]
         public Dashboard Dashboard { get; set; }
 
@@ -63,7 +65,7 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "File representation of Dashboard to delete",
+            HelpMessage = "File representation of Dashboard to execute",
             ParameterSetName = "DashboardFile")]
         public string DashboardFile { get; set; }
 
@@ -96,9 +98,8 @@ namespace Snowflake.Powershell
             try
             {
                 logger.Info("ParameterSetName={0}", this.ParameterSetName);
-
                 switch (this.ParameterSetName)
-                {                 
+                {
                     case "DashboardObject":
                         break;
 
@@ -124,7 +125,7 @@ namespace Snowflake.Powershell
                         throw new ArgumentException(String.Format("Unknown parameter set {0}", this.ParameterSetName));
                 }
 
-                // Get all dashboards already present
+                // Get all Dashboards already present
                 string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (dashboardsApiResult.Length == 0)
                 {
@@ -140,8 +141,7 @@ namespace Snowflake.Powershell
                 }
                 logger.Info("Number of Entities={0}", entitiesArray.Count);
 
-                List<Dashboard> dashboardsToDeleteList = new List<Dashboard>(entitiesArray.Count);
-
+                List<Dashboard> dashboardsToExecuteList = new List<Dashboard>(entitiesArray.Count);
                 foreach (JObject entityObject in entitiesArray)
                 {
                     // Only deal with "folder" objects, which are dashboards
@@ -152,11 +152,11 @@ namespace Snowflake.Powershell
                     switch (this.ParameterSetName)
                     {                 
                         case "DashboardName":
-                            if (this.DashboardName == potentialTargetDashboard.DashboardName) 
+                            if (String.Compare(this.DashboardName, potentialTargetDashboard.DashboardName, true) == 0) 
                             {
                                 logger.Info("Found Match by Name: {0}={1}", this.DashboardName, potentialTargetDashboard);
                                 
-                                dashboardsToDeleteList.Add(potentialTargetDashboard);
+                                dashboardsToExecuteList.Add(potentialTargetDashboard);
                             }
                             break;
 
@@ -165,23 +165,23 @@ namespace Snowflake.Powershell
                             {
                                 logger.Info("Found Match by ID: {0}={1}", this.DashboardID, potentialTargetDashboard);
 
-                                dashboardsToDeleteList.Add(potentialTargetDashboard);
+                                dashboardsToExecuteList.Add(potentialTargetDashboard);
                             }
                             break;
 
-                        case "WorksheetFile":
-                        case "WorksheetObject":
+                        case "DashboardFile":
+                        case "DashboardObject":
                             if (this.Dashboard.DashboardID == potentialTargetDashboard.DashboardID) 
                             {
                                 logger.Info("Found Match by ID: {0}={1}", this.Dashboard.DashboardID, potentialTargetDashboard);
 
-                                dashboardsToDeleteList.Add(potentialTargetDashboard);
+                                dashboardsToExecuteList.Add(potentialTargetDashboard);
                             }
                             else if (String.Compare(this.Dashboard.DashboardName, potentialTargetDashboard.DashboardName, true) == 0) 
                             {
                                 logger.Info("Found Match by Name: {0}={1}", this.Dashboard.DashboardName, potentialTargetDashboard);
                                 
-                                dashboardsToDeleteList.Add(potentialTargetDashboard);
+                                dashboardsToExecuteList.Add(potentialTargetDashboard);
                             }
                             break;
 
@@ -190,23 +190,22 @@ namespace Snowflake.Powershell
                     }
                 }
 
-                logger.Info("Number of Dashboards to Delete={0}", dashboardsToDeleteList.Count);
-                loggerConsole.Info("Deleting {0} Dashboards", dashboardsToDeleteList.Count);
+                logger.Info("Number of Dashboards to Execute={0}", dashboardsToExecuteList.Count);
+                loggerConsole.Info("Executing {0} Dashboards", dashboardsToExecuteList.Count);
 
-                foreach (Dashboard dashboard in dashboardsToDeleteList)
+                foreach (Dashboard dashboard in dashboardsToExecuteList)
                 {
-                    logger.Info("Deleting {0}", dashboard);
-                    loggerConsole.Trace("Deleting Dashboard {0} ({1})", dashboard.DashboardName, dashboard.DashboardID);
+                    logger.Info("Running {0}", dashboard);
+                    loggerConsole.Trace("Running Dashboard {0} ({1}) with {2} Worksheets", dashboard.DashboardName, dashboard.DashboardID, dashboard.Worksheets.Count);
                     
-                    // Delete the Worksheet
-                    string dashboardDeleteApiResult = SnowflakeDriver.DeleteDashboard(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);
-                    if (dashboardDeleteApiResult.Length == 0)
+                    string dashboardsRefreshResult = SnowflakeDriver.ExecuteDashboard(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);
+                    if (dashboardsRefreshResult .Length == 0)
                     {
-                        throw new ItemNotFoundException("Invalid response from deleting dashboard entity");
+                        throw new ItemNotFoundException("Invalid response from refreshing dashboard");
                     }
                 }
 
-                WriteObject(String.Format("Deleted {0} objects", dashboardsToDeleteList.Count));
+                WriteObject(String.Format("Executed {0} objects", dashboardsToExecuteList.Count));
             }
             catch (Exception ex)
             {

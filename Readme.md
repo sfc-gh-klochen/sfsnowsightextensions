@@ -11,7 +11,7 @@ Install Powershell 7 from [Powershell GitHub Releases](https://github.com/PowerS
 ## Install on Windows
 Download `SnowflakePS.win.<version>.zip`, save and extract the archive.
 
-Open your terminal (I recommend [Windows Terminal](https://github.com/microsoft/terminal)) with Powershel.
+Open your terminal (I recommend [Windows Terminal](https://github.com/microsoft/terminal)) with Powershell.
 
 Run this command to load Snowflake Powershell module:
 ```
@@ -23,7 +23,7 @@ Download `SnowflakePS.osx.<version>.zip` but do not extract the archive yet.
 
 Open your terminal (I recommend [iTerm2](https://iterm2.com/)) and change working directory to where you saved the file to. 
 
-Run this command in the shell to remove the quarantine attribute that will otherwise stop the application from running:
+To avoid OS security warnings, run this command in the shell to remove the quarantine attribute:
 ```
 xattr -d com.apple.quarantine SnowflakePS.*.zip
 ```
@@ -60,14 +60,16 @@ The output should look like this:
 ```
 CommandType     Name                                               Version    Source
 -----------     ----                                               -------    ------
-Cmdlet          Connect-SFApp                                      2021.4.15… SnowflakePS
-Cmdlet          Get-SFDashboards                                   2021.4.15… SnowflakePS
-Cmdlet          Get-SFFolders                                      2021.4.15… SnowflakePS
-Cmdlet          Get-SFWorksheets                                   2021.4.15… SnowflakePS
-Cmdlet          New-SFDashboard                                    2021.4.15… SnowflakePS
-Cmdlet          New-SFWorksheet                                    2021.4.15… SnowflakePS
-Cmdlet          Remove-SFDashboard                                 2021.4.15… SnowflakePS
-Cmdlet          Remove-SFWorksheet                                 2021.4.15… SnowflakePS
+Cmdlet          Connect-SFApp                                      2021.7.23… SnowflakePS
+Cmdlet          Get-SFDashboards                                   2021.7.23… SnowflakePS
+Cmdlet          Get-SFFolders                                      2021.7.23… SnowflakePS
+Cmdlet          Get-SFWorksheets                                   2021.7.23… SnowflakePS
+Cmdlet          Invoke-SFDashboard                                 2021.7.23… SnowflakePS
+Cmdlet          Invoke-SFWorksheet                                 2021.7.23… SnowflakePS
+Cmdlet          New-SFDashboard                                    2021.7.23… SnowflakePS
+Cmdlet          New-SFWorksheet                                    2021.7.23… SnowflakePS
+Cmdlet          Remove-SFDashboard                                 2021.7.23… SnowflakePS
+Cmdlet          Remove-SFWorksheet                                 2021.7.23… SnowflakePS
 ```
 
 ## Connect-SFApp
@@ -479,7 +481,7 @@ PS > $worksheets | foreach {New-SFWorksheet -AuthContext $appContext -Worksheet 
 ```
 
 ## Remove-SFWorksheet
-Removes single Worksheet from Account.
+Removes Worksheets matching criteria from Account.
 
 ```
 PS > Remove-SFWorksheet -?
@@ -491,6 +493,10 @@ SYNTAX
     Remove-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetName] <string> [<CommonParameters>]
 
     Remove-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetID] <string> [<CommonParameters>]
+
+    Remove-SFWorksheet [-AuthContext] <AppUserContext> [-Worksheet] <Worksheet> [<CommonParameters>]
+
+    Remove-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetFile] <string> [<CommonParameters>]
 ```
 
 ### Remove-SFWorksheet Parameter - AuthContext
@@ -501,6 +507,12 @@ Name of Worksheet to remove.
 
 ### Remove-SFWorksheet Parameter - WorksheetID
 ID of Worksheet to remove.
+
+### Remove-SFWorksheet Parameter - WorksheetFile
+Path to the JSON file for Worksheet to remove.
+
+### Remove-SFWorksheet Parameter - Worksheet
+Worksheet object to remove.
 
 ### Remove-SFWorksheet - Remove All Worksheets in a List
 Remove all Worksheets in a `$worksheets` array:
@@ -515,7 +527,7 @@ Deleting Worksheet 'Account and SSO (2zdJ1tNq2xY)'
 ```
 
 ### Remove-SFWorksheet - Remove Worksheet by Name
-Remove specific Worksheet by name:
+Remove all Worksheet matching this name:
 ```
 PS > Remove-SFWorksheet -AuthContext $appContext -WorksheetName "Worksheet 1"
 Deleting '1' Worksheets
@@ -542,6 +554,115 @@ Deleting '1' Worksheets
 Deleting Worksheet 'CreatedFromPostman (44wTpZWV14L)'
 True
 Execution took 00:00:00.2252777 (225 ms)
+```
+
+### Remove-SFWorksheet - Remove Worksheet by Worksheet Object
+Remove all Worksheet matching this object by ID:
+```
+PS > Remove-SFWorksheet -AuthContext $appContext -Worksheet $worksheetToRemove
+Deleting 1 Worksheets
+Deleting Worksheet SomeTestWorksheet (56E6Mqp4tVH)
+1
+Execution took 00:00:00.2085117 (208 ms)
+```
+
+### Remove-SFWorksheet - Remove Worksheets by Worksheet File
+Remove all Worksheet matching the name of Worksheet in the file :
+```
+PS > Remove-SFWorksheet -AuthContext $authDO -WorksheetFile "C:\path\to\file\Worksheet.sfpscogs_dodievich_sso.New Worksheet.Jy0WhT9EF7.json"
+Deleting 12 Worksheets
+Deleting Worksheet New Worksheet (Jy0WhT9EF7)
+Deleting Worksheet New Worksheet (1mm5gl1G4Of)
+Deleting Worksheet New Worksheet (3is88vL0SBD)
+Deleting Worksheet New Worksheet (1lSOwVG6Dwq)
+Deleting Worksheet New Worksheet (3EbvV8pu7bN)
+Deleting Worksheet New Worksheet (34cWGNABZg0)
+Deleting Worksheet New Worksheet (1QvyiOQIpS5)
+Deleting Worksheet New Worksheet (5NuahvwNLCL)
+Deleting Worksheet New Worksheet (ySbLs9BMgX)
+Deleting Worksheet New Worksheet (19QHHcONj03)
+Deleting Worksheet New Worksheet (51IRz4Ay7Us)
+Deleting Worksheet New Worksheet (2LLvwLlQxmN)
+12
+Execution took 00:00:01.2082572 (1208 ms)
+```
+
+## Invoke-SFWorksheet
+Runs Worksheets matching name, ID, file or object, refreshing the results. Works only for single-query worksheets.
+
+```
+PS > Invoke-SFWorksheet -?
+
+NAME
+    Invoke-SFWorksheet
+
+SYNTAX
+    Invoke-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetName] <string> [<CommonParameters>]
+
+    Invoke-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetID] <string> [<CommonParameters>]
+
+    Invoke-SFWorksheet [-AuthContext] <AppUserContext> [-Worksheet] <Worksheet> [<CommonParameters>]
+
+    Invoke-SFWorksheet [-AuthContext] <AppUserContext> [-WorksheetFile] <string> [<CommonParameters>]
+```
+
+### Invoke-SFWorksheet Parameter - AuthContext
+Authentication context from Connect-SFApp command.
+
+### Invoke-SFWorksheet Parameter - WorksheetName
+Name of Worksheet to run.
+
+### Invoke-SFWorksheet Parameter - WorksheetID
+ID of Worksheet to run.
+
+### Invoke-SFWorksheet Parameter - WorksheetFile
+Path to the JSON file for Worksheet to run.
+
+### Invoke-SFWorksheet Parameter - Worksheet
+Worksheet object to run.
+
+### Invoke-SFWorksheet - Invoke Worksheet by Name
+Run all Worksheets matching this name:
+```
+PS > Invoke-SFWorksheet -AuthContext $authDO -WorksheetName "Current Time"
+Executing 1 Worksheets
+Running Worksheet Current Time (43QTjcl6w3M)
+Query 019dc954-0000-5f0c-0000-38c10017c142 at 7/23/2021 9:08:42 PM succeeded
+Executed 1 objects
+Execution took 00:00:00.5783268 (578 ms)
+```
+
+### Invoke-SFWorksheet - Invoke Worksheet by ID
+Run specific Worksheet by ID:
+```
+PS > Invoke-SFWorksheet -AuthContext $authDO -WorksheetID 43QTjcl6w3M
+Executing 1 Worksheets
+Running Worksheet Current Time (43QTjcl6w3M)
+Query 019dc955-0000-5f0e-0000-38c10017b12a at 7/23/2021 9:09:04 PM succeeded
+Executed 1 objects
+Execution took 00:00:00.2480283 (248 ms)
+```
+
+### Invoke-SFWorksheet - Invoke Worksheet by Worksheet Object
+Run all Worksheets matching this name from Worksheet object:
+```
+PS > Invoke-SFWorksheet -AuthContext $authDO -Worksheet $worksheetObject
+Executing 1 Worksheets
+Running Worksheet Current Time (43QTjcl6w3M)
+Query 019dc955-0000-5f0e-0000-38c10017b156 at 7/23/2021 9:09:56 PM succeeded
+Executed 1 objects
+Execution took 00:00:00.2545735 (254 ms)
+```
+
+### Invoke-SFWorksheet - Invoke Worksheet by File
+Run all Worksheets matching this name from Worksheet file:
+```
+PS > Invoke-SFWorksheet -AuthContext $authDO -WorksheetFile "C:\path\to\file\Worksheet.sfpscogs_dodievich_sso.Current Time.43QTjcl6w3M.json"
+Executing 1 Worksheets
+Running Worksheet Current Time (43QTjcl6w3M)
+Query 019dc955-0000-5f0e-0000-38c10017b12e at 7/23/2021 9:09:19 PM succeeded
+Executed 1 objects
+Execution took 00:00:00.2708688 (270 ms)
 ```
 
 ## Get-SFDashboards
@@ -788,4 +909,73 @@ PS > Remove-SFDashboard -AuthContext $appContext -DashboardName "Dashboard 1"
 Remove specific Worksheet by ID:
 ```
 PS > Remove-SFDashboard -AuthContext $appContext -DashboardID mydashboardid
+```
+
+## Invoke-SFWorksheet
+Runs Dashboards matching name, ID, file or object, refreshing the results.
+
+```
+PS > Invoke-SFDashboard -?
+
+NAME
+    Invoke-SFDashboard
+
+SYNTAX
+    Invoke-SFDashboard [-AuthContext] <AppUserContext> [-DashboardName] <string> [<CommonParameters>]
+
+    Invoke-SFDashboard [-AuthContext] <AppUserContext> [-DashboardID] <string> [<CommonParameters>]
+
+    Invoke-SFDashboard [-AuthContext] <AppUserContext> [-Dashboard] <Dashboard> [<CommonParameters>]
+
+    Invoke-SFDashboard [-AuthContext] <AppUserContext> [-DashboardFile] <string> [<CommonParameters>]
+```
+
+### Invoke-SFDashboard Parameter - AuthContext
+Authentication context from Connect-SFApp command.
+
+### Invoke-SFDashboard Parameter - DashboardName
+Name of Dashboard to run.
+
+### Invoke-SFDashboard Parameter - DashboardID
+ID of Dashboard to run.
+
+### Invoke-SFDashboard Parameter - DashboardFile
+Path to the JSON file for Dashboard to run.
+
+### Invoke-SFDashboard Parameter - Dashboard
+Dashboard object to run.
+
+### Invoke-SFDashboard - Invoke Dashboard by Name
+Run all Dashboards matching this name:
+```
+PS > Invoke-SFDashboard -AuthContext $authDO -DashboardName "Execute Dashboard Test"
+Executing 1 Dashboards
+Running Dashboard Execute Dashboard Test (Wwhwx0o8) with 2 Worksheets
+Executed 1 objects
+Execution took 00:00:00.4652800 (465 ms)
+```
+
+### Invoke-SFDashboard - Invoke Dashboard by ID
+Run specific Dashboard by ID:
+```
+PS > Invoke-SFDashboard -AuthContext $authDO -DashboardID Wwhwx0o8
+Executing 1 Dashboards
+Running Dashboard Execute Dashboard Test (Wwhwx0o8) with 2 Worksheets
+Executed 1 objects
+Execution took 00:00:00.5582934 (558 ms)
+```
+
+### Invoke-SFDashboard - Invoke Dashboard by Dashboard Object
+Run all Dashboards matching this name from Dashboard object:
+```
+PS > Invoke-SFDashboard -AuthContext $authDO -Dashboard $dashboardObject
+```
+
+### Invoke-SFDashboard - Invoke Worksheet by File
+Run all Dashboards matching this name from Dashboard file:
+```
+PS > Invoke-SFDashboard -AuthContext $authDO -DashboardFile "C:\path\to\file\Dashboard.sfpscogs_dodievich_sso.Execute Dashboard Test.Wwhwx0o8.json"
+Running Dashboard Execute Dashboard Test (Wwhwx0o8) with 2 Worksheets
+Executed 1 objects
+Execution took 00:00:00.2708688 (270 ms)
 ```

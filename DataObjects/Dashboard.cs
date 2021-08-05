@@ -152,7 +152,14 @@ namespace Snowflake.Powershell
                                 if (this.Worksheets.Count(w => w.WorksheetID == worksheetID) == 0) 
                                 {
                                     Worksheet worksheet = new Worksheet(worksheetID, dashboardsPayloadObject, authContext);
-                                    this.Worksheets.Add(worksheet);
+                                    
+                                    // Do a check on whether the Worksheet is valid
+                                    // Sometimes you get phantom worksheets that must have been deleted and they don't have any Query or Worksheet
+                                    if (worksheet.Query != null && worksheet.Query.Length > 0 &&
+                                        worksheet.WorksheetName != null && worksheet.WorksheetName.Length > 0 )
+                                    {
+                                        this.Worksheets.Add(worksheet);
+                                    }
                                 }
 
                                 this.NumWidgets++;
