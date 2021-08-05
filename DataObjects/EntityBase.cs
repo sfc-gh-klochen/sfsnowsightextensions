@@ -9,7 +9,7 @@ namespace Snowflake.Powershell
     public class EntityBase
     {
         // Version metadata
-        public string _CreatedWith { get; set; } = "Snowflake Powershell Extensions";
+        public string _CreatedWith { get; set; } = "Snowflake Snowsight Extensions";
         public string _CreatedVersion { get; set; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         // Account level metadata

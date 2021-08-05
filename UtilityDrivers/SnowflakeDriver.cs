@@ -630,7 +630,7 @@ namespace Snowflake.Powershell
                     Uri baseUri = new Uri(baseUrl);
                     httpClient.BaseAddress = baseUri;
 
-                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Powershell Extensions {0}", Assembly.GetEntryAssembly().GetName().Version));
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetEntryAssembly().GetName().Version));
 
                     if (referer.Length > 0) 
                     {
@@ -745,7 +745,7 @@ namespace Snowflake.Powershell
                     Uri baseUri = new Uri(baseUrl);
                     httpClient.BaseAddress = baseUri;
 
-                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Powershell Extensions {0}", Assembly.GetEntryAssembly().GetName().Version));
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetEntryAssembly().GetName().Version));
 
                     if (referer.Length > 0) 
                     {

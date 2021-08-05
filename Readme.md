@@ -1,5 +1,5 @@
-# Snowflake Powershell Extensions
-Snowflake Powershell Extensions wrap Snowsight features that do not have API or SQL alternatives, such as manipulating Dashboards and Worksheets.
+# Snowflake Snowsight Extensions
+Snowflake Snowsight Extensions wrap Snowsight features that do not have API or SQL alternatives, such as manipulating Dashboards and Worksheets.
 
 Written by Daniel Odievich (daniel.odievich@snowflake.com)
 Senior Solution Architect at Snowflake Professional Services.
@@ -183,7 +183,7 @@ UserID             : 87577248877
 UserName           : dodievich
 ServerVersion      : 5.17.1
 FileSystemSafeName : AppUserContext.aws_cas1.dodievich.json
-_CreatedWith       : Snowflake Powershell Extensions
+_CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2021.5.18.0
 AccountName        : aws_cas1
 AccountFullName    : aws_cas1
@@ -354,7 +354,7 @@ Schema             :
 Query              : SELECT 123;
 Charts             : {}
 FileSystemSafeName : Worksheet.aws_cas1.KeithShareForDaniel.3MR8KWjzzEg.json
-_CreatedWith       : Snowflake Powershell Extensions
+_CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2021.5.18.0
 AccountName        : aws_cas1
 AccountFullName    : aws_cas1
@@ -750,7 +750,7 @@ Worksheets         : {Worksheet: Dashboard 1 Worksheet 1 (3d5CF0nwwcA) in folder
                      CREATE OR REPLACE USER fbaggins
                          }
 FileSystemSafeName : Dashboard.aws_cas1.Copy of Dashboard 1.5JjYJohs.json
-_CreatedWith       : Snowflake Powershell Extensions
+_CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2021.5.18.0
 AccountName        : aws_cas1
 AccountFullName    : aws_cas1

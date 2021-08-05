@@ -30,7 +30,7 @@ CompanyName = 'Snowflake Computing'
 Copyright = 'Copyright © 2021'
 
 # Description of the functionality provided by this module
-Description = 'Snowflake Powershell Extensions provide access to Snowflake features via console'
+Description = 'Snowflake Snowsight Extensions provide access to Snowflake features via console'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '7.1'
