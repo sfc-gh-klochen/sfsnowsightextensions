@@ -4,6 +4,9 @@ Snowflake Snowsight Extensions wrap Snowsight features that do not have API or S
 Written by Daniel Odievich (daniel.odievich@snowflake.com)
 Senior Solution Architect at Snowflake Professional Services.
 
+| :exclamation:        | This project is not an officialy supported product of Snowflake. Use at your own risk.     |
+|---------------|:------------------------|
+
 # Install
 ## Install PowerShell
 Install Powershell 7 from [Powershell GitHub Releases](https://github.com/PowerShell/PowerShell/releases) or [Powershell Landing page](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
