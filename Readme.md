@@ -7,6 +7,11 @@ Senior Solution Architect at Snowflake Professional Services.
 | :exclamation:        | This project is not an officialy supported product of Snowflake. Use at your own risk.     |
 |---------------|:------------------------|
 
+# Example
+## Copied dashboard
+![](docs/CopiedDashboard.png)
+[Full Size](docs/CopiedDashboard.png?raw=true)
+
 # Install
 ## Install PowerShell
 Install Powershell 7 from [Powershell GitHub Releases](https://github.com/PowerShell/PowerShell/releases) or [Powershell Landing page](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
@@ -285,7 +290,7 @@ FileSystemSafeName : 2021-04-16 1-16pm.4Ylfm6mqkJB
 Convert Worksheets in `$worksheets` array to `$worksheetsHash` hash table:
 
 ```
-PS > $worksheetsDict = @{}; $worksheets | foreach {$worksheetsHash[$_.WorksheetID] = $_}; $worksheetsHash
+PS > $worksheetsHash = @{}; $worksheets | foreach {$worksheetsHash[$_.WorksheetID] = $_}; $worksheetsHash
 
 Name                           Value
 ----                           -----
