@@ -13,12 +13,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+using CsvHelper;
+using CsvHelper.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NLog;
 using System;
+using System.Globalization;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -370,6 +374,256 @@ namespace Snowflake.Powershell
             }
 
             return null;
+        }
+
+        #endregion
+
+        #region CSV reading and writing
+
+        public static bool WriteListToCSVFile<T>(List<T> listToWrite, ClassMap<T> classMap, string csvFilePath)
+        {
+            return WriteListToCSVFile(listToWrite, classMap, csvFilePath, false);
+        }
+
+        public static bool WriteListToCSVFile<T>(List<T> listToWrite, ClassMap<T> classMap, string csvFilePath, bool appendToExistingFile)
+        {
+            return WriteListToCSVFile(listToWrite, classMap, csvFilePath, appendToExistingFile, true);
+
+        }
+        
+        public static bool WriteListToCSVFile<T>(List<T> listToWrite, ClassMap<T> classMap, string csvFilePath, bool appendToExistingFile, bool includeHeader)
+        {
+            if (listToWrite == null) return true;
+
+            string folderPath = Path.GetDirectoryName(csvFilePath);
+
+            if (CreateFolder(folderPath) == true)
+            {
+                try
+                {
+                    logger.Trace("Writing list of type {0} with {1} elements to file {2}, append mode {3}", typeof(T), listToWrite.Count, csvFilePath, appendToExistingFile);
+
+                    if (appendToExistingFile == true && File.Exists(csvFilePath) == true)
+                    {
+                        // Append without header
+                        using (StreamWriter sw = File.AppendText(csvFilePath))
+                        {
+                            CsvWriter csvWriter = new CsvWriter(sw, CultureInfo.InvariantCulture);
+                            csvWriter.Configuration.RegisterClassMap(classMap);
+                            csvWriter.Configuration.HasHeaderRecord = false;
+                            csvWriter.Configuration.NewLine = NewLine.LF;
+                            csvWriter.WriteRecords(listToWrite);
+                        }
+                    }
+                    else
+                    {
+                        // Create new with header
+                        using (StreamWriter sw = File.CreateText(csvFilePath))
+                        {
+                            CsvWriter csvWriter = new CsvWriter(sw, CultureInfo.InvariantCulture);
+                            csvWriter.Configuration.RegisterClassMap(classMap);
+                            csvWriter.Configuration.HasHeaderRecord = includeHeader;
+                            csvWriter.Configuration.NewLine = NewLine.LF;
+                            csvWriter.WriteRecords(listToWrite);
+                        }
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("Unable to write CSV to file {0}", csvFilePath);
+                    logger.Error(ex);
+                }
+            }
+
+            return false;
+        }
+
+        public static MemoryStream WriteListToMemoryStream<T>(List<T> listToWrite, ClassMap<T> classMap)
+        {
+            try
+            {
+                if (listToWrite == null) return null;
+
+                logger.Trace("Writing list with {0} elements containing type {1} to memory stream", listToWrite.Count, typeof(T));
+
+                MemoryStream ms = new MemoryStream(1024 * listToWrite.Count);
+                StreamWriter sw = new StreamWriter(ms);
+                CsvWriter csvWriter = new CsvWriter(sw, CultureInfo.InvariantCulture);
+                csvWriter.Configuration.RegisterClassMap(classMap);
+                csvWriter.Configuration.HasHeaderRecord = true;
+                csvWriter.WriteRecords(listToWrite);
+
+                sw.Flush();
+
+                // Rewind the stream
+                ms.Position = 0;
+
+                return ms;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Unable to write CSV to memory stream");
+                logger.Error(ex);
+            }
+
+            return null;
+        }
+
+        public static List<T> ReadListFromCSVFile<T>(string csvFilePath, ClassMap<T> classMap)
+        {
+            return ReadListFromCSVFile<T>(csvFilePath, classMap, String.Empty);
+        }
+
+        public static List<T> ReadListFromCSVFile<T>(string csvFilePath, ClassMap<T> classMap, string skipRecordPrefix)
+        {
+            try
+            {
+                logger.Trace("Reading list of type {0} from file {1}", typeof(T), csvFilePath);
+
+                if (File.Exists(csvFilePath) == false)
+                {
+                    logger.Warn("File {0} does not exist", csvFilePath);
+                }
+                else
+                {
+                    using (StreamReader sr = File.OpenText(csvFilePath))
+                    {
+                        CsvReader csvReader = new CsvReader(sr, CultureInfo.InvariantCulture);
+                        csvReader.Configuration.RegisterClassMap(classMap);
+                        csvReader.Configuration.BadDataFound = rc =>
+                        {
+                            logger.Warn("Bad thing on row {0}, char {1}, field '{2}'", rc.Row, rc.CharPosition, rc.Field);
+                            logger.Warn(rc.RawRecord);
+                        };
+                        if (skipRecordPrefix.Length > 0)
+                        {
+                            csvReader.Configuration.ShouldSkipRecord = record => record.FirstOrDefault()?.StartsWith(skipRecordPrefix) ?? false;
+                        }
+                        return csvReader.GetRecords<T>().ToList();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Unable to read CSV from file {0}", csvFilePath);
+                logger.Error(ex);
+            }
+
+            return null;
+        }
+
+        public static bool AppendTwoCSVFiles(string csvToAppendToFilePath, string csvFromWhichToAppendFilePath)
+        {
+            string folderPath = Path.GetDirectoryName(csvToAppendToFilePath);
+
+            if (CreateFolder(folderPath) == true)
+            {
+                try
+                {
+                    logger.Trace("Adding to to CSV file {0} this CSV file {1}", csvToAppendToFilePath, csvFromWhichToAppendFilePath);
+
+                    if (File.Exists(csvFromWhichToAppendFilePath) == true)
+                    {
+                        if (File.Exists(csvToAppendToFilePath) == true)
+                        {
+                            // Append without header
+                            using (FileStream sr = File.Open(csvFromWhichToAppendFilePath, FileMode.Open))
+                            {
+                                while (true)
+                                {
+                                    if (sr.Position == sr.Length) break;
+
+                                    char c = (char)sr.ReadByte();
+                                    if (c == '\n' || c == '\r')
+                                    {
+                                        break;
+                                    }
+                                }
+
+                                using (FileStream csvToAppendToSW = File.Open(csvToAppendToFilePath, FileMode.Append))
+                                {
+                                    copyStream(sr, csvToAppendToSW);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Create new file with header
+                            using (StreamReader sr = File.OpenText(csvFromWhichToAppendFilePath))
+                            {
+                                using (StreamWriter sw = File.CreateText(csvToAppendToFilePath))
+                                {
+                                    copyStream(sr.BaseStream, sw.BaseStream);
+                                }
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    logger.Error("Appending file {0} and file {1} failed", csvToAppendToFilePath, csvFromWhichToAppendFilePath);
+                    logger.Error(ex);
+                }
+            }
+
+            return false;
+        }
+
+        public static bool AppendTwoCSVFiles(FileStream csvToAppendToSW, string csvToAppendFilePath)
+        {
+            try
+            {
+                logger.Trace("Appending CSV file {0} to another CSV file open as stream", csvToAppendFilePath);
+
+                if (File.Exists(csvToAppendFilePath) == true)
+                {
+                    using (FileStream sr = File.Open(csvToAppendFilePath, FileMode.Open))
+                    {
+                        // If the stream to append to is already ahead, that means we don't need headers anymore
+                        if (csvToAppendToSW.Position > 0)
+                        {
+                            // Go through the first line to remove the header
+                            while (true)
+                            {
+                                if (sr.Position == sr.Length) break;
+
+                                char c = (char)sr.ReadByte();
+                                if (c == '\n' || c == '\r')
+                                {
+                                    // Found the end of the first lne
+                                    break;
+                                }
+                            }
+                        }
+
+                        copyStream(sr, csvToAppendToSW);
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Appending CSV file {0} to another CSV file open as stream", csvToAppendFilePath);
+                logger.Error(ex);
+            }
+
+            return false;
+        }
+
+        private static void copyStream(Stream input, Stream output)
+        {
+            // 1048576 = 1024*1024 = 2^20 = 1MB
+            byte[] buffer = new byte[1048576];
+            int bytesRead;
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
         }
 
         #endregion

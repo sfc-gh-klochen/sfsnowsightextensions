@@ -202,6 +202,7 @@ namespace Snowflake.Powershell
                 String.Format("{0}::{1}", userName, accountUrl),
                 "https://app.snowflake.com/",
                 snowSightAuthToken,
+                String.Empty,
                 String.Empty
             );
         }
@@ -347,6 +348,7 @@ namespace Snowflake.Powershell
                 String.Format("{0}::{1}", userName, accountUrl),
                 "https://app.snowflake.com/",
                 snowSightAuthToken,
+                String.Empty,
                 String.Empty
             );
         }
@@ -548,6 +550,7 @@ namespace Snowflake.Powershell
                 String.Format("{0}::{1}", userName, accountUrl),
                 "https://app.snowflake.com/",
                 snowSightAuthToken,
+                String.Empty,
                 String.Empty
             );
         }
@@ -594,6 +597,7 @@ namespace Snowflake.Powershell
                 String.Empty
             );
         }
+        
         #endregion
 
         #region Snowsight Folders
@@ -619,14 +623,60 @@ namespace Snowflake.Powershell
 
         #endregion
 
+        #region Snowsight Queries
+
+        public static string GetQueryDetails(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse)
+        {
+            return apiGET(
+                appServerUrl,
+                String.Format("v0/session/request/monitoring/queries/{0}?max=1001", queryID),
+                "application/json",
+                String.Format("{0}::{1}", userName, accountUrl),
+                "https://app.snowflake.com/",
+                snowSightAuthToken,
+                String.Empty,
+                roleToUse
+            );
+        }
+
+        public static string GetQueryProfile(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse)
+        {
+            return apiGET(
+                appServerUrl,
+                String.Format("v0/session/request/monitoring/query-plan-data/{0}", queryID),
+                "application/json",
+                String.Format("{0}::{1}", userName, accountUrl),
+                "https://app.snowflake.com/",
+                snowSightAuthToken,
+                String.Empty, 
+                roleToUse
+            );
+        }
+
+        public static string GetQueryProfile(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse, int retryNumber)
+        {
+            return apiGET(
+                appServerUrl,
+                String.Format("v0/session/request/monitoring/query-plan-data/{0}?jobRetryAttemptRank={1}", queryID, retryNumber),
+                "application/json",
+                String.Format("{0}::{1}", userName, accountUrl),
+                "https://app.snowflake.com/",
+                snowSightAuthToken,
+                String.Empty, 
+                roleToUse
+            );
+        }
+
+        #endregion
+
         #region Retrieval GET and POST API
 
         private static string apiGET(string baseUrl, string restAPIUrl, string acceptHeader)
         {
-            return apiGET(baseUrl, restAPIUrl, acceptHeader, String.Empty, String.Empty, String.Empty, String.Empty);
+            return apiGET(baseUrl, restAPIUrl, acceptHeader, String.Empty, String.Empty, String.Empty, String.Empty, String.Empty);
         }
 
-        private static string apiGET(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext, string referer, string snowSightAuthToken, string classicUIAuthToken)
+        private static string apiGET(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext, string referer, string snowSightAuthToken, string classicUIAuthToken, string roleToUse)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -641,11 +691,11 @@ namespace Snowflake.Powershell
 
                 using (HttpClient httpClient = new HttpClient(httpClientHandler))
                 {
-                    httpClient.Timeout = new TimeSpan(0, 3, 0);
+                    httpClient.Timeout = new TimeSpan(0, 1, 0);
                     Uri baseUri = new Uri(baseUrl);
                     httpClient.BaseAddress = baseUri;
 
-                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetEntryAssembly().GetName().Version));
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
                     if (referer.Length > 0) 
                     {
@@ -663,6 +713,10 @@ namespace Snowflake.Powershell
                     {
                         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", String.Format("Snowflake Token=\"{0}\"", classicUIAuthToken));
                     }
+                    if (roleToUse.Length > 0)
+                    {
+                        httpClient.DefaultRequestHeaders.Add("x-snowflake-role", roleToUse);
+                    }
 
                     MediaTypeWithQualityHeaderValue accept = new MediaTypeWithQualityHeaderValue(acceptHeader);
                     if (httpClient.DefaultRequestHeaders.Accept.Contains(accept) == false)
@@ -676,7 +730,7 @@ namespace Snowflake.Powershell
                         string resultString = response.Content.ReadAsStringAsync().Result;
                         if (resultString == null) resultString = String.Empty;
 
-                        logger.Info("GET {0}/{1} returned {2} ({3}), Response ({4}):\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, resultString.Length, resultString);
+                        logger.Info("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
 
                         // As exception for the cookie authentication, where we return not the body, but the cookie
                         if (restAPIUrl.StartsWith("complete-oauth/snowflake") && 
@@ -703,11 +757,11 @@ namespace Snowflake.Powershell
                         if (resultString == null) resultString = String.Empty;
                         if (resultString.Length > 0)
                         {
-                            logger.Error("GET {0}/{1} returned {2} ({3}), Response ({4}):\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, resultString.Length, resultString);
+                            logger.Error("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
                         }
                         else
                         {
-                            logger.Error("GET {0}/{1} returned {2} ({3})", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase);
+                            logger.Error("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders);
                         }
 
                         if (response.StatusCode == HttpStatusCode.Unauthorized || 
@@ -756,11 +810,11 @@ namespace Snowflake.Powershell
 
                 using (HttpClient httpClient = new HttpClient(httpClientHandler))
                 {
-                    httpClient.Timeout = new TimeSpan(0, 3, 0);
+                    httpClient.Timeout = new TimeSpan(0, 1, 0);
                     Uri baseUri = new Uri(baseUrl);
                     httpClient.BaseAddress = baseUri;
 
-                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetEntryAssembly().GetName().Version));
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
                     if (referer.Length > 0) 
                     {
@@ -803,7 +857,7 @@ namespace Snowflake.Powershell
                         string resultString = response.Content.ReadAsStringAsync().Result;
                         if (resultString == null) resultString = String.Empty;
 
-                        logger.Info("POST {0}/{1} returned {2} ({3}), Request:\n{4}\nResponse ({5}):\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, requestBody, resultString.Length, resultString);
+                        logger.Info("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nRequest:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, requestBody, resultString.Length, resultString);
 
                         return resultString;
                     }
@@ -813,11 +867,11 @@ namespace Snowflake.Powershell
                         if (resultString == null) resultString = String.Empty;
                         if (resultString.Length > 0)
                         {
-                            logger.Error("POST {0}/{1} returned {2} ({3}), Request:\n{4}\nResponse ({5}):\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, requestBody, resultString.Length, resultString);
+                            logger.Error("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nRequest:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, requestBody, resultString.Length, resultString);
                         }
                         else
                         {
-                            logger.Error("POST {0}/{1} returned {2} ({3}), Request:\n{4}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, requestBody);
+                            logger.Error("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nRequest:\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, requestBody);
                         }
 
                         if (response.StatusCode == HttpStatusCode.Unauthorized || 
@@ -850,7 +904,6 @@ namespace Snowflake.Powershell
         {
             return apiDELETE(baseUrl, restAPIUrl, acceptHeader, String.Empty, String.Empty, String.Empty, String.Empty);
         }
-
         private static string apiDELETE(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext, string referer, string snowSightAuthToken, string classicUIAuthToken)
         {
             Stopwatch stopWatch = new Stopwatch();
@@ -864,11 +917,11 @@ namespace Snowflake.Powershell
 
                 using (HttpClient httpClient = new HttpClient(httpClientHandler))
                 {
-                    httpClient.Timeout = new TimeSpan(0, 3, 0);
+                    httpClient.Timeout = new TimeSpan(0, 1, 0);
                     Uri baseUri = new Uri(baseUrl);
                     httpClient.BaseAddress = baseUri;
 
-                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Powershell {0}", Assembly.GetEntryAssembly().GetName().Version));
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
                     if (referer.Length > 0) 
                     {
@@ -899,7 +952,7 @@ namespace Snowflake.Powershell
                         string resultString = response.Content.ReadAsStringAsync().Result;
                         if (resultString == null) resultString = String.Empty;
 
-                        logger.Info("DELETE {0}/{1} returned {2} ({3}), Response ({4}):\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase,  resultString.Length, resultString);
+                        logger.Info("DELETE {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
 
                         return resultString;
                     }
@@ -909,7 +962,7 @@ namespace Snowflake.Powershell
                         if (resultString == null) resultString = String.Empty;
                         if (resultString.Length > 0)
                         {
-                            logger.Error("DELETE {0}/{1} returned {2} ({3}), Response ({4}):\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, resultString.Length, resultString);
+                            logger.Error("DELETE {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
                         }
                         else
                         {

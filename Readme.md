@@ -1,5 +1,5 @@
 # Snowflake Snowsight Extensions
-Snowflake Snowsight Extensions wrap Snowsight features that do not have API or SQL alternatives, such as manipulating Dashboards and Worksheets.
+Snowflake Snowsight Extensions wrap Snowsight features that do not have API or SQL alternatives, such as manipulating Dashboards and Worksheets, and retrieving Query Profile and step timings.
 
 Written by Daniel Odievich (daniel.odievich@snowflake.com)
 Senior Solution Architect at Snowflake Professional Services.
@@ -66,18 +66,19 @@ PS > Get-Command -Module SnowflakePS
 
 The output should look like this:
 ```
-CommandType     Name                                               Version    Source
------------     ----                                               -------    ------
-Cmdlet          Connect-SFApp                                      2021.7.23… SnowflakePS
-Cmdlet          Get-SFDashboards                                   2021.7.23… SnowflakePS
-Cmdlet          Get-SFFolders                                      2021.7.23… SnowflakePS
-Cmdlet          Get-SFWorksheets                                   2021.7.23… SnowflakePS
-Cmdlet          Invoke-SFDashboard                                 2021.7.23… SnowflakePS
-Cmdlet          Invoke-SFWorksheet                                 2021.7.23… SnowflakePS
-Cmdlet          New-SFDashboard                                    2021.7.23… SnowflakePS
-Cmdlet          New-SFWorksheet                                    2021.7.23… SnowflakePS
-Cmdlet          Remove-SFDashboard                                 2021.7.23… SnowflakePS
-Cmdlet          Remove-SFWorksheet                                 2021.7.23… SnowflakePS
+CommandType     Name                                               Version     Source
+-----------     ----                                               -------     ------
+Cmdlet          Connect-SFApp                                      2021.9.28.0 SnowflakePS
+Cmdlet          Get-SFDashboards                                   2021.9.28.0 SnowflakePS
+Cmdlet          Get-SFFolders                                      2021.9.28.0 SnowflakePS
+Cmdlet          Get-SFQueryProfile                                 2021.9.28.0 SnowflakePS
+Cmdlet          Get-SFWorksheets                                   2021.9.28.0 SnowflakePS
+Cmdlet          Invoke-SFDashboard                                 2021.9.28.0 SnowflakePS
+Cmdlet          Invoke-SFWorksheet                                 2021.9.28.0 SnowflakePS
+Cmdlet          New-SFDashboard                                    2021.9.28.0 SnowflakePS
+Cmdlet          New-SFWorksheet                                    2021.9.28.0 SnowflakePS
+Cmdlet          Remove-SFDashboard                                 2021.9.28.0 SnowflakePS
+Cmdlet          Remove-SFWorksheet                                 2021.9.28.0 SnowflakePS
 ```
 
 ## Connect-SFApp
@@ -986,4 +987,57 @@ PS > Invoke-SFDashboard -AuthContext $authDO -DashboardFile "C:\path\to\file\Das
 Running Dashboard Execute Dashboard Test (Wwhwx0o8) with 2 Worksheets
 Executed 1 objects
 Execution took 00:00:00.2708688 (270 ms)
+```
+
+## Get-SFQueryProfile
+Retrieves query profile information for Query.
+
+```
+PS > Get-SFQueryProfile -?
+
+NAME
+    Get-SFQueryProfile
+
+SYNTAX
+    Get-SFQueryProfile [-AuthContext] <AppUserContext> [-QueryIDs] <string[]> [[-Role] <string>] [[-OutputFolder] <string>]
+    [[-IncludeJobRetries]] [<CommonParameters>]
+```
+
+### Get-SFQueryProfile Parameter - AuthContext
+Authentication context from Connect-SFApp command.
+
+### Get-SFQueryProfile Parameter - QueryIDs
+Array of Query IDs to retrieve
+
+### Get-SFQueryProfile Parameter - Role
+Role to use to retrieve things. If omitted, user's default role from Authentication context is used
+
+### Get-SFQueryProfile Parameter - OutputFolder
+Location where to save the resulting data
+
+### Get-SFQueryProfile Parameter - IncludeJobRetries
+Whether to retrieve all the potential GS job retries or just get the latest run. This parameter can add considerable duration to the retrieval process.
+
+### Get-SFQueryProfile - Get Step Timing for Single Query
+Get information about single query:
+```
+PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs 019f3db8-0602-9e0b-0004-150310c3b4ff -OutputFolder ....\path\to\store\results
+```
+
+### Get-SFQueryProfile - Get Step Timing for Several Queries
+Get information about several queries:
+```
+PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs 019f3db8-0602-9e0b-0004-150310c3b4ff, 019f311f-0602-97e3-0004-15030dbe80c7 -OutputFolder ..\path\to\store\results
+```
+
+### Get-SFQueryProfile - Get Step Timing for Several Queries and with All GS Job Retries
+Get information about several queries for Query IDs stored in a CSV file.
+
+First, load CSV file with Query IDs in :
+```
+PS > $queriesList = Import-CSV ..\LocalStore\featured_product_daily_aggregate\InterestingQueries.csv
+```
+Then pass the list of queries and specify that GS job retries are included:
+```
+PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs ($queriesList | foreach {$_.Query_ID}) -Role ACCOUNTADMIN -OutputFolder ..\path\to\store\results -IncludeJobRetries
 ```

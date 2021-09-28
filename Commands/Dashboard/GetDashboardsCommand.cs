@@ -131,7 +131,7 @@ namespace Snowflake.Powershell
 
                 dashboardsList = dashboardsList.OrderBy(d => d.DashboardName).ToList();
 
-                loggerConsole.Info("Retrieved {0} dashboards", dashboardsList.Count);
+                loggerConsole.Info("Retrieved {0} Dashboards", dashboardsList.Count);
 
                 WriteObject(dashboardsList.ToArray());                
             }

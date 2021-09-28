@@ -263,7 +263,7 @@ namespace Snowflake.Powershell
                     }
                 }
 
-                WriteObject(String.Format("Executed {0} objects", worksheetsToExecuteList.Count));
+                WriteObject(String.Format("Executed {0} Worksheets", worksheetsToExecuteList.Count));
             }
             catch (Exception ex)
             {

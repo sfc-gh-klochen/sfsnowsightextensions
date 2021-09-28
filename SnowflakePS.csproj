@@ -5,9 +5,9 @@
     <AssemblyName>SnowflakePS</AssemblyName>
     <RootNamespace>Snowflake.Powershell</RootNamespace>
 
-    <Version>2021.8.4.0</Version>
-    <FileVersion>2021.8.4.0</FileVersion>
-    <AssemblyVersion>2021.8.4.0</AssemblyVersion>
+    <Version>2021.9.28.0</Version>
+    <FileVersion>2021.9.28.0</FileVersion>
+    <AssemblyVersion>2021.9.28.0</AssemblyVersion>
     <Authors>Daniel Odievich (daniel.odievich@snowflake.com)</Authors>
     <Company>Snowflake Computing</Company>
     <Product>Snowflake Snowsight Extensions</Product>
@@ -29,6 +29,7 @@
     <PackageReference Include="NLog" Version="4.7.10" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+    <PackageReference Include="CsvHelper" Version="19.0.0" />
   </ItemGroup>
 
   <ItemGroup>

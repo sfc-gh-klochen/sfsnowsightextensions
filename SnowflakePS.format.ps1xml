@@ -217,5 +217,67 @@
           </WideEntries>
        </WideControl>      
     </View>
+
+    <View>
+      <Name>Snowflake.Powershell.Query</Name>
+      <ViewSelectedBy>
+        <TypeName>Snowflake.Powershell.Query</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Width>38</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Width>10</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Width>25</Width>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>QueryID</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Status</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>User</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Warehouse</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>StartedTimeUtc</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Snowflake.Powershell.Query Wide</Name>
+      <ViewSelectedBy>
+        <TypeName>Snowflake.Powershell.Query</TypeName>
+      </ViewSelectedBy>
+      <WideControl>
+          <WideEntries>
+            <WideEntry>
+              <WideItem>
+                <PropertyName>QueryID</PropertyName>
+              </WideItem>
+            </WideEntry>
+          </WideEntries>
+       </WideControl>      
+    </View>    
   </ViewDefinitions>
 </Configuration>

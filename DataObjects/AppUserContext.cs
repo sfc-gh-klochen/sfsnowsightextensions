@@ -25,6 +25,8 @@ namespace Snowflake.Powershell
         public string AuthTokenSession { get; set; }
         public string ClientID { get; set; }
         public string CSRFToken { get; set; }
+        public string DefaultRole { get; set; }
+        public string DefaultWarehouse { get; set; }
         public string UserID { get; set; }
         public string UserName { get; set; }
         public string ServerVersion { get; set; }

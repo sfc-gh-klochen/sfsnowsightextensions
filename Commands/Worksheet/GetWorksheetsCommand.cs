@@ -103,7 +103,7 @@ namespace Snowflake.Powershell
 
                 worksheetsList = worksheetsList.OrderBy(w => w.FolderName).ThenBy(w => w.WorksheetName).ToList();
 
-                loggerConsole.Info("Retrieved {0} worksheets", worksheetsList.Count);
+                loggerConsole.Info("Retrieved {0} Worksheets", worksheetsList.Count);
 
                 WriteObject(worksheetsList.ToArray());
             }

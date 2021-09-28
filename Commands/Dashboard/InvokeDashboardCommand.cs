@@ -220,7 +220,7 @@ namespace Snowflake.Powershell
                     }
                 }
 
-                WriteObject(String.Format("Executed {0} objects", dashboardsToExecuteList.Count));
+                WriteObject(String.Format("Executed {0} Dashboards", dashboardsToExecuteList.Count));
             }
             catch (Exception ex)
             {
