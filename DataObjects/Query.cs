@@ -151,7 +151,10 @@ namespace Snowflake.Powershell
 
                     this.QueryID = JSONHelper.getStringValueFromJToken(queryObject, "id");
                     this.SQL = JSONHelper.getStringValueFromJToken(queryObject, "sqlText");
-                    this.SQLStart = this.SQL.Substring(0, 50);
+                    if (this.SQL.Length >= 50)
+                    {
+                        this.SQLStart = this.SQL.Substring(0, 50);                    
+                    }
                     this.SQLTextHash = JSONHelper.getLongValueFromJToken(queryObject, "sqlTextHash");
                     this.Tag = JSONHelper.getStringValueFromJToken(queryObject, "queryTag");
                     

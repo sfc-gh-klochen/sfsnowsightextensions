@@ -992,6 +992,9 @@ Execution took 00:00:00.2708688 (270 ms)
 ## Get-SFQueryProfile
 Retrieves query profile information for Query.
 
+![](docs/Get-SFQueryProfile.png)
+[Full Size](docs/Get-SFQueryProfile.png?raw=true)
+
 ```
 PS > Get-SFQueryProfile -?
 
