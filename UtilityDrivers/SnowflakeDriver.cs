@@ -743,7 +743,7 @@ namespace Snowflake.Powershell
                                 {
                                     if (cookie.StartsWith("user-") == true)
                                     {
-                                        resultString = cookie;
+                                        resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, HttpUtility.HtmlEncode(resultString));
                                     }
                                 }
                             }

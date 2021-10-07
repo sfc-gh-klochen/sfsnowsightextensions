@@ -172,7 +172,7 @@ namespace Snowflake.Powershell
                         throw new ArgumentException(String.Format("Unknown parameter set {0}", this.ParameterSetName));
                 }
                 appUserContext.UserName = this.UserName;
-                logger.Info("Username={0}", appUserContext.UserName);
+                logger.Info("LoginName={0}", appUserContext.UserName);
 
                 #endregion
 
@@ -529,13 +529,49 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 3, Converting OAuth redirect into authentication cookie
-                appUserContext.AuthTokenSnowsight = SnowflakeDriver.GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode);
-                if (appUserContext.AuthTokenSnowsight.Length == 0)
+                string authenticationTokenWebPageResult = SnowflakeDriver.GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode);
+                if (authenticationTokenWebPageResult.Length == 0)
                 {
                     throw new InvalidCredentialException(String.Format("Invalid response from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
                 }
 
+                JObject authenticationTokenWebPageObject = JObject.Parse(authenticationTokenWebPageResult);
+                if (authenticationTokenWebPageObject == null)
+                {
+                    throw new InvalidCredentialException(String.Format("Invalid result from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
+                }
+                appUserContext.AuthTokenSnowsight = JSONHelper.getStringValueFromJToken(authenticationTokenWebPageObject, "authenticationCookie");
+
                 logger.Info("SnowsightAuthToken={0}", appUserContext.AuthTokenSnowsight);
+
+                // For users where their USERNAME is not the same as LOGIN_NAME, the future authentication needs USERNAME property. It is specified in var params = {...} block in HTML returned from the call
+                // <html>
+                // <head>
+                // 	<script>
+                // 	var params = {"account":"sfpscogs_dodievich_sso","appServerUrl":"https://apps-api.c1.westus2.azure.app.snowflake.com",.... "username":"DODIEVICH_ALT"}}
+                // 	if (window.opener && params.isPopupAuth) {
+                string paramsCarryingPageResult = HttpUtility.HtmlDecode(JSONHelper.getStringValueFromJToken(authenticationTokenWebPageObject, "resultPage"));
+                Regex regexParameters = new Regex(@"(?i)var params = ({.*})", RegexOptions.IgnoreCase);
+                match = regexParameters.Match(paramsCarryingPageResult);
+                if (match != null)
+                {
+                    if (match.Groups.Count > 1)
+                    {
+                        string userAccountParams = match.Groups[1].Value;
+
+                        JObject userAccountParamsObject = JObject.Parse(userAccountParams);
+                        if (userAccountParamsObject != null)
+                        {
+                            string userName = JSONHelper.getStringValueFromJToken(userAccountParamsObject["user"], "username");
+                            logger.Info("UserName={0}", userName);
+                            // Only set the Username if it is indeed different from LoginName
+                            if (String.Compare(userName, appUserContext.UserName, true) != 0)
+                            {
+                                appUserContext.UserName = userName;
+                            }
+                        }
+                    }
+                }
 
                 #endregion
 
