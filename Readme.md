@@ -68,17 +68,17 @@ The output should look like this:
 ```
 CommandType     Name                                               Version     Source
 -----------     ----                                               -------     ------
-Cmdlet          Connect-SFApp                                      2021.9.29.0 SnowflakePS
-Cmdlet          Get-SFDashboards                                   2021.9.29.0 SnowflakePS
-Cmdlet          Get-SFFolders                                      2021.9.29.0 SnowflakePS
-Cmdlet          Get-SFQueryProfile                                 2021.9.29.0 SnowflakePS
-Cmdlet          Get-SFWorksheets                                   2021.9.29.0 SnowflakePS
-Cmdlet          Invoke-SFDashboard                                 2021.9.29.0 SnowflakePS
-Cmdlet          Invoke-SFWorksheet                                 2021.9.29.0 SnowflakePS
-Cmdlet          New-SFDashboard                                    2021.9.29.0 SnowflakePS
-Cmdlet          New-SFWorksheet                                    2021.9.29.0 SnowflakePS
-Cmdlet          Remove-SFDashboard                                 2021.9.29.0 SnowflakePS
-Cmdlet          Remove-SFWorksheet                                 2021.9.29.0 SnowflakePS
+Cmdlet          Connect-SFApp                                      2021.10.06.0 SnowflakePS
+Cmdlet          Get-SFDashboards                                   2021.10.06.0 SnowflakePS
+Cmdlet          Get-SFFolders                                      2021.10.06.0 SnowflakePS
+Cmdlet          Get-SFQueryProfile                                 2021.10.06.0 SnowflakePS
+Cmdlet          Get-SFWorksheets                                   2021.10.06.0 SnowflakePS
+Cmdlet          Invoke-SFDashboard                                 2021.10.06.0 SnowflakePS
+Cmdlet          Invoke-SFWorksheet                                 2021.10.06.0 SnowflakePS
+Cmdlet          New-SFDashboard                                    2021.10.06.0 SnowflakePS
+Cmdlet          New-SFWorksheet                                    2021.10.06.0 SnowflakePS
+Cmdlet          Remove-SFDashboard                                 2021.10.06.0 SnowflakePS
+Cmdlet          Remove-SFWorksheet                                 2021.10.06.0 SnowflakePS
 ```
 
 ## Connect-SFApp

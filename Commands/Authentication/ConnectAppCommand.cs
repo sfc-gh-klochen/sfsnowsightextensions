@@ -540,7 +540,9 @@ namespace Snowflake.Powershell
                 #endregion
 
                 #region Organization and User ID context
-                
+
+                loggerConsole.Info("Getting Organization and User context for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
+
                 // Get Org ID and User ID for future use
                 string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext.AppServerUrl, appUserContext.AccountUrl, appUserContext.Region, appUserContext.AccountName, appUserContext.UserName, appUserContext.AuthTokenSnowsight);
                 if (organizationAndUserContextResult.Length == 0)
@@ -556,8 +558,11 @@ namespace Snowflake.Powershell
                 {
                     throw new ItemNotFoundException(String.Format("Unable to parse Organization and User Context for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
                 }
-                appUserContext.DefaultRole = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["User"]["settings"], "defaultRole").ToString();
-                appUserContext.DefaultWarehouse = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["User"]["settings"], "defaultWarehouse").ToString();
+                if (JSONHelper.isTokenNull(organizationAndUserContextObject["User"]) == false)
+                {
+                    appUserContext.DefaultRole = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["User"]["settings"], "defaultRole").ToString();
+                    appUserContext.DefaultWarehouse = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["User"]["settings"], "defaultWarehouse").ToString();
+                }
                 
                 logger.Info("UserID={0}", appUserContext.UserID);
                 logger.Info("OrganizationID={0}", appUserContext.OrganizationID);
