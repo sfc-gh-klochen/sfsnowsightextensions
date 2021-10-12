@@ -26,9 +26,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Authentication;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
-
 
 namespace Snowflake.Powershell
 {
@@ -550,7 +550,7 @@ namespace Snowflake.Powershell
                 // 	<script>
                 // 	var params = {"account":"sfpscogs_dodievich_sso","appServerUrl":"https://apps-api.c1.westus2.azure.app.snowflake.com",.... "username":"DODIEVICH_ALT"}}
                 // 	if (window.opener && params.isPopupAuth) {
-                string paramsCarryingPageResult = HttpUtility.HtmlDecode(JSONHelper.getStringValueFromJToken(authenticationTokenWebPageObject, "resultPage"));
+                string paramsCarryingPageResult = Encoding.UTF8.GetString(Convert.FromBase64String(JSONHelper.getStringValueFromJToken(authenticationTokenWebPageObject, "resultPage")));
                 Regex regexParameters = new Regex(@"(?i)var params = ({.*})", RegexOptions.IgnoreCase);
                 match = regexParameters.Match(paramsCarryingPageResult);
                 if (match != null)

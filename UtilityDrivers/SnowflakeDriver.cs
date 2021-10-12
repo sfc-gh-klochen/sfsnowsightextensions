@@ -22,6 +22,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 
@@ -743,7 +744,7 @@ namespace Snowflake.Powershell
                                 {
                                     if (cookie.StartsWith("user-") == true)
                                     {
-                                        resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, HttpUtility.HtmlEncode(resultString));
+                                        resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
                                     }
                                 }
                             }
