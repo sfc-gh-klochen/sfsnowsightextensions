@@ -1046,3 +1046,13 @@ Then pass the list of queries and specify that GS job retries are included:
 ```
 PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs ($queriesList | foreach {$_.Query_ID}) -Role ACCOUNTADMIN -OutputFolder ..\path\to\store\results -IncludeJobRetries
 ```
+
+# Development
+
+## Building the project on macOS
+
+Requirements: VSCode
+
+1. Install [.NET 5 SDK](https://dotnet.microsoft.com/download/dotnet/5.0)
+2. Clone and open the project in VSCode
+3. Build the project (cmd+shift+P -> Tasks: Run build task)
