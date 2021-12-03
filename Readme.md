@@ -1053,11 +1053,7 @@ PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs ($queriesList | foreach {$_
 ```
 
 # Development
-
-## Building the project on macOS
-
-Requirements: VSCode
-
-1. Install [.NET 5 SDK](https://dotnet.microsoft.com/download/dotnet/5.0)
-2. Clone and open the project in VSCode
-3. Build the project (cmd+shift+P -> Tasks: Run build task)
+* Install [.NET 5 SDK](https://dotnet.microsoft.com/download/dotnet/5.0)
+* Clone and open the project in VSCode
+* Restore project (Palette -> .NET: Restore All Projects)
+* Build the project (Palette -> Tasks: Run build task -> Build)
