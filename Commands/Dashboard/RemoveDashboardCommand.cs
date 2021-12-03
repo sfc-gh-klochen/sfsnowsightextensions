@@ -140,7 +140,7 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all dashboards already present
-                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (dashboardsApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException("Invalid response from listing dashboard entities");
@@ -214,7 +214,7 @@ namespace Snowflake.Powershell
                     loggerConsole.Trace("Deleting Dashboard {0} ({1})", dashboard.DashboardName, dashboard.DashboardID);
                     
                     // Delete the Worksheet
-                    string dashboardDeleteApiResult = SnowflakeDriver.DeleteDashboard(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);
+                    string dashboardDeleteApiResult = SnowflakeDriver.DeleteDashboard(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);
                     if (dashboardDeleteApiResult.Length == 0)
                     {
                         throw new ItemNotFoundException("Invalid response from deleting dashboard entity");

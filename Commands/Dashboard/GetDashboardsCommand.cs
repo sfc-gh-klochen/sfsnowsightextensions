@@ -72,7 +72,7 @@ namespace Snowflake.Powershell
         {
             try
             {
-                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (dashboardsApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException("Invalid response from listing dashboard entities");
@@ -113,7 +113,9 @@ namespace Snowflake.Powershell
                             loggerConsole.Trace("Worksheet {0} ({1}), details of Chart {2} ({3})", worksheet.WorksheetName, worksheet.WorksheetID, chart.ChartName, chart.ChartID);
                             
                             // Get chart details
-                            string chartDetailApiResult = SnowflakeDriver.GetChart(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, chart.WorksheetID, chart.ChartID);
+                            string chartDetailApiResult = SnowflakeDriver.GetChart(
+                                this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                                chart.WorksheetID, chart.ChartID);
                             
                             if (chartDetailApiResult.Length == 0)
                             {

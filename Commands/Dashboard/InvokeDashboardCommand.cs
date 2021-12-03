@@ -141,7 +141,7 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all Dashboards already present
-                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (dashboardsApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException("Invalid response from listing dashboard entities");
@@ -213,7 +213,7 @@ namespace Snowflake.Powershell
                     logger.Info("Running {0}", dashboard);
                     loggerConsole.Trace("Running Dashboard {0} ({1}) with {2} Worksheets", dashboard.DashboardName, dashboard.DashboardID, dashboard.Worksheets.Count);
                     
-                    string dashboardsRefreshResult = SnowflakeDriver.ExecuteDashboard(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);
+                    string dashboardsRefreshResult = SnowflakeDriver.ExecuteDashboard(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);
                     if (dashboardsRefreshResult .Length == 0)
                     {
                         throw new ItemNotFoundException("Invalid response from refreshing dashboard");

@@ -72,7 +72,7 @@ namespace Snowflake.Powershell
         {
             try
             {
-                string foldersApiResult = SnowflakeDriver.GetFolders(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string foldersApiResult = SnowflakeDriver.GetFolders(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (foldersApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Invalid response from listing folder entities"));

@@ -19,6 +19,7 @@ namespace Snowflake.Powershell
 {
     public class AppUserContext : EntityBase
     {
+        public string MainAppUrl { get; set; }
         public string AppServerUrl { get; set; }
         public string AuthTokenSnowsight { get; set; }
         public string AuthTokenMaster { get; set; }
@@ -35,7 +36,7 @@ namespace Snowflake.Powershell
         {
             get 
             {
-                return String.Format("AppUserContext.{0}.{1}.json", FileIOHelper.GetFileSystemSafeString(this.AccountName), FileIOHelper.GetFileSystemSafeString(this.UserName));
+                return String.Format("AppUserContext.{0}.{1}.{2}.json", FileIOHelper.GetFileSystemSafeString(this.AccountName), FileIOHelper.GetFileSystemSafeString(this.Region), FileIOHelper.GetFileSystemSafeString(this.UserName));
             }
             set
             {

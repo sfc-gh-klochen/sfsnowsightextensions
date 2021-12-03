@@ -140,7 +140,7 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all worksheets already present
-                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (worksheetsApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException("Invalid response from listing worksheet entities");
@@ -214,7 +214,9 @@ namespace Snowflake.Powershell
                     loggerConsole.Trace("Deleting Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
                     
                     // Delete the Worksheet
-                    string worksheetDeleteApiResult = SnowflakeDriver.DeleteWorksheet(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, worksheet.WorksheetID);
+                    string worksheetDeleteApiResult = SnowflakeDriver.DeleteWorksheet(
+                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        worksheet.WorksheetID);
                     if (worksheetDeleteApiResult.Length == 0)
                     {
                         throw new ItemNotFoundException("Invalid response from deleting worksheet entity");

@@ -137,7 +137,9 @@ namespace Snowflake.Powershell
                     if (File.Exists(queryDetailsFilePath) == true) return;
 
                     // First, get details
-                    string queryDetailsApiResult = SnowflakeDriver.GetQueryDetails(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, queryID, this.Role);
+                    string queryDetailsApiResult = SnowflakeDriver.GetQueryDetails(
+                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        queryID, this.Role);
                     if (queryDetailsApiResult.Length == 0)
                     {
                         logger.Warn("Getting details for {0} failed", queryID);
@@ -170,7 +172,9 @@ namespace Snowflake.Powershell
                     if (this.IncludeJobRetries.IsPresent == false)
                     {
                         // Only get latest
-                        string queryProfileApiResult = SnowflakeDriver.GetQueryProfile(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, queryID, this.Role);
+                        string queryProfileApiResult = SnowflakeDriver.GetQueryProfile(
+                            this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                            queryID, this.Role);
                         if (queryProfileApiResult.Length == 0)
                         {
                             logger.Warn("Getting profile for {0} failed", queryID);
@@ -205,7 +209,9 @@ namespace Snowflake.Powershell
                         // Get up to 3 retries with GS
                         Parallel.For(0, 3, (retryNumber, stateRetries) => 
                         {
-                            string queryProfileApiResult = SnowflakeDriver.GetQueryProfile(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, queryID, this.Role, retryNumber);
+                            string queryProfileApiResult = SnowflakeDriver.GetQueryProfile(
+                                this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, queryID, 
+                                this.Role, retryNumber);
                             if (queryProfileApiResult.Length == 0)
                             {
                                 logger.Warn("Getting profile for {0} retry number {1} failed", queryID, retryNumber);

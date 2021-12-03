@@ -35,19 +35,19 @@ namespace Snowflake.Powershell
 
         #region Snowsight Client Metadata
 
-        public static string GetAccountAppEndpoints(string accountName)
+        public static string GetAccountAppEndpoints(string mainAppURL, string accountName)
         {
             return apiGET(
-                "https://app.snowflake.com",
+                mainAppURL, // "https://app.snowflake.com"
                 String.Format("v0/validate-snowflake-url?url={0}", accountName),
                 "*/*"
             );
         }
 
-        public static string GetSnowSightClientIDInDeployment(string appServerUrl, string accountUrl)
+        public static string GetSnowSightClientIDInDeployment(string mainAppURL, string appServerUrl, string accountUrl)
         {
             string csrf = "SnowflakePS";
-            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"https://app.snowflake.com\"}}", csrf, accountUrl);
+            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
             
             return apiGET(
                 appServerUrl,
@@ -194,14 +194,14 @@ namespace Snowflake.Powershell
 
         #region Snowsight Org Metadata
 
-        public static string GetOrganizationAndUserContext(string appServerUrl, string accountUrl, string region, string accountName, string userName, string snowSightAuthToken)
+        public static string GetOrganizationAndUserContext(string mainAppURL, string appServerUrl, string accountUrl, string region, string accountName, string userName, string snowSightAuthToken)
         {
             return apiGET(
                 appServerUrl,
                 String.Format("bootstrap/{0}/{1}", region, accountName),
                 "application/json",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty,
                 String.Empty
@@ -212,7 +212,7 @@ namespace Snowflake.Powershell
 
         #region Snowsight Worksheets
 
-        public static string GetWorksheets(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken)
+        public static string GetWorksheets(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken)
         {
             string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":1000,\"owner\":null,\"types\":[\"query\"],\"showNeverViewed\":\"if-invited\"}";
 
@@ -224,14 +224,14 @@ namespace Snowflake.Powershell
                 "application/json",
                 requestBody,
                 "application/x-www-form-urlencoded",
-                String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}::{1}", userName, accountUrl),                
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string CreateWorksheet(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string worksheetName)
+        public static string CreateWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string worksheetName)
         {
             string requestBody = String.Format("action=create&orgId={0}&name={1}", organizationID, HttpUtility.UrlEncode(worksheetName));
 
@@ -242,13 +242,13 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string CreateWorksheet(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string worksheetName, string folderID)
+        public static string CreateWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string worksheetName, string folderID)
         {
             string requestBody = String.Format("action=create&orgId={0}&name={1}&folderId={2}", organizationID, HttpUtility.UrlEncode(worksheetName), folderID);
 
@@ -259,13 +259,13 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string UpdateWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string queryText, string role, string warehouse, string database, string schema)
+        public static string UpdateWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string queryText, string role, string warehouse, string database, string schema)
         {
             string executionContextParam = String.Format("{{\"role\":\"{0}\",\"warehouse\":\"{1}\",\"database\":\"{2}\",\"schema\":\"{3}\"}}", role, warehouse, database, schema);
 
@@ -278,27 +278,27 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
 
             );
         }
 
-        public static string DeleteWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID)
+        public static string DeleteWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID)
         {
             return apiDELETE(
                 appServerUrl,
                 String.Format("v0/queries/{0}", worksheetID), 
                 "application/json", 
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string ExecuteWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string queryText, string paramRefs, string role, string warehouse, string database, string schema)
+        public static string ExecuteWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string queryText, string paramRefs, string role, string warehouse, string database, string schema)
         {
             string executionContextParam = String.Format("{{\"role\":\"{0}\",\"warehouse\":\"{1}\",\"database\":\"{2}\",\"schema\":\"{3}\"}}", role, warehouse, database, schema);
 
@@ -311,7 +311,7 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
@@ -321,7 +321,7 @@ namespace Snowflake.Powershell
 
         #region Snowsight Dashboards
 
-        public static string GetDashboards(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken)
+        public static string GetDashboards(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken)
         {
             string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":1000,\"owner\":null,\"types\":[\"dashboard\"],\"showNeverViewed\":\"if-invited\"}";
 
@@ -334,27 +334,27 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string GetDashboard(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID)
+        public static string GetDashboard(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID)
         {
             return apiGET(
                 appServerUrl,
                 String.Format("v0/folders/{0}", dashboardID),
                 "application/json",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty,
                 String.Empty
             );
         }
 
-        public static string CreateDashboard(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string dashboardName, string roleName, string warehouseName)
+        public static string CreateDashboard(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string dashboardName, string roleName, string warehouseName)
         {
             string requestBody = String.Format("orgId={0}&name={1}&role={2}&warehouse={3}&type=dashboard&visibility=organization", organizationID, HttpUtility.UrlEncode(dashboardName), roleName, warehouseName);
 
@@ -365,13 +365,13 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string UpdateDashboardNewRowWithWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID, string worksheetID, string displayMode, int rowIndex, int rowHeight)
+        public static string UpdateDashboardNewRowWithWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID, string worksheetID, string displayMode, int rowIndex, int rowHeight)
         {
             // Table
             // [{
@@ -432,13 +432,13 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string UpdateDashboardInsertNewCellWithWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID, string worksheetID, string displayMode, int rowIndex, int rowHeight, int cellIndex)
+        public static string UpdateDashboardInsertNewCellWithWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID, string worksheetID, string displayMode, int rowIndex, int rowHeight, int cellIndex)
         {
             // Table:
             // [{
@@ -501,26 +501,26 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string DeleteDashboard(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID)
+        public static string DeleteDashboard(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID)
         {
             return apiDELETE(
                 appServerUrl,
                 String.Format("v0/folders/{0}", dashboardID), 
                 "application/json", 
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
         }
 
-        public static string ExecuteDashboard(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID)
+        public static string ExecuteDashboard(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string dashboardID)
         {
             string requestBody = "action=refresh&drafts={}";
 
@@ -531,7 +531,7 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
@@ -542,21 +542,21 @@ namespace Snowflake.Powershell
 
         #region Snowsight Charts
 
-        public static string GetChart(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string worksheetID, string chartID)
+        public static string GetChart(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string worksheetID, string chartID)
         {
             return apiGET(
                 appServerUrl,
                 String.Format("v0/queries/{0}/charts/{1}", worksheetID, chartID),
                 "application/json",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty,
                 String.Empty
             );
         }
 
-        public static string CreateChartFromWorksheet(string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string chartConfiguration)
+        public static string CreateChartFromWorksheet(string mainAppURL, string appServerUrl, string accountUrl, string userName, string snowSightAuthToken, string worksheetID, string chartConfiguration)
         {
             // {
             //     "type": "line",
@@ -593,7 +593,7 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
@@ -603,7 +603,7 @@ namespace Snowflake.Powershell
 
         #region Snowsight Folders
 
-        public static string GetFolders(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken)
+        public static string GetFolders(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken)
         {
             string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":1000,\"owner\":null,\"types\":[\"folder\"],\"showNeverViewed\":\"if-invited\"}";
 
@@ -616,7 +616,7 @@ namespace Snowflake.Powershell
                 requestBody,
                 "application/x-www-form-urlencoded",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty
             );
@@ -626,42 +626,42 @@ namespace Snowflake.Powershell
 
         #region Snowsight Queries
 
-        public static string GetQueryDetails(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse)
+        public static string GetQueryDetails(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse)
         {
             return apiGET(
                 appServerUrl,
                 String.Format("v0/session/request/monitoring/queries/{0}?max=1001", queryID),
                 "application/json",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty,
                 roleToUse
             );
         }
 
-        public static string GetQueryProfile(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse)
+        public static string GetQueryProfile(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse)
         {
             return apiGET(
                 appServerUrl,
                 String.Format("v0/session/request/monitoring/query-plan-data/{0}", queryID),
                 "application/json",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty, 
                 roleToUse
             );
         }
 
-        public static string GetQueryProfile(string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse, int retryNumber)
+        public static string GetQueryProfile(string mainAppURL, string appServerUrl, string accountUrl, string organizationID, string userName, string snowSightAuthToken, string queryID, string roleToUse, int retryNumber)
         {
             return apiGET(
                 appServerUrl,
                 String.Format("v0/session/request/monitoring/query-plan-data/{0}?jobRetryAttemptRank={1}", queryID, retryNumber),
                 "application/json",
                 String.Format("{0}::{1}", userName, accountUrl),
-                "https://app.snowflake.com/",
+                String.Format("{0}/", mainAppURL), // "https://app.snowflake.com/",
                 snowSightAuthToken,
                 String.Empty, 
                 roleToUse

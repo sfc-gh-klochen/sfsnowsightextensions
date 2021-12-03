@@ -48,7 +48,7 @@ namespace Snowflake.Powershell
         private static readonly byte[] SUCCESS_RESPONSE = System.Text.Encoding.UTF8.GetBytes(
             "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/>" +
             "<title> SAML Response for Snowflake </title></head>" +
-            "<body>Your identity was confirmed and propagated to Snowflake Powershell. You can close this window now and go back to where you started from." +
+            "<body>Your identity was confirmed and propagated to Snowflake Snowsight Extensions. You can close this window now and go back to where you started from." +
             "</body></html>;"
             );
             
@@ -78,15 +78,38 @@ namespace Snowflake.Powershell
         public string Account { get; set; }
 
         [Parameter(
-            Mandatory = true,
+            Mandatory = false,
             Position = 1,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Main application URL",
+            ParameterSetName = "UserNamePasswordString")]
+        [Parameter(
+            Mandatory = false,
+            Position = 1,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Main application URL",
+            ParameterSetName = "UserNamePasswordPSCredential")]
+        [Parameter(
+            Mandatory = false,
+            Position = 1,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Main application URL",
+            ParameterSetName = "BrowserSSO")]
+        public string MainAppURL { get; set; } = "https://app.snowflake.com";
+
+        [Parameter(
+            Mandatory = true,
+            Position = 2,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Username with which to access account",
             ParameterSetName = "UserNamePasswordString")]
         [Parameter(
             Mandatory = true,
-            Position = 1,
+            Position = 2,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Username with which to access account",
@@ -95,7 +118,7 @@ namespace Snowflake.Powershell
 
         [Parameter(
             Mandatory = true,
-            Position = 2,
+            Position = 3,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Password with which to authenticate",
@@ -104,7 +127,7 @@ namespace Snowflake.Powershell
 
         [Parameter(
             Mandatory = true,
-            Position = 1,
+            Position = 4,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Username and password in Credentials object with which to authenticate",
             ParameterSetName = "UserNamePasswordPSCredential")]
@@ -113,7 +136,7 @@ namespace Snowflake.Powershell
 
         [Parameter(
             Mandatory = true,
-            Position = 3,
+            Position = 5,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Use Browser to authenticate with SSO provider",
@@ -176,13 +199,20 @@ namespace Snowflake.Powershell
 
                 #endregion
 
+                #region Main server URL adjustment
+
+                appUserContext.MainAppUrl = this.MainAppURL;
+                logger.Info("MainAppURL={0}", appUserContext.MainAppUrl);
+
+                #endregion
+
                 #region Account and region validation
 
                 // Get authentication endpoint for the account 
-                string accountEndpointResult = SnowflakeDriver.GetAccountAppEndpoints(this.Account);
+                string accountEndpointResult = SnowflakeDriver.GetAccountAppEndpoints(appUserContext.MainAppUrl, this.Account);
                 if (accountEndpointResult.Length == 0)
                 {
-                    throw new ItemNotFoundException(String.Format("Unable to get account endpoint for account {0}", this.Account));
+                    throw new ItemNotFoundException(String.Format("Unable to get account endpoint for account {0} in {1}", this.Account, appUserContext.MainAppUrl));
                 }
 
                 // Is the account valid?
@@ -190,7 +220,7 @@ namespace Snowflake.Powershell
                 if (JSONHelper.getBoolValueFromJToken(accountAuthenticationEndpointObject, "valid") == false)
                 {                    
                     // {"valid":false}
-                    throw new ItemNotFoundException(String.Format("No valid account endpoint for account {0}", this.Account));
+                    throw new ItemNotFoundException(String.Format("No valid account endpoint for account {0} in {1}", this.Account, appUserContext.MainAppUrl));
                 }
 
                 // {
@@ -207,6 +237,13 @@ namespace Snowflake.Powershell
                 //     "url": "https://sfpscogs_dodievich_sso.west-us-2.azure.snowflakecomputing.com",
                 //     "valid": true
                 // }
+                // {
+                //     "account": "snowhouse",
+                //     "appServerUrl": "https://apps-api-preprod3.c1.us-west-2.aws-dev.app.snowflake.com",
+                //     "region": "preprod3",
+                //     "url": "https://snowhouse.preprod3.int.snowflakecomputing.com:8085",
+                //     "valid": true
+                // }
                 appUserContext.AppServerUrl = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "appServerUrl");
                 appUserContext.AccountUrl = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "url");
                 appUserContext.Region = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "region");
@@ -219,14 +256,14 @@ namespace Snowflake.Powershell
                 logger.Info("AppServerUrl={0}", appUserContext.AppServerUrl);
                 logger.Info("Region={0}", appUserContext.Region);
 
-                loggerConsole.Trace("Account '{0}' in region '{1}' is accessible at '{2}' and served by application server '{3}'", appUserContext.AccountName, appUserContext.Region, appUserContext.AccountUrl, appUserContext.AppServerUrl);
+                loggerConsole.Trace("Account '{0}' in region '{1}' is accessible at '{2}' and served by application server '{3}' in main application '{4}'", appUserContext.AccountName, appUserContext.Region, appUserContext.AccountUrl, appUserContext.AppServerUrl, appUserContext.MainAppUrl);
 
                 #endregion
 
                 #region Snowsight Client ID 
 
                 // Get the client ID of Snowsight for this region
-                string deploymentSnowSightClientIDRedirectResult = SnowflakeDriver.GetSnowSightClientIDInDeployment(appUserContext.AppServerUrl, appUserContext.AccountUrl);
+                string deploymentSnowSightClientIDRedirectResult = SnowflakeDriver.GetSnowSightClientIDInDeployment(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl);
                 if (deploymentSnowSightClientIDRedirectResult.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to get account client ID for account {0}", appUserContext.AccountName));
@@ -580,7 +617,7 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Getting Organization and User context for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Get Org ID and User ID for future use
-                string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext.AppServerUrl, appUserContext.AccountUrl, appUserContext.Region, appUserContext.AccountName, appUserContext.UserName, appUserContext.AuthTokenSnowsight);
+                string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl, appUserContext.Region, appUserContext.AccountName, appUserContext.UserName, appUserContext.AuthTokenSnowsight);
                 if (organizationAndUserContextResult.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Invalid response from getting organization context for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));

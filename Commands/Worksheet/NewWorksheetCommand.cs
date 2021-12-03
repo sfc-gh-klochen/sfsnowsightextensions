@@ -133,7 +133,7 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all worksheets already present
-                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (worksheetsApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException("Invalid response from listing worksheet entities");
@@ -234,7 +234,7 @@ namespace Snowflake.Powershell
                 {
                     // Updating existing worksheet
                     string updateWorksheetApiResult = SnowflakeDriver.UpdateWorksheet(
-                        this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
                         targetWorksheetToReplace.WorksheetID, this.Worksheet.Query, this.Worksheet.Role, this.Worksheet.Warehouse, this.Worksheet.Database, this.Worksheet.Schema);
 
                     worksheetsPayloadObject = JObject.Parse(updateWorksheetApiResult);
@@ -254,7 +254,7 @@ namespace Snowflake.Powershell
                 {
                     // Creating new worksheet
                     string createWorksheetApiResult = SnowflakeDriver.CreateWorksheet(
-                        this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
                         this.Worksheet.WorksheetName);
 
                     if (createWorksheetApiResult.Length == 0)
@@ -267,7 +267,7 @@ namespace Snowflake.Powershell
                     logger.Info("New WorksheetID={0}", newWorksheetID);
 
                     string updateWorksheetApiResult = SnowflakeDriver.UpdateWorksheet(
-                        this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
                         newWorksheetID, this.Worksheet.Query, this.Worksheet.Role, this.Worksheet.Warehouse, this.Worksheet.Database, this.Worksheet.Schema);
 
                     if (updateWorksheetApiResult.Length == 0)
@@ -288,7 +288,7 @@ namespace Snowflake.Powershell
                     loggerConsole.Trace("Running Worksheet {0} ({1})", createdOrUpdatedWorksheet.WorksheetName, createdOrUpdatedWorksheet.WorksheetID);
 
                     string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(
-                        this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
                         createdOrUpdatedWorksheet.WorksheetID, createdOrUpdatedWorksheet.Query, this.Worksheet.Parameters.ToString(Newtonsoft.Json.Formatting.None),
                         createdOrUpdatedWorksheet.Role, createdOrUpdatedWorksheet.Warehouse, createdOrUpdatedWorksheet.Database, createdOrUpdatedWorksheet.Schema);
                 }

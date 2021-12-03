@@ -140,7 +140,7 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all worksheets already present
-                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
                 if (worksheetsApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException("Invalid response from listing worksheet entities");
@@ -214,7 +214,7 @@ namespace Snowflake.Powershell
 
                     // Execute the worksheet
                     string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(
-                        this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
                         worksheet.WorksheetID, worksheet.Query, worksheet.Parameters.ToString(Newtonsoft.Json.Formatting.None),
                         worksheet.Role, worksheet.Warehouse, worksheet.Database, worksheet.Schema);
 

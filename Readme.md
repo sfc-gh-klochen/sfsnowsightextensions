@@ -70,17 +70,17 @@ The output should look like this:
 ```
 CommandType     Name                                               Version     Source
 -----------     ----                                               -------     ------
-Cmdlet          Connect-SFApp                                      2021.10.11.0 SnowflakePS
-Cmdlet          Get-SFDashboards                                   2021.10.11.0 SnowflakePS
-Cmdlet          Get-SFFolders                                      2021.10.11.0 SnowflakePS
-Cmdlet          Get-SFQueryProfile                                 2021.10.11.0 SnowflakePS
-Cmdlet          Get-SFWorksheets                                   2021.10.11.0 SnowflakePS
-Cmdlet          Invoke-SFDashboard                                 2021.10.11.0 SnowflakePS
-Cmdlet          Invoke-SFWorksheet                                 2021.10.11.0 SnowflakePS
-Cmdlet          New-SFDashboard                                    2021.10.11.0 SnowflakePS
-Cmdlet          New-SFWorksheet                                    2021.10.11.0 SnowflakePS
-Cmdlet          Remove-SFDashboard                                 2021.10.11.0 SnowflakePS
-Cmdlet          Remove-SFWorksheet                                 2021.10.11.0 SnowflakePS
+Cmdlet          Connect-SFApp                                      2021.12.02.0 SnowflakePS
+Cmdlet          Get-SFDashboards                                   2021.12.02.0 SnowflakePS
+Cmdlet          Get-SFFolders                                      2021.12.02.0 SnowflakePS
+Cmdlet          Get-SFQueryProfile                                 2021.12.02.0 SnowflakePS
+Cmdlet          Get-SFWorksheets                                   2021.12.02.0 SnowflakePS
+Cmdlet          Invoke-SFDashboard                                 2021.12.02.0 SnowflakePS
+Cmdlet          Invoke-SFWorksheet                                 2021.12.02.0 SnowflakePS
+Cmdlet          New-SFDashboard                                    2021.12.02.0 SnowflakePS
+Cmdlet          New-SFWorksheet                                    2021.12.02.0 SnowflakePS
+Cmdlet          Remove-SFDashboard                                 2021.12.02.0 SnowflakePS
+Cmdlet          Remove-SFWorksheet                                 2021.12.02.0 SnowflakePS
 ```
 
 ## Connect-SFApp
@@ -95,11 +95,11 @@ NAME
     Connect-SFApp
 
 SYNTAX
-    Connect-SFApp [-Account] <string> [-UserName] <string> [-Password] <securestring> [<CommonParameters>]
+    Connect-SFApp [-Account] <string> [[-MainAppURL] <string>] [-UserName] <string> [-Password] <securestring> [<CommonParameters>]
 
-    Connect-SFApp [-Account] <string> [-Credential] <pscredential> [<CommonParameters>]
+    Connect-SFApp [-Account] <string> [[-MainAppURL] <string>] [-Credential] <pscredential> [<CommonParameters>]
 
-    Connect-SFApp [-Account] <string> [-UserName] <string> [-SSO] [<CommonParameters>]
+    Connect-SFApp [-Account] <string> [[-MainAppURL] <string>] [-UserName] <string> [-SSO] [<CommonParameters>]
 ```
 
 ### Connect-SFApp Parameter - Account
@@ -110,6 +110,11 @@ Account URL | Account Name
 https://aws_cas1.snowflakecomputing.com | aws_cas1
 https://customer.canada-central.azure.snowflakecomputing.com | customer.canada-central.azure
 https://sfpscogs_dodievich_sso.west-us-2.azure.snowflakecomputing.com | sfpscogs_dodievich_sso.west-us-2.azure
+
+### Connect-SFApp Parameter - MainAppURL
+Optional parameter. By default it is https://app.snowflake.com, which is a production environment of Snowsight. 
+
+Pass a real URL to point at a different endpoint (QA/DEV), if you have access to it.
 
 ### Connect-SFApp Parameter - UserName
 Username of user to authenticate 
