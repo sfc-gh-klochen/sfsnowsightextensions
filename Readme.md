@@ -927,7 +927,7 @@ Remove specific Worksheet by ID:
 PS > Remove-SFDashboard -AuthContext $appContext -DashboardID mydashboardid
 ```
 
-## Invoke-SFWorksheet
+## Invoke-SFDashboard
 Runs Dashboards matching name, ID, file or object, refreshing the results.
 
 ```
