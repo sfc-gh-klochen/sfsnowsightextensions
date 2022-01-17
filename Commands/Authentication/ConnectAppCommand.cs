@@ -566,7 +566,7 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 3, Converting OAuth redirect into authentication cookie
-                string authenticationTokenWebPageResult = SnowflakeDriver.GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode);
+                string authenticationTokenWebPageResult = SnowflakeDriver.GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode, appUserContext.MainAppUrl);
                 if (authenticationTokenWebPageResult.Length == 0)
                 {
                     throw new InvalidCredentialException(String.Format("Invalid response from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
