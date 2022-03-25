@@ -102,10 +102,10 @@ namespace Snowflake.Powershell
                 "application/json");
         }
 
-        public static string GetAuthenticationTokenFromOAuthRedirectToken(string appServerUrl, string accountUrl, string oAuthRedirectCode)
+        public static string GetAuthenticationTokenFromOAuthRedirectToken(string appServerUrl, string accountUrl, string oAuthRedirectCode, string mainAppURL)
         {
             string csrf = "SnowflakePS";
-            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"https://app.snowflake.com\"}}", csrf, accountUrl);
+            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
             
             return apiGET(
                 appServerUrl,
