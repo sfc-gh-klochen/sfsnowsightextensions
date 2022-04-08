@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+﻿// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -72,7 +72,7 @@ namespace Snowflake.Powershell
         {
             try
             {
-                string foldersApiResult = SnowflakeDriver.GetFolders(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string foldersApiResult = SnowflakeDriver.GetFolders(this.AuthContext);
                 if (foldersApiResult.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Invalid response from listing folder entities"));

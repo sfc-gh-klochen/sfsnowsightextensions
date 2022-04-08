@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -158,7 +158,7 @@ namespace Snowflake.Powershell
                     this.SQLTextHash = JSONHelper.getLongValueFromJToken(queryObject, "sqlTextHash");
                     this.Tag = JSONHelper.getStringValueFromJToken(queryObject, "queryTag");
                     
-                    this.URL = String.Format("https://app.snowflake.com/{0}/{1}/compute/query-history/{2}", authContext.Region, authContext.AccountFullName, this.QueryID);
+                    this.URL = String.Format("{0}/{1}/{2}/compute/history/queries/{3}/detail", authContext.MainAppUrl,  authContext.Region, authContext.AccountFullName, this.QueryID);
 
                     this.Status = JSONHelper.getStringValueFromJToken(queryObject, "status");
                     this.State = JSONHelper.getStringValueFromJToken(queryObject, "state");

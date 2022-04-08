@@ -21,7 +21,7 @@ Install Powershell 7 from [Powershell GitHub Releases](https://github.com/PowerS
 ## Install on Windows
 Download `SnowflakePS.win.<version>.zip`, save and extract the archive.
 
-Open your terminal (I recommend [Windows Terminal](https://github.com/microsoft/terminal)) with Powershell.
+Open your terminal ([Windows Terminal](https://github.com/microsoft/terminal) is Recommendated) with Powershell.
 
 Run this command to load Snowflake Powershell module:
 ```
@@ -31,7 +31,7 @@ PS > Import-Module <path to where you extracted binaries>\SnowflakePS.psd1
 ## Install on OSX
 Download `SnowflakePS.osx.<version>.zip` but do not extract the archive yet.
 
-Open your terminal (I recommend [iTerm2](https://iterm2.com/)) and change working directory to where you saved the file to. 
+Open your terminal ([iTerm2](https://iterm2.com/) is recommended) and change working directory to where you saved the file to. 
 
 To avoid OS security warnings, run this command in the shell to remove the quarantine attribute:
 ```
@@ -68,19 +68,22 @@ PS > Get-Command -Module SnowflakePS
 
 The output should look like this:
 ```
-CommandType     Name                                               Version     Source
------------     ----                                               -------     ------
-Cmdlet          Connect-SFApp                                      2021.12.02.0 SnowflakePS
-Cmdlet          Get-SFDashboards                                   2021.12.02.0 SnowflakePS
-Cmdlet          Get-SFFolders                                      2021.12.02.0 SnowflakePS
-Cmdlet          Get-SFQueryProfile                                 2021.12.02.0 SnowflakePS
-Cmdlet          Get-SFWorksheets                                   2021.12.02.0 SnowflakePS
-Cmdlet          Invoke-SFDashboard                                 2021.12.02.0 SnowflakePS
-Cmdlet          Invoke-SFWorksheet                                 2021.12.02.0 SnowflakePS
-Cmdlet          New-SFDashboard                                    2021.12.02.0 SnowflakePS
-Cmdlet          New-SFWorksheet                                    2021.12.02.0 SnowflakePS
-Cmdlet          Remove-SFDashboard                                 2021.12.02.0 SnowflakePS
-Cmdlet          Remove-SFWorksheet                                 2021.12.02.0 SnowflakePS
+CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Cmdlet          Connect-SFApp                                      2022.4.8.0 SnowflakePS
+Cmdlet          Get-SFDashboards                                   2022.4.8.0 SnowflakePS
+Cmdlet          Get-SFFilters                                      2022.4.8.0 SnowflakePS
+Cmdlet          Get-SFFolders                                      2022.4.8.0 SnowflakePS
+Cmdlet          Get-SFQueryProfile                                 2022.4.8.0 SnowflakePS
+Cmdlet          Get-SFWorksheets                                   2022.4.8.0 SnowflakePS
+Cmdlet          Invoke-SFDashboard                                 2022.4.8.0 SnowflakePS
+Cmdlet          Invoke-SFWorksheet                                 2022.4.8.0 SnowflakePS
+Cmdlet          New-SFDashboard                                    2022.4.8.0 SnowflakePS
+Cmdlet          New-SFFilter                                       2022.4.8.0 SnowflakePS
+Cmdlet          New-SFWorksheet                                    2022.4.8.0 SnowflakePS
+Cmdlet          Remove-SFDashboard                                 2022.4.8.0 SnowflakePS
+Cmdlet          Remove-SFFilter                                    2022.4.8.0 SnowflakePS
+Cmdlet          Remove-SFWorksheet                                 2022.4.8.0 SnowflakePS
 ```
 
 ## Connect-SFApp
@@ -111,22 +114,24 @@ https://aws_cas1.snowflakecomputing.com | aws_cas1
 https://customer.canada-central.azure.snowflakecomputing.com | customer.canada-central.azure
 https://sfpscogs_dodievich_sso.west-us-2.azure.snowflakecomputing.com | sfpscogs_dodievich_sso.west-us-2.azure
 
+PrivateLink URLs are supported but may not work for you if you have network access policies blocking the client IP addresses.
+
 ### Connect-SFApp Parameter - MainAppURL
 Optional parameter. By default it is https://app.snowflake.com, which is a production environment of Snowsight. 
 
 Pass a real URL to point at a different endpoint (QA/DEV), if you have access to it.
 
 ### Connect-SFApp Parameter - UserName
-Username of user to authenticate 
+Username of user to authenticate.
 
 ### Connect-SFApp Parameter - Password
-Password of user as secure string
+Password of user as secure string.
 
 ### Connect-SFApp Parameter - Credential
-Username/password combination of user to authenticate as PSCredential
+Username/password combination of user to authenticate as PSCredential.
 
 ### Connect-SFApp Parameter - SSO
-When specified, browser authentication with SSO provider is used
+When specified, browser authentication with SSO provider is used.
 
 ### Connect-SFApp - Prompt for Username and Password
 You will get prompted for username and password:
@@ -837,7 +842,7 @@ Option | Result
 CreateNew | Create new Dashboard with the same name but new ID
 Skip | Skip creating Dashboard (Default) 
 
-## New-SFDashboard - Create or Update Dashboard From Worksheet Variable
+### New-SFDashboard - Create or Update Dashboard From Worksheet Variable
 Create Dashboard from `$dashboard` variable that was either retrieved from Account or loaded from previously saved file:
 ```
 PS > New-SFDashboard -AuthContext $appContext -Dashboard $dashboard -ActionIfExists CreateNew
@@ -900,6 +905,7 @@ SYNTAX
 
     Remove-SFDashboard [-AuthContext] <AppUserContext> [-DashboardID] <string> [<CommonParameters>]
 ```
+
 ### Remove-SFDashboard Parameter - AuthContext
 Authentication context from Connect-SFApp command.
 
@@ -987,7 +993,7 @@ Run all Dashboards matching this name from Dashboard object:
 PS > Invoke-SFDashboard -AuthContext $authDO -Dashboard $dashboardObject
 ```
 
-### Invoke-SFDashboard - Invoke Worksheet by File
+### Invoke-SFDashboard - Invoke Dashboard by File
 Run all Dashboards matching this name from Dashboard file:
 ```
 PS > Invoke-SFDashboard -AuthContext $authDO -DashboardFile "C:\path\to\file\Dashboard.sfpscogs_dodievich_sso.Execute Dashboard Test.Wwhwx0o8.json"
@@ -995,6 +1001,237 @@ Running Dashboard Execute Dashboard Test (Wwhwx0o8) with 2 Worksheets
 Executed 1 objects
 Execution took 00:00:00.2708688 (270 ms)
 ```
+
+## Get-SFFilters
+Returns list of all Filters in the Account as an array of Filter objects that can be manipulated directly and saved to a file.
+
+```
+PS > Get-SFFilters -?
+
+NAME
+    Get-SFFilters
+
+SYNTAX
+    Get-SFFilters [-AuthContext] <AppUserContext> [<CommonParameters>]
+```
+
+### Get-SFFilters Parameter - AuthContext
+Authentication context from Connect-SFApp command.
+
+### Get-SFFilters - Retrieve List of Filters
+Retrieve the list of Filters into `$filters` variable:
+```
+PS > Get-SFFilters -AuthContext $appContext
+Found Filter Date range (daterange) [daterange]
+Found Filter Date bucket (datebucket) [datebucket]
+Found Filter Time zone (timezone) [timezone]
+Found Filter Schema (schema) [query]
+Getting Query Details for Filter Schema (schema) [query]
+Found Worksheet Param Query (3wTm7pTHOQy)
+Found Filter TimeUnitType (time_unit_type) [manual]
+Found Filter TimeUnitValue (time_unit_value) [manual]
+Found Filter OrderStatus (orderstatus) [query]
+Getting Query Details for Filter OrderStatus (orderstatus) [query]
+...
+Getting Query Details for Filter testqueryfilter1 (testqueryfilter1) [query]
+Retrieved 16 Filters
+Execution took 00:00:02.9268173 (2926 ms)
+```
+
+### Get-SFFilters - View Single Filter
+View details of single Filter:
+```
+PS > $filters[0] | Format-List
+
+Description        : 
+Keyword            : account
+DisplayName        : Account
+Scope              : org
+Type               : query
+Version            : 1
+WorksheetID        : icqOJDRRU8
+Worksheet          : Worksheet: Param Query (icqOJDRRU8) in account aws_cas1 is owned by DSILVA (291224489264) with query text:
+                     select distinct account from MonthlyCustomerStats;
+Role               : ACCOUNTADMIN
+Warehouse          : DSILVA_WH
+Database           : 
+Schema             : 
+Configuration      : {scope, type, keyword, label…}
+FileSystemSafeName : Filter.aws_cas1.query.account.json
+_CreatedWith       : Snowflake Snowsight Extensions
+_CreatedVersion    : 2022.4.8.0
+AccountName        : aws_cas1
+AccountFullName    : aws_cas1
+AccountUrl         : https://aws_cas1.snowflakecomputing.com
+OrganizationID     : 257859291703
+Region             : us-west-2
+```
+
+### Get-SFFilter - Access Filter by Keyword Name
+Convert Worksheets in `$worksheets` array to `$worksheetsHash` hash table:
+
+```
+PS > $filtersHash = @{}; $filters | foreach {$filtersHash[$_.Keyword] = $_}; $filtersHash
+
+Name                           Value
+----                           -----
+testfilterkeywordtesttest      Filter: Test Filter List Display Name (Test Filter Description) of org scope is used as testfilterkeywordtesttest in account aws_cas1 is ran by PROD_SYSADMIN role in PROD_WH warehouse
+timezone                       Filter: Time zone (A time zone) of global scope is used as timezone in account aws_cas1 is ran by  role in  warehouse
+testtest                       Filter: TestTest (testtest) of org scope is used as testtest in account aws_cas1 is ran by SYSADMIN role in  warehouse
+testqueryfilter1               Filter: testqueryfilter1 (testqueryfilter1) of org scope is used as testqueryfilter1 in account aws_cas1 is ran by SYSADMIN role in DODIEVICH_LOAD_WH warehouse
+testfilterlistkeyword          Filter: Test Filter List Display Name (Test Filter Description) of org scope is used as testfilterlistkeyword in account aws_cas1 is ran by SYSADMIN role in DODIEVICH_LOAD_WH warehouse
+schema                         Filter: Schema (Custom Schema Filter) of org scope is used as schema in account aws_cas1 is ran by SYSADMIN role in DSILVA_WH warehouse
+orderstatus                    Filter: OrderStatus (From tpc data) of org scope is used as orderstatus in account aws_cas1 is ran by SYSADMIN role in ADMIN_WH warehouse
+account                        Filter: Account () of org scope is used as account in account aws_cas1 is ran by ACCOUNTADMIN role in DSILVA_WH warehouse
+```
+
+Get Filter by Keyword from `$filtersHash` hashtable:
+```
+PS > $filtersHash["orderstatus"]
+
+DisplayName                         Keyword                   Type                      Scope
+-----------                         -------                   ----                      -----
+OrderStatus                         orderstatus               query                     org
+```
+
+### Get-SFFilters - Save All Filters to Local Files
+Save all Filters to files:
+```
+PS > $filters | foreach {$_.SaveToFolder("path/to/folder")}
+```
+
+### Get-SFFilters - Save Single Filter to Local File
+Save single Filter from `$filters` array to file, specifying its name:
+```
+PS > $filters[0].SaveToFile("path/to/folder/myfilter.json")
+```
+Save single Filter from `$filters` array to folder with the default filename specified by `FileSystemSafeName` property:
+```
+PS > $filters[0].SaveToFolder("path/to/folder")
+```
+
+### Get-SFFilters - Get Single Filter from Local File
+Load Filter from file into a variable:
+
+```
+PS > $filter = Get-Content 'path/to/folder/myfilter.json' | ConvertFrom-JSON
+```
+
+## New-SFFilter
+Creates new or updates an existing Filter in the Account.
+
+```
+PS > New-SFFilter -?
+
+NAME
+    New-SFFilter
+
+SYNTAX
+    New-SFFilter [-AuthContext] <AppUserContext> [[-ActionIfExists] {Overwrite | Skip}] [<CommonParameters>]
+
+    New-SFFilter [-AuthContext] <AppUserContext> [-Filter] <Filter> [[-ActionIfExists] {Overwrite | Skip}] [<CommonParameters>]
+
+    New-SFFilter [-AuthContext] <AppUserContext> [-FilterFile] <string> [[-ActionIfExists] {Overwrite | Skip}] [<CommonParameters>]
+```
+
+### New-SFFilter Parameter - AuthContext
+Authentication context from Connect-SFApp command.
+
+### New-SFFilter Parameter - FilterFile
+Path to the JSON file for Worksheet to create or update.
+
+### New-SFFilter Parameter - Filter
+Worksheet object to create or update.
+
+### New-SFFilter Parameter - ActionIfExists
+Specifies what to do if Account contain Worksheet with the same keyword:
+
+Option | Result
+-- | --
+Overwrite | Update existing Filter with the same keyword
+Skip | Skip creating Filter (Default) 
+
+### New-SFFilter - Create or Update Worksheet From List of Worksheets
+Create or update Filter from one of the Filters objects in `$filters` array:
+```
+PS > New-SFFilter -AuthContext $appContext -Filter $filters[4] -ActionIfExists Overwrite
+Getting Query Details for Filter OrderPriority (orderpriority) [query]
+Found Worksheet Param Query (4YGIJWpZapH)
+Existing Worksheet OrderPriority (orderpriority) will be overwritten because ActionIfExists is Overwrite
+Running Worksheet Param Query (4YGIJWpZapH)
+
+DisplayName                         Keyword                   Type                      Scope
+-----------                         -------                   ----                      -----
+OrderPriority                       orderpriority             query                     org
+Execution took 00:00:05.6899666 (5689 ms)
+```
+
+### New-SFWorksheet - Create or Update Worksheet From Worksheet File
+Create or update Filter from Filter file:
+```
+PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Overwrite
+Getting Query Details for Filter OrderPriority (orderpriority) [query]
+Found Worksheet Param Query (4YGIJWpZapH)
+Existing Worksheet OrderPriority (orderpriority) will be overwritten because ActionIfExists is Overwrite
+Running Worksheet Param Query (4YGIJWpZapH)
+
+DisplayName                         Keyword                   Type                      Scope
+-----------                         -------                   ----                      -----
+OrderPriority                       orderpriority             query                     org
+Execution took 00:00:01.1230870 (1123 ms)
+```
+
+### New-SFWorksheet - Create New Worksheet Only If It Does Not Exists From Worksheet File
+Create new Filter from Filter file only if it doesn't already exist:
+```
+PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Skip
+Getting Query Details for Filter OrderPriority (orderpriority) [query]
+Found Worksheet Param Query (4YGIJWpZapH)
+Existing Worksheet OrderPriority (orderpriority) will be ignored and nothing will be done because ActionIfExists is Skip
+Execution took 00:00:00.4108136 (410 ms)
+```
+
+### New-SFWorksheet - Create Multiple New Worksheets from Worksheet Objects
+Create new and overwrite existing Filters from list of Filters in `$worksheets` array:
+```
+PS > $filters | foreach {New-SFFilter -AuthContext $appContext -Filter $_ -ActionIfExists Overwrite}
+```
+
+## Remove-SFFilter
+Removes single Filter from Account.
+
+```
+PS > Remove-SFFilter -?
+
+NAME
+    Remove-SFFilter
+
+SYNTAX
+    Remove-SFFilter [-AuthContext] <AppUserContext> [-FilterKeyword] <string> [<CommonParameters>]
+
+    Remove-SFFilter [-AuthContext] <AppUserContext> [-Filter] <Filter> [<CommonParameters>]
+
+    Remove-SFFilter [-AuthContext] <AppUserContext> [-FilterFile] <string> [<CommonParameters>]
+```
+
+### Remove-SFFilter Parameter - AuthContext
+Authentication context from Connect-SFApp command.
+
+### Remove-SFFilter Parameter - FilterKeyword
+ID of Filter to remove.
+
+### Remove-SFFilter Parameter - Filter
+Filter object to remove.
+
+### Remove-SFFilter Parameter - FilterFile
+File representation of Filter to remove.
+
+### Remove-SFFilter - Remove Filter by ID
+Remove specific Filter by ID:
+```
+PS > Remove-SFFilter -AuthContext $appContext -FilterKeyword myfiltertodelete
+```
+
 
 ## Get-SFQueryProfile
 Retrieves query profile information for Query.
@@ -1053,7 +1290,7 @@ PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs ($queriesList | foreach {$_
 ```
 
 # Development
-* Install [.NET 5 SDK](https://dotnet.microsoft.com/download/dotnet/5.0)
+* Install [.NET 6 SDK](https://dotnet.microsoft.com/download/dotnet/6.0)
 * Clone and open the project in VSCode
 * Restore project (Palette -> .NET: Restore All Projects)
 * Build the project (Palette -> Tasks: Run build task -> Build)

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Snowflake Inc. All rights reserved.
+# Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 # Licensed under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
@@ -27,7 +27,7 @@
 RootModule = 'SnowflakePS.dll'
 
 # Version number of this module.
-ModuleVersion = '2021.12.02.0'
+ModuleVersion = '2022.4.8.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -42,7 +42,7 @@ Author = 'Daniel Odievich (daniel.odievich@snowflake.com)'
 CompanyName = 'Snowflake Computing'
 
 # Copyright statement for this module
-Copyright = 'Copyright © 2021'
+Copyright = 'Copyright © 2021-2022'
 
 # Description of the functionality provided by this module
 Description = 'Snowflake Snowsight Extensions provide access to Snowflake features via console'
@@ -87,7 +87,13 @@ FormatsToProcess = @("SnowflakePS.format.ps1xml")
 FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = @("Connect-SFApp", "Get-SFWorksheets", "New-SFWorksheet", "Remove-SFWorksheet", "Invoke-SFWorksheet", "Get-SFFolders", "Get-SFDashboards", "New-SFDashboard", "Remove-SFDashboard", "Invoke-SFDashboard", "Get-SFQueryProfile")
+CmdletsToExport = @(
+    "Connect-SFApp", 
+    "Get-SFQueryProfile", 
+    "Get-SFWorksheets", "New-SFWorksheet", "Remove-SFWorksheet", "Invoke-SFWorksheet", 
+    "Get-SFFolders", 
+    "Get-SFDashboards", "New-SFDashboard", "Remove-SFDashboard", "Invoke-SFDashboard", 
+    "Get-SFFilters", "New-SFFilter", "Remove-SFFilter")
 
 # Variables to export from this module
 VariablesToExport = '*'

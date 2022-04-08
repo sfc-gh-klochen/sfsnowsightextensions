@@ -14,7 +14,7 @@
                 "-NoExit",
                 "-NoProfile",
                 "-Command",
-                "Import-Module ${workspaceFolder}/bin/Debug/net5.0/SnowflakePS.psd1",
+                "Import-Module ${workspaceFolder}/bin/Debug/net6.0/SnowflakePS.psd1",
             ],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

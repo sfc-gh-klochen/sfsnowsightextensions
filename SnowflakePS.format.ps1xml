@@ -153,7 +153,7 @@
               </WideItem>
             </WideEntry>
           </WideEntries>
-       </WideControl>      
+       </WideControl>
     </View>
 
     <View>
@@ -215,7 +215,7 @@
               </WideItem>
             </WideEntry>
           </WideEntries>
-       </WideControl>      
+       </WideControl>
     </View>
 
     <View>
@@ -277,7 +277,63 @@
               </WideItem>
             </WideEntry>
           </WideEntries>
-       </WideControl>      
+       </WideControl>
+    </View>
+
+    <View>
+      <Name>Snowflake.Powershell.Filter</Name>
+      <ViewSelectedBy>
+        <TypeName>Snowflake.Powershell.Filter</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Width>35</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Width>25</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Width>25</Width>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>DisplayName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Keyword</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Type</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Scope</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+    <View>
+      <Name>Snowflake.Powershell.Filter Wide</Name>
+      <ViewSelectedBy>
+        <TypeName>Snowflake.Powershell.Filter</TypeName>
+      </ViewSelectedBy>
+      <WideControl>
+          <WideEntries>
+            <WideEntry>
+              <WideItem>
+                <PropertyName>Description</PropertyName>
+              </WideItem>
+            </WideEntry>
+          </WideEntries>
+       </WideControl>
     </View>    
   </ViewDefinitions>
 </Configuration>

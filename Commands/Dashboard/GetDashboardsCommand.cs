@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+﻿// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -72,10 +72,10 @@ namespace Snowflake.Powershell
         {
             try
             {
-                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext);
                 if (dashboardsApiResult.Length == 0)
                 {
-                    throw new ItemNotFoundException("Invalid response from listing dashboard entities");
+                    throw new ItemNotFoundException("Invalid response from listing Dashboard entities");
                 }
                 
                 JObject dashboardsPayloadObject = JObject.Parse(dashboardsApiResult);
@@ -113,9 +113,7 @@ namespace Snowflake.Powershell
                             loggerConsole.Trace("Worksheet {0} ({1}), details of Chart {2} ({3})", worksheet.WorksheetName, worksheet.WorksheetID, chart.ChartName, chart.ChartID);
                             
                             // Get chart details
-                            string chartDetailApiResult = SnowflakeDriver.GetChart(
-                                this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
-                                chart.WorksheetID, chart.ChartID);
+                            string chartDetailApiResult = SnowflakeDriver.GetChart(this.AuthContext, chart.WorksheetID, chart.ChartID);
                             
                             if (chartDetailApiResult.Length == 0)
                             {

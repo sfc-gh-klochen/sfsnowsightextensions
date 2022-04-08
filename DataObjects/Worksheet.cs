@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -90,6 +90,9 @@ namespace Snowflake.Powershell
 
             this.WorksheetID = JSONHelper.getStringValueFromJToken(entityObject, "entityId");
             this.WorksheetName = JSONHelper.getStringValueFromJToken(entityObject["info"], "name");
+
+            this.Query = String.Empty;
+            this.FolderName = String.Empty;
 
             JObject entityDetailObject = (JObject)JSONHelper.getJTokenValueFromJToken(queriesObject, this.WorksheetID);
             if (entityDetailObject != null)
@@ -211,6 +214,9 @@ namespace Snowflake.Powershell
 
             this.WorksheetID = worksheetID;
 
+            this.Query = String.Empty;
+            this.FolderName = String.Empty;
+
             JObject entityDetailObject = (JObject)JSONHelper.getJTokenValueFromJToken(queriesObject, this.WorksheetID);
             if (entityDetailObject != null)
             {
@@ -312,16 +318,30 @@ namespace Snowflake.Powershell
             int queryLength = this.Query.Length;
             if (queryLength > 256) queryLength = 256;
 
-            return String.Format(
-                "Worksheet: {0} ({1}) in folder {2} ({3}) in account {4} is owned by {5} ({6}) with query text:\n{7}",
-                this.WorksheetName,
-                this.WorksheetID,
-                this.FolderName,
-                this.FolderID,
-                this.AccountFullName,
-                this.OwnerUserName,
-                this.OwnerUserID,
-                this.Query.Substring(0, queryLength));
+            if (this.FolderName.Length == 0)
+            {
+                return String.Format(
+                    "Worksheet: {0} ({1}) in account {2} is owned by {3} ({4}) with query text:\n{5}",
+                    this.WorksheetName,
+                    this.WorksheetID,
+                    this.AccountFullName,
+                    this.OwnerUserName,
+                    this.OwnerUserID,
+                    this.Query.Substring(0, queryLength));
+            }
+            else
+            {
+                return String.Format(
+                    "Worksheet: {0} ({1}) in folder {2} ({3}) in account {4} is owned by {5} ({6}) with query text:\n{7}",
+                    this.WorksheetName,
+                    this.WorksheetID,
+                    this.FolderName,
+                    this.FolderID,
+                    this.AccountFullName,
+                    this.OwnerUserName,
+                    this.OwnerUserID,
+                    this.Query.Substring(0, queryLength));
+            }
         }        
     }
 }

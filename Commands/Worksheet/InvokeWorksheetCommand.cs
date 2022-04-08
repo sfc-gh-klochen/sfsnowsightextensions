@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -140,10 +140,10 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all worksheets already present
-                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext);
                 if (worksheetsApiResult.Length == 0)
                 {
-                    throw new ItemNotFoundException("Invalid response from listing worksheet entities");
+                    throw new ItemNotFoundException("Invalid response from listing Worksheet entities");
                 }
 
                 JObject worksheetsPayloadObject = JObject.Parse(worksheetsApiResult);
@@ -213,8 +213,7 @@ namespace Snowflake.Powershell
                     loggerConsole.Trace("Running Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
 
                     // Execute the worksheet
-                    string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(
-                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                    string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(this.AuthContext, 
                         worksheet.WorksheetID, worksheet.Query, worksheet.Parameters.ToString(Newtonsoft.Json.Formatting.None),
                         worksheet.Role, worksheet.Warehouse, worksheet.Database, worksheet.Schema);
 

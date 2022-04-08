@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+﻿// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -72,10 +72,10 @@ namespace Snowflake.Powershell
         {
             try
             {
-                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string worksheetsApiResult = SnowflakeDriver.GetWorksheets(this.AuthContext);
                 if (worksheetsApiResult.Length == 0)
                 {
-                    throw new ItemNotFoundException(String.Format("Invalid response from listing worksheet entities"));
+                    throw new ItemNotFoundException(String.Format("Invalid response from listing Worksheet entities"));
                 }
 
                 JObject worksheetsPayloadObject = JObject.Parse(worksheetsApiResult);

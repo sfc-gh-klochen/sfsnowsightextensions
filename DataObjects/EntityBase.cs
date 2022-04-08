@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -13,6 +13,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+using NLog;
 using System;
 using System.IO;
 using System.Reflection;
@@ -24,6 +25,8 @@ namespace Snowflake.Powershell
         // Version metadata
         public string _CreatedWith { get; set; } = "Snowflake Snowsight Extensions";
         public string _CreatedVersion { get; set; } = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+        private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
 
         // Account level metadata
         public string AccountName { get; set; }
@@ -39,6 +42,7 @@ namespace Snowflake.Powershell
         {
             string fullPath = Path.GetFullPath(fileName);
             FileIOHelper.WriteObjectToFile(this, fullPath);
+            loggerConsole.Info("Saved {0}", fullPath);
         }
 
         public void SaveToFolder(string folderName)

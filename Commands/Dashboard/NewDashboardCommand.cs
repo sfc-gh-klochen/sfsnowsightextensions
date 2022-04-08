@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -128,10 +128,10 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all Dashboards already present
-                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext);
                 if (dashboardsApiResult.Length == 0)
                 {
-                    throw new ItemNotFoundException("Invalid response from listing dashboard entities");
+                    throw new ItemNotFoundException("Invalid response from listing Dashboard entities");
                 }
 
                 Dashboard targetDashboardToReplace = null;
@@ -208,7 +208,7 @@ namespace Snowflake.Powershell
 
                         case "Skip":
                             logger.Info("Found {0} to overwrite but ActionIfExists={1}, will skip", targetDashboardToReplace, this.ActionIfExists);
-                            loggerConsole.Info("Existing Dashboard {0} ({1}) will be ignored and nothing will be done because ActionIfExists is {1}", targetDashboardToReplace.DashboardName, targetDashboardToReplace.DashboardID, this.ActionIfExists);
+                            loggerConsole.Info("Existing Dashboard {0} ({1}) will be ignored and nothing will be done because ActionIfExists is {2}", targetDashboardToReplace.DashboardName, targetDashboardToReplace.DashboardID, this.ActionIfExists);
                         
                             return;
 
@@ -218,7 +218,7 @@ namespace Snowflake.Powershell
                 }
                 else
                 {
-                    logger.Info("No match for {0}, new one will be created", this.Dashboard);
+                    logger.Info("No match for Dashboard {0}, new one will be created", this.Dashboard);
                     loggerConsole.Info("Creating new Dashboard {0}", this.Dashboard.DashboardName);
 }
 
@@ -233,9 +233,7 @@ namespace Snowflake.Powershell
                 else
                 {
                     // Creating new Dashboard
-                    string createDashboardApiResult = SnowflakeDriver.CreateDashboard(
-                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
-                        this.Dashboard.DashboardName, this.Dashboard.Role, this.Dashboard.Warehouse);
+                    string createDashboardApiResult = SnowflakeDriver.CreateDashboard(this.AuthContext, this.Dashboard.DashboardName, this.Dashboard.Role, this.Dashboard.Warehouse);
 
                     if (createDashboardApiResult.Length == 0)
                     {
@@ -257,9 +255,7 @@ namespace Snowflake.Powershell
                         loggerConsole.Trace("{0}/{1}: Creating new Worksheet for {2} ({3})", i + 1, this.Dashboard.Worksheets.Count, worksheetToCreate.WorksheetName, worksheetToCreate.WorksheetID);
 
                         // Creating new worksheet
-                        string createWorksheetApiResult = SnowflakeDriver.CreateWorksheet(
-                            this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
-                            worksheetToCreate.WorksheetName, newDashboardID);
+                        string createWorksheetApiResult = SnowflakeDriver.CreateWorksheet(this.AuthContext, worksheetToCreate.WorksheetName, newDashboardID);
 
                         if (createWorksheetApiResult.Length == 0)
                         {
@@ -270,9 +266,7 @@ namespace Snowflake.Powershell
                         string newWorksheetID = JSONHelper.getStringValueFromJToken(createWorksheetPayloadObject, "pid");
                         logger.Info("Original WorksheetID={0} -> New WorksheetID={1}", worksheetToCreate.WorksheetID, newWorksheetID);
 
-                        string updateWorksheetApiResult = SnowflakeDriver.UpdateWorksheet(
-                            this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
-                            newWorksheetID, worksheetToCreate.Query, worksheetToCreate.Role, worksheetToCreate.Warehouse, worksheetToCreate.Database, worksheetToCreate.Schema);
+                        string updateWorksheetApiResult = SnowflakeDriver.UpdateWorksheet(this.AuthContext, newWorksheetID, worksheetToCreate.Query, worksheetToCreate.Role, worksheetToCreate.Warehouse, worksheetToCreate.Database, worksheetToCreate.Schema);
 
                         if (updateWorksheetApiResult.Length == 0)
                         {
@@ -298,9 +292,7 @@ namespace Snowflake.Powershell
                             loggerConsole.Trace("Creating new Chart {0} ({1}) in {2} ({3})", chartToCreate.ChartName, chartToCreate.ChartID, worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
 
                             // Creating new worksheet
-                            string createChartApiResult = SnowflakeDriver.CreateChartFromWorksheet(
-                                this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight,
-                                worksheetCreated.WorksheetID, chartToCreate.Configuration.ToString(Newtonsoft.Json.Formatting.None));
+                            string createChartApiResult = SnowflakeDriver.CreateChartFromWorksheet(this.AuthContext, worksheetCreated.WorksheetID, chartToCreate.Configuration.ToString(Newtonsoft.Json.Formatting.None));
                         }
                     }
 
@@ -336,16 +328,12 @@ namespace Snowflake.Powershell
                                         if (cellIndex == 0)
                                         {
                                             // Insert new row into the first cell
-                                            string newRowApiResult = SnowflakeDriver.UpdateDashboardNewRowWithWorksheet(
-                                                this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight,
-                                                newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight);
+                                            string newRowApiResult = SnowflakeDriver.UpdateDashboardNewRowWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight);
                                         }
                                         else
                                         {
                                             // Insert new cell into existing row
-                                            string newCEllApiResult = SnowflakeDriver.UpdateDashboardInsertNewCellWithWorksheet(
-                                                this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight,
-                                                newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight, cellIndex);
+                                            string newCEllApiResult = SnowflakeDriver.UpdateDashboardInsertNewCellWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight, cellIndex);
                                         }
                                     }
 
@@ -365,8 +353,7 @@ namespace Snowflake.Powershell
                             logger.Info("Running new Worksheet {0}", worksheetCreated);
                             loggerConsole.Trace("Running new Worksheet {0} ({1})", worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
 
-                            string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(
-                                this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
+                            string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(this.AuthContext, 
                                 worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetToCreate.Parameters.ToString(Newtonsoft.Json.Formatting.None),
                                 worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
 
@@ -417,9 +404,7 @@ namespace Snowflake.Powershell
                     }
 
                     // Get final dashboard
-                    string getDashboardApiResult = SnowflakeDriver.GetDashboard(
-                        this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, 
-                        newDashboardID);
+                    string getDashboardApiResult = SnowflakeDriver.GetDashboard(this.AuthContext, newDashboardID);
 
                     if (getDashboardApiResult.Length == 0)
                     {

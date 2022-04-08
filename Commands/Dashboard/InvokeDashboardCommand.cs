@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -141,10 +141,10 @@ namespace Snowflake.Powershell
                 }
 
                 // Get all Dashboards already present
-                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.OrganizationID, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight);
+                string dashboardsApiResult = SnowflakeDriver.GetDashboards(this.AuthContext);
                 if (dashboardsApiResult.Length == 0)
                 {
-                    throw new ItemNotFoundException("Invalid response from listing dashboard entities");
+                    throw new ItemNotFoundException("Invalid response from listing Dashboard entities");
                 }
 
                 JObject dashboardsPayloadObject = JObject.Parse(dashboardsApiResult);
@@ -213,7 +213,7 @@ namespace Snowflake.Powershell
                     logger.Info("Running {0}", dashboard);
                     loggerConsole.Trace("Running Dashboard {0} ({1}) with {2} Worksheets", dashboard.DashboardName, dashboard.DashboardID, dashboard.Worksheets.Count);
                     
-                    string dashboardsRefreshResult = SnowflakeDriver.ExecuteDashboard(this.AuthContext.MainAppUrl, this.AuthContext.AppServerUrl, this.AuthContext.AccountUrl, this.AuthContext.UserName, this.AuthContext.AuthTokenSnowsight, dashboard.DashboardID);
+                    string dashboardsRefreshResult = SnowflakeDriver.ExecuteDashboard(this.AuthContext, dashboard.DashboardID);
                     if (dashboardsRefreshResult .Length == 0)
                     {
                         throw new ItemNotFoundException("Invalid response from refreshing dashboard");

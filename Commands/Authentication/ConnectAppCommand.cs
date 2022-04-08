@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2021 Snowflake Inc. All rights reserved.
+﻿// Copyright (c) 2021-2022 Snowflake Inc. All rights reserved.
 
 // Licensed under the Apache License, Version 2.0 (the
 // "License"); you may not use this file except in compliance
@@ -617,7 +617,7 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Getting Organization and User context for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Get Org ID and User ID for future use
-                string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl, appUserContext.Region, appUserContext.AccountName, appUserContext.UserName, appUserContext.AuthTokenSnowsight);
+                string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext);
                 if (organizationAndUserContextResult.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Invalid response from getting organization context for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
