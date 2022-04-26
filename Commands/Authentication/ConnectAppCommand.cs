@@ -626,6 +626,11 @@ namespace Snowflake.Powershell
                 JObject organizationAndUserContextObject = JObject.Parse(organizationAndUserContextResult);
                 appUserContext.UserID = JSONHelper.getLongValueFromJToken(organizationAndUserContextObject["User"], "id").ToString();
                 appUserContext.OrganizationID = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["Org"], "id");
+                if (appUserContext.OrganizationID.Length == 0)
+                {
+                    // Sometimes the Org parameter is empty, in this case, get it from the User property
+                    appUserContext.OrganizationID = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["User"], "defaultOrgId");
+                }
                 appUserContext.CSRFToken = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["PageParams"], "csrfToken");
                 if (appUserContext.UserID.Length == 0 || appUserContext.OrganizationID.Length == 0)
                 {

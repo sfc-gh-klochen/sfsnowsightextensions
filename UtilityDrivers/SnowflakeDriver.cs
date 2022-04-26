@@ -199,8 +199,8 @@ namespace Snowflake.Powershell
         {
             return apiGET(
                 authContext.AppServerUrl,
-                String.Format("bootstrap/{0}/{1}", authContext.Region, authContext.AccountName),
-                "application/json",
+                "bootstrap",
+                "*/*",
                 String.Format("{0}::{1}", authContext.UserName, authContext.AccountUrl),
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
