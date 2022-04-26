@@ -70,20 +70,20 @@ The output should look like this:
 ```
 CommandType     Name                                               Version    Source
 -----------     ----                                               -------    ------
-Cmdlet          Connect-SFApp                                      2022.4.8.0 SnowflakePS
-Cmdlet          Get-SFDashboards                                   2022.4.8.0 SnowflakePS
-Cmdlet          Get-SFFilters                                      2022.4.8.0 SnowflakePS
-Cmdlet          Get-SFFolders                                      2022.4.8.0 SnowflakePS
-Cmdlet          Get-SFQueryProfile                                 2022.4.8.0 SnowflakePS
-Cmdlet          Get-SFWorksheets                                   2022.4.8.0 SnowflakePS
-Cmdlet          Invoke-SFDashboard                                 2022.4.8.0 SnowflakePS
-Cmdlet          Invoke-SFWorksheet                                 2022.4.8.0 SnowflakePS
-Cmdlet          New-SFDashboard                                    2022.4.8.0 SnowflakePS
-Cmdlet          New-SFFilter                                       2022.4.8.0 SnowflakePS
-Cmdlet          New-SFWorksheet                                    2022.4.8.0 SnowflakePS
-Cmdlet          Remove-SFDashboard                                 2022.4.8.0 SnowflakePS
-Cmdlet          Remove-SFFilter                                    2022.4.8.0 SnowflakePS
-Cmdlet          Remove-SFWorksheet                                 2022.4.8.0 SnowflakePS
+Cmdlet          Connect-SFApp                                      2022.4.25.0 SnowflakePS
+Cmdlet          Get-SFDashboards                                   2022.4.25.0 SnowflakePS
+Cmdlet          Get-SFFilters                                      2022.4.25.0 SnowflakePS
+Cmdlet          Get-SFFolders                                      2022.4.25.0 SnowflakePS
+Cmdlet          Get-SFQueryProfile                                 2022.4.25.0 SnowflakePS
+Cmdlet          Get-SFWorksheets                                   2022.4.25.0 SnowflakePS
+Cmdlet          Invoke-SFDashboard                                 2022.4.25.0 SnowflakePS
+Cmdlet          Invoke-SFWorksheet                                 2022.4.25.0 SnowflakePS
+Cmdlet          New-SFDashboard                                    2022.4.25.0 SnowflakePS
+Cmdlet          New-SFFilter                                       2022.4.25.0 SnowflakePS
+Cmdlet          New-SFWorksheet                                    2022.4.25.0 SnowflakePS
+Cmdlet          Remove-SFDashboard                                 2022.4.25.0 SnowflakePS
+Cmdlet          Remove-SFFilter                                    2022.4.25.0 SnowflakePS
+Cmdlet          Remove-SFWorksheet                                 2022.4.25.0 SnowflakePS
 ```
 
 ## Connect-SFApp
@@ -1059,7 +1059,7 @@ Schema             :
 Configuration      : {scope, type, keyword, label…}
 FileSystemSafeName : Filter.aws_cas1.query.account.json
 _CreatedWith       : Snowflake Snowsight Extensions
-_CreatedVersion    : 2022.4.8.0
+_CreatedVersion    : 2022.4.25.0
 AccountName        : aws_cas1
 AccountFullName    : aws_cas1
 AccountUrl         : https://aws_cas1.snowflakecomputing.com
