@@ -96,7 +96,7 @@ namespace Snowflake.Powershell
                     Dashboard dashboard = new Dashboard(entityObject, dashboardsPayloadObject, this.AuthContext);
 
                     logger.Info(dashboard);
-                    loggerConsole.Trace("Found Dashboard {0} ({1}) with {2} Worksheets", dashboard.DashboardName, dashboard.DashboardID, dashboard.Worksheets.Count);
+                    loggerConsole.Info("Found Dashboard {0} ({1}) with {2} Worksheets", dashboard.DashboardName, dashboard.DashboardID, dashboard.Worksheets.Count);
 
                     // Fill in the chart information
                     for (int i = 0; i < dashboard.Worksheets.Count; i++)
@@ -117,8 +117,9 @@ namespace Snowflake.Powershell
                             
                             if (chartDetailApiResult.Length == 0)
                             {
-                                throw new ItemNotFoundException("Invalid response from getting chart detail");
-                            }
+                                logger.Warn("Invalid response from getting chart detail");
+                                continue;
+                            }                            
                             
                             JObject chartDetailPayloadObject = JObject.Parse(chartDetailApiResult);
 

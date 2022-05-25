@@ -40,27 +40,55 @@ namespace Snowflake.Powershell
             return apiGET(
                 mainAppURL, // "https://app.snowflake.com"
                 String.Format("v0/validate-snowflake-url?url={0}", accountName),
-                "*/*"
-            );
+                "*/*",
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty                
+            ).Item1;
         }
 
-        public static string GetSnowSightClientIDInDeployment(string mainAppURL, string appServerUrl, string accountUrl)
+        public static Tuple<string, string> OAuth_Start_GetSnowSightClientIDInDeployment(string mainAppURL, string appServerUrl, string accountUrl)
         {
             string csrf = "SnowflakePS";
             string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
             
-            return apiGET(
+            Tuple<string, List<string>, HttpStatusCode> result = apiGET(
                 appServerUrl,
                 String.Format("start-oauth/snowflake?accountUrl={0}&state={1}", HttpUtility.UrlEncode(accountUrl), HttpUtility.UrlEncode(stateParam)),
-                "text/html"
+                "text/html", 
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty
             );
+
+            if (result.Item3 == HttpStatusCode.Redirect)
+            {
+                // Get the cookie
+                foreach (string cookie in result.Item2)
+                {
+                    if (cookie.StartsWith("oauth-nonce-") == true)
+                    {
+                        return new Tuple<string, string>(result.Item1, cookie);
+                        // resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
+                    }
+                }
+            }
+
+            // Default return
+            return new Tuple<string, string>(String.Empty, String.Empty);
         }
 
         #endregion
 
         #region Snowsight Authentication
 
-        public static string GetMasterTokenFromCredentials(string accountUrl, string accountName, string userName, string password)
+        public static string OAuth_Authenticate_GetMasterTokenFromCredentials(string accountUrl, string accountName, string userName, string password)
         {            
             string requestJSONTemplate = 
 @"{{
@@ -83,7 +111,7 @@ namespace Snowflake.Powershell
                 "application/json");
         }
 
-        public static string GetOAuthRedirectFromOAuthToken(string accountUrl, string clientID, string oAuthToken)
+        public static string OAuth_Authorize_GetOAuthRedirectFromOAuthToken(string accountUrl, string clientID, string oAuthToken)
         {            
             string requestJSONTemplate = 
 @"{{
@@ -102,16 +130,39 @@ namespace Snowflake.Powershell
                 "application/json");
         }
 
-        public static string GetAuthenticationTokenFromOAuthRedirectToken(string appServerUrl, string accountUrl, string oAuthRedirectCode, string mainAppURL)
+        public static Tuple<string, string> OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(string appServerUrl, string accountUrl, string oAuthRedirectCode, string oAuthNonceCookie, string mainAppURL)
         {
             string csrf = "SnowflakePS";
-            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
+            Cookie oauthNonceCookie = getOAuthNonceCookie(oAuthNonceCookie, "doesn't matter");
+            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\", \"oauthNonce\":\"{3}\"}}", csrf, accountUrl, mainAppURL, oauthNonceCookie.Value);
             
-            return apiGET(
+            Tuple<string, List<string>, HttpStatusCode> result = apiGET(
                 appServerUrl,
                 String.Format("complete-oauth/snowflake?code={0}&state={1}", oAuthRedirectCode, HttpUtility.UrlEncode(stateParam)),
-                "text/html"
+                "text/html",
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                String.Empty,
+                oAuthNonceCookie
             );
+
+            if (result.Item3 == HttpStatusCode.OK)
+            {
+                // Get the cookie
+                foreach (string cookie in result.Item2)
+                {
+                    if (cookie.StartsWith("user-") == true)
+                    {
+                        return new Tuple<string, string>(result.Item1, cookie);
+                        // resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
+                    }
+                }
+            }
+
+            // Default return
+            return new Tuple<string, string>(String.Empty, String.Empty);
         }
 
         #endregion
@@ -205,8 +256,9 @@ namespace Snowflake.Powershell
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
                 String.Empty,
+                String.Empty,
                 String.Empty
-            );
+            ).Item1;
         }
 
         #endregion
@@ -244,8 +296,9 @@ namespace Snowflake.Powershell
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
                 String.Empty,
+                String.Empty,
                 String.Empty
-            );
+            ).Item1;
         }
 
         public static string CreateWorksheet(
@@ -400,8 +453,9 @@ namespace Snowflake.Powershell
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
                 String.Empty,
+                String.Empty,
                 String.Empty
-            );
+            ).Item1;
         }
 
         public static string CreateDashboard(
@@ -614,8 +668,9 @@ namespace Snowflake.Powershell
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
                 String.Empty,
+                String.Empty,
                 String.Empty
-            );
+            ).Item1;
         }
 
         public static string CreateChartFromWorksheet(
@@ -703,8 +758,9 @@ namespace Snowflake.Powershell
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
                 String.Empty,
-                roleToUse
-            );
+                roleToUse,
+                String.Empty
+            ).Item1;
         }
 
         public static string GetQueryProfile(
@@ -719,8 +775,9 @@ namespace Snowflake.Powershell
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
                 String.Empty, 
-                roleToUse
-            );
+                roleToUse,
+                String.Empty
+            ).Item1;
         }
 
         public static string GetQueryProfile(
@@ -735,8 +792,9 @@ namespace Snowflake.Powershell
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 authContext.AuthTokenSnowsight,
                 String.Empty, 
-                roleToUse
-            );
+                roleToUse,
+                String.Empty
+            ).Item1;
         }
 
         #endregion
@@ -781,12 +839,21 @@ namespace Snowflake.Powershell
 
         #region Retrieval GET and POST API
 
-        private static string apiGET(string baseUrl, string restAPIUrl, string acceptHeader)
-        {
-            return apiGET(baseUrl, restAPIUrl, acceptHeader, String.Empty, String.Empty, String.Empty, String.Empty, String.Empty);
-        }
+        // private static string apiGET(string baseUrl, string restAPIUrl, string acceptHeader)
+        // {
+        //     return apiGET(baseUrl, restAPIUrl, acceptHeader, String.Empty, String.Empty, String.Empty, String.Empty, String.Empty);
+        // }
 
-        private static string apiGET(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext, string referer, string snowSightAuthToken, string classicUIAuthToken, string roleToUse)
+        // private static string apiGET(string baseUrl, string restAPIUrl, string acceptHeader, List<string> cookies)
+        // {
+        //     return apiGET(baseUrl, restAPIUrl, acceptHeader, String.Empty, String.Empty, String.Empty, String.Empty, String.Empty);
+        // }
+
+        /// Returns Tuple<string, List<string>, HttpStatusCode>
+        ///               ^^^^^^                                    results of the page
+        ///                       ^^^^^^^^^^^^                      list of cookies
+        ///                                     ^^^^^^^^^^^^^^^     HTTP Result Code
+        private static Tuple<string, List<string>, HttpStatusCode> apiGET(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext, string referer, string snowSightAuthToken, string classicUIAuthToken, string roleToUse, string oauthNonceCookie)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -819,6 +886,10 @@ namespace Snowflake.Powershell
                     {
                         httpClientHandler.CookieContainer.Add(getAuthenticationCookie(snowSightAuthToken, baseUri.DnsSafeHost));
                     }
+                    if (oauthNonceCookie.Length > 0)
+                    {
+                        httpClientHandler.CookieContainer.Add(getOAuthNonceCookie(oauthNonceCookie, baseUri.DnsSafeHost));
+                    }
                     if (classicUIAuthToken.Length > 0)
                     {
                         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", String.Format("Snowflake Token=\"{0}\"", classicUIAuthToken));
@@ -835,31 +906,21 @@ namespace Snowflake.Powershell
                     }
 
                     HttpResponseMessage response = httpClient.GetAsync(restAPIUrl).Result;
+                    
+                    IEnumerable<string> cookiesList = new List<string>(); 
+                    if (response.Headers.Contains("Set-Cookie") == true)
+                    {
+                        cookiesList = response.Headers.GetValues("Set-Cookie"); 
+                    }
+
                     if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Found)
                     {
                         string resultString = response.Content.ReadAsStringAsync().Result;
                         if (resultString == null) resultString = String.Empty;
 
-                        logger.Info("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
+                        logger.Info("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), resultString.Length, resultString);
 
-                        // As exception for the cookie authentication, where we return not the body, but the cookie
-                        if (restAPIUrl.StartsWith("complete-oauth/snowflake") && 
-                            response.Headers.Contains("Set-Cookie") == true)
-                        {
-                            List<string> cookies = response.Headers.GetValues("Set-Cookie").ToList();
-                            if (cookies.Count > 0)
-                            {
-                                foreach (string cookie in cookies)
-                                {
-                                    if (cookie.StartsWith("user-") == true)
-                                    {
-                                        resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
-                                    }
-                                }
-                            }
-                        }
-
-                        return resultString;
+                        return new Tuple<string, List<string>, HttpStatusCode>(resultString, cookiesList.ToList(), response.StatusCode);
                     }
                     else
                     {
@@ -867,11 +928,11 @@ namespace Snowflake.Powershell
                         if (resultString == null) resultString = String.Empty;
                         if (resultString.Length > 0)
                         {
-                            logger.Error("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
+                            logger.Info("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), resultString.Length, resultString);
                         }
                         else
                         {
-                            logger.Error("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders);
+                            logger.Error("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList));
                         }
 
                         if (response.StatusCode == HttpStatusCode.Unauthorized || 
@@ -880,7 +941,7 @@ namespace Snowflake.Powershell
                             loggerConsole.Error("GET {0}/{1} returned {2} ({3})", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase);
                         }
 
-                        return String.Empty;
+                        return new Tuple<string, List<string>, HttpStatusCode>(String.Empty, cookiesList.ToList(), response.StatusCode);
                     }
                 }
             }
@@ -891,7 +952,7 @@ namespace Snowflake.Powershell
 
                 loggerConsole.Error("GET {0}/{1} threw {2} ({3})", baseUrl, restAPIUrl, ex.Message, ex.Source);
 
-                return String.Empty;
+                return new Tuple<string, List<string>, HttpStatusCode>(String.Empty, new List<string>(0), HttpStatusCode.InternalServerError);
             }
             finally
             {
@@ -962,12 +1023,19 @@ namespace Snowflake.Powershell
                     }
 
                     HttpResponseMessage response = httpClient.PostAsync(restAPIUrl, content).Result;
+
+                    IEnumerable<string> cookiesList = new List<string>(); 
+                    if (response.Headers.Contains("Set-Cookie") == true)
+                    {
+                        cookiesList = response.Headers.GetValues("Set-Cookie"); 
+                    }
+
                     if (response.IsSuccessStatusCode)
                     {
                         string resultString = response.Content.ReadAsStringAsync().Result;
                         if (resultString == null) resultString = String.Empty;
 
-                        logger.Info("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nRequest:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, requestBody, resultString.Length, resultString);
+                        logger.Info("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nRequest:\n{6}\nResponse Length {7}:\n{8}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), requestBody, resultString.Length, resultString);
 
                         return resultString;
                     }
@@ -977,11 +1045,11 @@ namespace Snowflake.Powershell
                         if (resultString == null) resultString = String.Empty;
                         if (resultString.Length > 0)
                         {
-                            logger.Error("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nRequest:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, requestBody, resultString.Length, resultString);
+                            logger.Error("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nRequest:\n{6}\nResponse Length {7}:\n{8}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), requestBody, resultString.Length, resultString);
                         }
                         else
                         {
-                            logger.Error("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nRequest:\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, requestBody);
+                            logger.Error("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nRequest:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), requestBody);
                         }
 
                         if (response.StatusCode == HttpStatusCode.Unauthorized || 
@@ -1014,6 +1082,7 @@ namespace Snowflake.Powershell
         {
             return apiDELETE(baseUrl, restAPIUrl, acceptHeader, String.Empty, String.Empty, String.Empty, String.Empty);
         }
+
         private static string apiDELETE(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext, string referer, string snowSightAuthToken, string classicUIAuthToken)
         {
             Stopwatch stopWatch = new Stopwatch();
@@ -1057,12 +1126,19 @@ namespace Snowflake.Powershell
                     }
 
                     HttpResponseMessage response = httpClient.DeleteAsync(restAPIUrl).Result;
+
+                    IEnumerable<string> cookiesList = new List<string>(); 
+                    if (response.Headers.Contains("Set-Cookie") == true)
+                    {
+                        cookiesList = response.Headers.GetValues("Set-Cookie"); 
+                    }
+
                     if (response.IsSuccessStatusCode)
                     {
                         string resultString = response.Content.ReadAsStringAsync().Result;
                         if (resultString == null) resultString = String.Empty;
 
-                        logger.Info("DELETE {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
+                        logger.Info("DELETE {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), resultString.Length, resultString);
 
                         return resultString;
                     }
@@ -1072,7 +1148,7 @@ namespace Snowflake.Powershell
                         if (resultString == null) resultString = String.Empty;
                         if (resultString.Length > 0)
                         {
-                            logger.Error("DELETE {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}\nResponse Length {5}:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, resultString.Length, resultString);
+                            logger.Error("DELETE {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), resultString.Length, resultString);
                         }
                         else
                         {
@@ -1121,57 +1197,120 @@ namespace Snowflake.Powershell
             //      HttpOnly; 
             //      Secure; 
             //      SameSite=Lax
-            Cookie authCookie = new Cookie();
-            authCookie.Domain = domain;
+            Cookie cookie = new Cookie();
+            cookie.Domain = domain;
 
-            string[] authCookieComponents = snowSightAuthToken.Split(';', StringSplitOptions.TrimEntries);
-            foreach (string authCookieComponent in authCookieComponents)
+            string[] cookieComponents = snowSightAuthToken.Split(';', StringSplitOptions.TrimEntries);
+            foreach (string cookieComponent in cookieComponents)
             {
-                string[] authCookieComponentTokens = authCookieComponent.Split('=');
-                if (authCookieComponentTokens.Length >= 2)
+                string[] cookieComponentTokens = cookieComponent.Split('=');
+                if (cookieComponentTokens.Length >= 2)
                 {
-                    string authCookieComponentName = authCookieComponentTokens[0];
-                    string authCookieComponentValue = authCookieComponentTokens[1];
+                    string authCookieComponentName = cookieComponentTokens[0];
+                    string authCookieComponentValue = cookieComponentTokens[1];
                     switch (authCookieComponentName)
                     {
                         case "Path":
-                            authCookie.Path = authCookieComponentValue;
+                            cookie.Path = authCookieComponentValue;
                             break;
                         
                         case "Expires":
                             DateTime expirationDateTime = DateTime.MinValue;
                             if (DateTime.TryParse(authCookieComponentValue, out expirationDateTime) == true)
                             {
-                                    authCookie.Expires = expirationDateTime;
+                                    cookie.Expires = expirationDateTime;
                             }
                             break;
 
                         case "HttpOnly":
-                            authCookie.HttpOnly = true;
+                            cookie.HttpOnly = true;
                             break;
 
                         case "Secure":
-                            authCookie.Secure = true;
+                            cookie.Secure = true;
                             break;
 
                         default:
                             if (authCookieComponentName.StartsWith("user-") == true)
                             {
-                                authCookie.Name = authCookieComponentName;
+                                cookie.Name = authCookieComponentName;
                                 // There is an = at the end of the value, so it's just best to grab everything after the first =
-                                authCookie.Value = authCookieComponent.Substring(authCookieComponentName.Length + 1);
+                                cookie.Value = cookieComponent.Substring(authCookieComponentName.Length + 1);
                             }
                             break;
                     }
                 }
             }
 
-            if (authCookie.Name.Length == 0)
+            if (cookie.Name.Length == 0)
             {
                 throw new ArgumentException("No cookie name was found in the authentication token");
             }
 
-            return authCookie;
+            return cookie;
+        }
+
+        private static Cookie getOAuthNonceCookie(string oAuthNonceCookie, string domain)
+        {
+            // Example cookie:
+            //      oauth-nonce-1qK1Es6m=1qK1Es6mjeZ; Path=/; Max-Age=3600; HttpOnly; Secure; SameSite=Lax
+            // OR better formatted
+            //      oauth-nonce-1qK1Es6m=1qK1Es6mjeZ; 
+            //      Path=/; 
+            //      Max-Age=3600; 
+            //      HttpOnly; 
+            //      Secure; 
+            //      SameSite=Lax
+            Cookie cookie = new Cookie();
+            cookie.Domain = domain;
+
+            string[] cookieComponents = oAuthNonceCookie.Split(';', StringSplitOptions.TrimEntries);
+            foreach (string cookieComponent in cookieComponents)
+            {
+                string[] cookieComponentTokens = cookieComponent.Split('=');
+                if (cookieComponentTokens.Length >= 2)
+                {
+                    string authCookieComponentName = cookieComponentTokens[0];
+                    string authCookieComponentValue = cookieComponentTokens[1];
+                    switch (authCookieComponentName)
+                    {
+                        case "Path":
+                            cookie.Path = authCookieComponentValue;
+                            break;
+                        
+                        case "Expires":
+                            DateTime expirationDateTime = DateTime.MinValue;
+                            if (DateTime.TryParse(authCookieComponentValue, out expirationDateTime) == true)
+                            {
+                                    cookie.Expires = expirationDateTime;
+                            }
+                            break;
+
+                        case "HttpOnly":
+                            cookie.HttpOnly = true;
+                            break;
+
+                        case "Secure":
+                            cookie.Secure = true;
+                            break;
+
+                        default:
+                            if (authCookieComponentName.StartsWith("oauth-nonce-") == true)
+                            {
+                                cookie.Name = authCookieComponentName;
+                                cookie.Value = cookieComponent.Substring(authCookieComponentName.Length + 1);
+                            }
+                            break;
+                    }
+                }
+            }
+
+            if (cookie.Name.Length == 0)
+            {
+                throw new ArgumentException("No cookie name was found in the oauth nonce token");
+            }
+
+            return cookie;
         }
 
         #endregion

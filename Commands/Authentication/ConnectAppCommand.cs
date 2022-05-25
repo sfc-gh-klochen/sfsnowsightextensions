@@ -195,7 +195,7 @@ namespace Snowflake.Powershell
                         throw new ArgumentException(String.Format("Unknown parameter set {0}", this.ParameterSetName));
                 }
                 appUserContext.UserName = this.UserName;
-                logger.Info("LoginName={0}", appUserContext.UserName);
+                logger.Info("UserName={0}", appUserContext.UserName);
 
                 #endregion
 
@@ -263,15 +263,15 @@ namespace Snowflake.Powershell
                 #region Snowsight Client ID 
 
                 // Get the client ID of Snowsight for this region
-                string deploymentSnowSightClientIDRedirectResult = SnowflakeDriver.GetSnowSightClientIDInDeployment(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl);
-                if (deploymentSnowSightClientIDRedirectResult.Length == 0)
+                Tuple<string, string> deploymentSnowSightClientIDRedirectResult = SnowflakeDriver.OAuth_Start_GetSnowSightClientIDInDeployment(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl);
+                if (deploymentSnowSightClientIDRedirectResult.Item1.Length == 0 || deploymentSnowSightClientIDRedirectResult.Item2.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to get account client ID for account {0}", appUserContext.AccountName));
                 }
 
                 string redirectWithClientIdUrl = String.Empty;
                 Regex regexVersion = new Regex(@"<a href=""(.*)"">Found<\/a>", RegexOptions.IgnoreCase);
-                Match match = regexVersion.Match(deploymentSnowSightClientIDRedirectResult);
+                Match match = regexVersion.Match(deploymentSnowSightClientIDRedirectResult.Item1);
                 if (match != null)
                 {
                     if (match.Groups.Count > 1)
@@ -297,6 +297,8 @@ namespace Snowflake.Powershell
                 // PROD1    ClientID=R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg== 
                 // AZWEST2  ClientID=uGWIv9zROgdvkWNlFHo4zi+F1M2joA==
                 logger.Info("ClientID={0}", appUserContext.ClientID);
+
+                logger.Info("OAuthNonce={0}", deploymentSnowSightClientIDRedirectResult.Item1);
 
                 #endregion
 
@@ -473,7 +475,7 @@ namespace Snowflake.Powershell
                     // Authenticate with username/password
 
                     // Authenticate Step 1, Getting OAuth Token
-                    string masterTokenFromCredentialsResult = SnowflakeDriver.GetMasterTokenFromCredentials(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, new System.Net.NetworkCredential(string.Empty, this.Password).Password);
+                    string masterTokenFromCredentialsResult = SnowflakeDriver.OAuth_Authenticate_GetMasterTokenFromCredentials(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, new System.Net.NetworkCredential(string.Empty, this.Password).Password);
                     if (masterTokenFromCredentialsResult.Length == 0)
                     {
                         throw new InvalidCredentialException(String.Format("Invalid response on authenticate user request {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -522,7 +524,7 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Validating master token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 2, Validating OAuth Token into OAuth Client Redirect
-                string oAuthTokenFromMasterTokenResult = SnowflakeDriver.GetOAuthRedirectFromOAuthToken(appUserContext.AccountUrl, appUserContext.ClientID, appUserContext.AuthTokenMaster);
+                string oAuthTokenFromMasterTokenResult = SnowflakeDriver.OAuth_Authorize_GetOAuthRedirectFromOAuthToken(appUserContext.AccountUrl, appUserContext.ClientID, appUserContext.AuthTokenMaster);
                 if (oAuthTokenFromMasterTokenResult.Length == 0)
                 {
                     throw new InvalidCredentialException(String.Format("Invalid response on validating master OAuth token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -566,19 +568,18 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 3, Converting OAuth redirect into authentication cookie
-                string authenticationTokenWebPageResult = SnowflakeDriver.GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode, appUserContext.MainAppUrl);
-                if (authenticationTokenWebPageResult.Length == 0)
+                Tuple<string, string> authenticationTokenWebPageResult = SnowflakeDriver.OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode, deploymentSnowSightClientIDRedirectResult.Item2, appUserContext.MainAppUrl);
+                if (authenticationTokenWebPageResult.Item1.Length == 0 || authenticationTokenWebPageResult.Item2.Length == 0)
                 {
                     throw new InvalidCredentialException(String.Format("Invalid response from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
                 }
 
-                JObject authenticationTokenWebPageObject = JObject.Parse(authenticationTokenWebPageResult);
-                if (authenticationTokenWebPageObject == null)
-                {
-                    throw new InvalidCredentialException(String.Format("Invalid result from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
-                }
-                appUserContext.AuthTokenSnowsight = JSONHelper.getStringValueFromJToken(authenticationTokenWebPageObject, "authenticationCookie");
-
+                // JObject authenticationTokenWebPageObject = JObject.Parse(authenticationTokenWebPageResult);
+                // if (authenticationTokenWebPageObject == null)
+                // {
+                //     throw new InvalidCredentialException(String.Format("Invalid result from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
+                // }
+                appUserContext.AuthTokenSnowsight = authenticationTokenWebPageResult.Item2;
                 logger.Info("SnowsightAuthToken={0}", appUserContext.AuthTokenSnowsight);
 
                 // For users where their USERNAME is not the same as LOGIN_NAME, the future authentication needs USERNAME property. It is specified in var params = {...} block in HTML returned from the call
@@ -587,7 +588,7 @@ namespace Snowflake.Powershell
                 // 	<script>
                 // 	var params = {"account":"sfpscogs_dodievich_sso","appServerUrl":"https://apps-api.c1.westus2.azure.app.snowflake.com",.... "username":"DODIEVICH_ALT"}}
                 // 	if (window.opener && params.isPopupAuth) {
-                string paramsCarryingPageResult = Encoding.UTF8.GetString(Convert.FromBase64String(JSONHelper.getStringValueFromJToken(authenticationTokenWebPageObject, "resultPage")));
+                string paramsCarryingPageResult = authenticationTokenWebPageResult.Item1;
                 Regex regexParameters = new Regex(@"(?i)var params = ({.*})", RegexOptions.IgnoreCase);
                 match = regexParameters.Match(paramsCarryingPageResult);
                 if (match != null)
@@ -600,11 +601,11 @@ namespace Snowflake.Powershell
                         if (userAccountParamsObject != null)
                         {
                             string userName = JSONHelper.getStringValueFromJToken(userAccountParamsObject["user"], "username");
-                            logger.Info("UserName={0}", userName);
                             // Only set the Username if it is indeed different from LoginName
                             if (String.Compare(userName, appUserContext.UserName, true) != 0)
                             {
                                 appUserContext.UserName = userName;
+                                logger.Info("UserName(different)={0}", userName);
                             }
                         }
                     }
