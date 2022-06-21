@@ -16,7 +16,7 @@ if __name__ == '__main__':
     # --overwrite [True or False, overwrite existing file in existing folder]
     # --out_folder [Rename any folder that is output from the results of python script changes/cleaning/etc.]
     # --clean [True or False, clean the file of any metadata]
-    # sample: python3 sfsnowsightextensions-wrapper/python_logic/dashboard_transfer.py --objects 'filters,dashboards,worksheets' --folder ./my_local_project --role ACCOUNTADMIN --warehouse COMPUTE_WH --account my_target_account_locator --out_folder my_target_account_folder  
+    # sample: python3 sfsnowsightextensions/python_logic/transfer_objects.py --objects 'filters,dashboards,worksheets' --folder ./my_local_project --role ACCOUNTADMIN --warehouse COMPUTE_WH --account my_target_account_locator --out_folder my_target_account_folder  
     parser = argparse.ArgumentParser(description='Read in scripts from one dir and output in another or same dir')
     parser.add_argument('--objects', '-o', type=str, help='can take on the values filters,dashboards,worksheets, default is all three', default='filters,dashboards,worksheets')
     parser.add_argument('--folder', '-f', type=str, help='relative path to folder/directory name', default='.')
@@ -27,6 +27,8 @@ if __name__ == '__main__':
     parser.add_argument('--account', '-a', type=str, help='target account for filenaming', default='')
     parser.add_argument('--overwrite', '-ow', type=bool, help='overwrite files where they are', default=False)
     parser.add_argument('--out_folder', '-of', type=str, help='rename the directory you wish to be output to', default='')
+    parser.add_argument('--clean', '-c', type=bool, help='Clean the file of any identifiable metadata', default=True)
+    
     args = parser.parse_args()
     args = vars(args)
 

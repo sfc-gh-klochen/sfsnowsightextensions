@@ -102,6 +102,7 @@ def change_worksheet_configuration(folder, filename, role, warehouse, database="
 def script_to_worksheet(folder, filename, role, warehouse, database="", schema="", account="", overwrite=False, out_folder='', clean=False):
     filename_no_extension = filename.split('.sql')[0]
     filename_no_extension = f"Worksheet.{filename_no_extension}.{account if account else 'Generic'}"
+    
     worksheet = {
             "FolderID": "",
             "FolderName": "",
@@ -135,4 +136,5 @@ def script_to_worksheet(folder, filename, role, warehouse, database="", schema="
         query = f.read()
 
     worksheet['Query'] = query
-    write_file(folder, filename, worksheet, account, overwrite, out_folder, clean=clean)
+    worksheet['WorksheetName'] = filename
+    write_file(folder, filename_no_extension + '.json', worksheet, account, overwrite, out_folder, clean=clean)
