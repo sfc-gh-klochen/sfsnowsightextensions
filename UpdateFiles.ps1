@@ -173,8 +173,6 @@ function Update-Documents ()
     ---------------- Mix of assets without a Role provided (default role is ACCOUNTADMIN) ----------------
     Update-Documents -SFObjectTypes 'worksheet, dashboard, filter' -FiltersPath $work_dir/filters -DashboardsPath $work_dir/Dashboards -WorksheetsPath $work_dir/worksheets -SFWarehouse SUPERNEWWAREHOUSE
     #>
-
-
 }
 
 function Update-Filters ()
