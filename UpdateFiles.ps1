@@ -15,8 +15,9 @@ function Update-Documents ()
     if($SFObjectTypes.Trim().ToLower() -eq "all") {
         $tmp_filters = Get-ChildItem $FiltersPath
         if ($tmp_filters) {
-            echo "`r`nFound Files at $FiltersPath"
-            $tmp_filters
+            Write-Host "`r`nFound Files at $FiltersPath" -ForegroundColor Cyan
+            echo "`r"
+            echo $tmp_filters.NAME
             echo "`r`n"
         }
         else {
@@ -25,8 +26,9 @@ function Update-Documents ()
         
         $tmp_dashboards = Get-ChildItem $DashboardsPath
         if ($tmp_dashboards) {
-            echo "`r`nFound files at $DashboardsPath"
-            $tmp_dashboards
+            Write-Host "`r`nFound files at $DashboardsPath" -ForegroundColor Cyan
+            echo "`r"
+            echo $tmp_dashboards.Name
             echo "`r`n"
         }
         else {
@@ -35,8 +37,9 @@ function Update-Documents ()
     
         $tmp_worksheets = Get-ChildItem $WorksheetsPath
         if ($tmp_worksheets) {
-            echo "Found files at $WorksheetsPath"
-            $tmp_worksheets
+            Write-Host "Found files at $WorksheetsPath" -ForegroundColor Cyan
+            echo "`r"
+            echo $tmp_worksheets.Name
             echo "`r`n"
         }
         else {
@@ -62,8 +65,9 @@ function Update-Documents ()
             if($obj -eq "filter") {
                 $tmp_filters = Get-ChildItem $FiltersPath
                 if ($tmp_filters) {
-                    echo "`r`nFound Files at $FiltersPath"
-                    $tmp_filters
+                    Write-Host "`r`nFound Files at $FiltersPath" -ForegroundColor Cyan
+                    echo "`r"
+                    $tmp_filters.Name
                     echo "`r`n"
                 }
                 else {
@@ -76,8 +80,9 @@ function Update-Documents ()
             elseif ($obj -eq "dashboard") {
                 $tmp_dashboards = Get-ChildItem $DashboardsPath
                 if ($tmp_dashboards) {
-                    echo "`r`nFound files at $DashboardsPath"
-                    $tmp_dashboards
+                    Write-Host "`r`nFound files at $DashboardsPath" -ForegroundColor Cyan
+                    echo "`r"
+                    echo $tmp_dashboards.Name
                     echo "`r`n"
                 }
                 else {
@@ -90,8 +95,9 @@ function Update-Documents ()
             elseif ($obj -eq "worksheet") {
                 $tmp_worksheets = Get-ChildItem $WorksheetsPath
                 if ($tmp_worksheets) {
-                    echo "`r`nFound files at $WorksheetsPath"
-                    $tmp_worksheets
+                    Write-Host "`r`nFound files at $WorksheetsPath" -ForegroundColor Cyan
+                    echo "`r"
+                    echo $tmp_worksheets.Name
                     echo "`r`n"
                 }
                 else {
@@ -189,8 +195,12 @@ function Update-Filters ()
                             Write-Host $f.Name -ForegroundColor Green
                             $fparam.Role = $SFRole
                             $fparam.Warehouse = $SFWarehouse
+                            $fparam.Database = $SFDatabase
+                            $fparam.Schema = $SFSchema
                             $fparam.Configuration.context.role = $SFRole
                             $fparam.Configuration.context.warehouse = $SFWarehouse
+                            $fparam.Configuration.context.database = $SFDatabase
+                            $fparam.Configuration.context.schema = $SFSchema
                             $fparam.FileSystemSafeName = ""
                             $fparam.AccountName = ""
                             $fparam.AccountFullName = ""
@@ -206,6 +216,8 @@ function Update-Filters ()
                             $fparam.Worksheet.OwnerUserName = ""
                             $fparam.Worksheet.Role = $SFRole
                             $fparam.Worksheet.Warehouse = $SFWarehouse
+                            $fparam.Worksheet.Database = $SFDatabase
+                            $fparam.Worksheet.Schema = $SFSchema
                             $fparam.Worksheet.FileSystemSafeName = ""
                             $fparam.Worksheet.AccountName = ""
                             $fparam.Worksheet.AccountFullName = ""
@@ -214,8 +226,12 @@ function Update-Filters ()
                             $fparam.Worksheet.Region = ""
                             $fparam.Role = $SFRole
                             $fparam.Warehouse = $SFWarehouse
+                            $fparam.Database = $SFDatabase
+                            $fparam.Schema = $SFSchema
                             $fparam.Configuration.context.role = $SFRole
                             $fparam.Configuration.context.warehouse = $SFWarehouse
+                            $fparam.Configuration.context.database = $SFDatabase
+                            $fparam.Configuration.context.schema = $SFSchema
                             $fparam.FileSystemSafeName = ""
                             $fparam.AccountName = ""
                             $fparam.AccountFullName = ""
@@ -253,11 +269,15 @@ function Update-Dashboards ()
                         $fparam.OwnerUserName = ""
                         $fparam.Role = $SFRole
                         $fparam.Warehouse = $SFWarehouse
+                        $fparam.Database = $SFDatabase
+                        $fparam.Schema = $SFSchema
                         foreach ($worksheet in $fparam.Worksheets) {
                             $worksheet.OwnerUserID = ""
                             $worksheet.OwnerUserName = ""
                             $worksheet.Role = $SFRole
                             $worksheet.Warehouse = $SFWarehouse
+                            $worksheet.Database = $SFDatabase
+                            $worksheet.Schema = $SFSchema
                             $worksheet.FileSystemSafeName = ""
                             $worksheet.AccountName = ""
                             $worksheet.AccountFullName = ""
