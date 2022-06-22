@@ -54,114 +54,121 @@ function Update-Documents ()
     }
 
     else{
-    $SFObjectTypes -Split ',' | ForEach-Object {
-    $obj = $_.Trim().ToLower()
+        $SFObjectTypes -Split ',' | ForEach-Object {
+            $obj = $_.Trim().ToLower()
 
-    echo "`r`nSearching for $obj files.`r`n"
+            echo "`r`nSearching for $obj files.`r`n"
 
-    if($obj -eq "filter") {
-        $tmp_filters = Get-ChildItem $FiltersPath
-        if ($tmp_filters) {
-            echo "`r`nFound Files at $FiltersPath"
-            $tmp_filters
-            echo "`r`n"
+            if($obj -eq "filter") {
+                $tmp_filters = Get-ChildItem $FiltersPath
+                if ($tmp_filters) {
+                    echo "`r`nFound Files at $FiltersPath"
+                    $tmp_filters
+                    echo "`r`n"
+                }
+                else {
+                    echo "`r`nNo files found at $FiltersPath"
+                }
+                Invoke-Command -ScriptBlock { Update-Filters -FiltersPath $FiltersPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
+                echo "`r`n"
+            }
+
+            elseif ($obj -eq "dashboard") {
+                $tmp_dashboards = Get-ChildItem $DashboardsPath
+                if ($tmp_dashboards) {
+                    echo "`r`nFound files at $DashboardsPath"
+                    $tmp_dashboards
+                    echo "`r`n"
+                }
+                else {
+                    echo "`r`nNo files Found at $DashboardsPath"
+                }
+
+                Invoke-Command -ScriptBlock { Update-Dashboards -DashboardsPath $DashboardsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
+            }
+
+            elseif ($obj -eq "worksheet") {
+                $tmp_worksheets = Get-ChildItem $WorksheetsPath
+                if ($tmp_worksheets) {
+                    echo "`r`nFound files at $WorksheetsPath"
+                    $tmp_worksheets
+                    echo "`r`n"
+                }
+                else {
+                    echo "`r`nNo files found at $WorksheetsPath"
+                }
+
+                Invoke-Command -ScriptBlock { Update-Worksheets -WorksheetsPath $WorksheetsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
+            } 
+            else {
+                echo "$obj not a valid object. Use 'Filter, Dashboard, Worksheet, a combination of the three in a comma seperated list, or All.'`r`n"
+            }
         }
-        else {
-            echo "`r`nNo files found at $FiltersPath"
-        }
-        Invoke-Command -ScriptBlock { Update-Filters -FiltersPath $FiltersPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
-        echo "`r`n"
+
     }
+    <#
+    .SYNOPSIS
+    Update Snowflake Role and Warehouse in Filters, Dashboards, or Worksheets files together or separately. 
+    .DESCRIPTION
+    This function allows the user to update the Snowflake Role and Warehouse in the exported Filter, Dashboard, or Worksheet files together or separately. Please refer to the examples for syntax. If a Role is not provided, ACCOUNTADMIN will be the designated Role.
 
-    elseif ($obj -eq "dashboard") {
-        $tmp_dashboards = Get-ChildItem $DashboardsPath
-        if ($tmp_dashboards) {
-            echo "`r`nFound files at $DashboardsPath"
-            $tmp_dashboards
-            echo "`r`n"
-        }
-        else {
-            echo "`r`nNo files Found at $DashboardsPath"
-        }
+    .PARAMETER SFObjectTypes
+    Specifies the object type being updated. Use Filter, Dashboard, Worksheet, or or a combination of the three (do not use all with the others or duplicates will be created) can be entered.
+    Choose All to update Filters, Dashboards, and Worksheets at the same time. Casing, ordering, and spaces do not matter for this argument do not matter. 'filter,dashboard,worksheet' = 'Worksheet, Dashboard, Filter'."
 
-        Invoke-Command -ScriptBlock { Update-Dashboards -DashboardsPath $DashboardsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
-    }
+    .PARAMETER FiltersPath
+    Specifies the path to the directory where the filters are located. Case sensitive.
 
-    elseif ($obj -eq "worksheet") {
-        $tmp_worksheets = Get-ChildItem $WorksheetsPath
-        if ($tmp_worksheets) {
-            echo "`r`nFound files at $WorksheetsPath"
-            $tmp_worksheets
-            echo "`r`n"
-        }
-        else {
-            echo "`r`nNo files found at $WorksheetsPath"
-        }
+    .PARAMETER DashboardsPath
+    Specifies the path to the directory where the dashboards are located. Case sensitive.
 
-        Invoke-Command -ScriptBlock { Update-Worksheets -WorksheetsPath $WorksheetsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
-    } 
-    else {
-        echo "$obj not a valid object. Use 'Filter, Dashboard, Worksheet, a combination of the three in a comma seperated list, or All.'`r`n"
-    }
-}
+    .PARAMETER WorksheetsPath
+    Specifies the path to the directory where the worksheets are located. Case sensitive.
 
-<#
-.SYNOPSIS
- Update Snowflake Role and Warehouse in Filters, Dashboards, or Worksheets files together or separately. 
-.DESCRIPTION
- This function allows the user to update the Snowflake Role and Warehouse in the exported Filter, Dashboard, or Worksheet files together or separately. Please refer to the examples for syntax. If a Role is not provided, ACCOUNTADMIN will be the designated Role.
+    .PARAMETER SFRole
+    Specifies the Snowflake Role required to run the specific object. Default is ACCOUNTADMIN.
 
-.PARAMETER SFObjectTypes
-Specifies the object type being updated. Use Filter, Dashboard, Worksheet, or or a combination of the three (do not use all with the others or duplicates will be created) can be entered.
-Choose All to update Filters, Dashboards, and Worksheets at the same time. Casing, ordering, and spaces do not matter for this argument do not matter. 'filter,dashboard,worksheet' = 'Worksheet, Dashboard, Filter'."
+    .PARAMETER SFWarehouse
+    Specifies the Snowflake Warehouse required to run the specific object. An error will display if no warehouse is designated.
 
-.PARAMETER FiltersPath
-Specifies the path to the directory where the filters are located. Case sensitive.
+    .PARAMETER SFDatabase
+    Specifies the Snowflake Database required to set the appropriate context. This is optional if you use fully qualified names.
 
-.PARAMETER DashboardsPath
-Specifies the path to the directory where the dashboards are located. Case sensitive.
+    .PARAMETER SFSchema
+    Specifies the Snowflake Schema required to set the appropriate context. This is optional if you use fully qualified names.
 
-.PARAMETER WorksheetsPath
-Specifies the path to the directory where the worksheets are located. Case sensitive.
+    .INPUTS
+    None. You cannot pipe objects to Update-Documents.
 
-.PARAMETER SFRole
-Specifies the Snowflake Role required to run the specific object. Default is ACCOUNTADMIN.
+    .OUTPUTS
+    set-content. Update-Documents updates the JSON value for the Snowflake Role and Warehouse in order to ensure the respective object works appropriately.
+    
+    .EXAMPLE
+    ---------------- All ----------------
+    Update-Documents -SFObjectTypes 'All' -FiltersPath $work_dir/filters  -DashboardsPath $work_dir/dashboards -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
+    .EXAMPLE
+    ---------------- Filters ----------------
+    Update-Documents -SFObjectTypes 'Filter' -FiltersPath $work_dir/filters -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
-.PARAMETER SFWarehouse
-Specifies the Snowflake Warehouse required to run the specific object. An error will display if no warehouse is designated.
+    .EXAMPLE
+    ---------------- Dashboard ----------------
+    Update-Documents -SFObjectTypes 'Dashboard' -DashboardsPath $work_dir/dashboards -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
-.INPUTS
-None. You cannot pipe objects to Update-Documents.
+    .EXAMPLE
+    ---------------- Worksheet ----------------
+    Update-Documents -SFObjectTypes 'Worksheet' -WorksheetsPath $work_dir/worksheets -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
-.OUTPUTS
-set-content. Update-Documents updates the JSON value for the Snowflake Role and Warehouse in order to ensure the respective object works appropriately.
- 
-.EXAMPLE
----------------- All ----------------
-Update-Documents -SFObjectTypes 'All' -FiltersPath $work_dir/filters  -DashboardsPath $work_dir/dashboards -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
-.EXAMPLE
----------------- Filters ----------------
-Update-Documents -SFObjectTypes 'Filter' -FiltersPath $work_dir/filters -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
-
-.EXAMPLE
----------------- Dashboard ----------------
-Update-Documents -SFObjectTypes 'Dashboard' -DashboardsPath $work_dir/dashboards -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
-
-.EXAMPLE
----------------- Worksheet ----------------
-Update-Documents -SFObjectTypes 'Worksheet' -WorksheetsPath $work_dir/worksheets -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
-
-.EXAMPLE
----------------- Mix of assets ----------------
-Update-Documents -SFObjectTypes 'dashboard, filter, worksheet' -FiltersPath $work_dir/filters -DashboardsPath $work_dir/Dashboards -WorksheetsPath $work_dir/worksheets -SFWarehouse SUPERNEWWAREHOUSE
+    .EXAMPLE
+    ---------------- Mix of assets ----------------
+    Update-Documents -SFObjectTypes 'dashboard, filter, worksheet' -FiltersPath $work_dir/filters -DashboardsPath $work_dir/Dashboards -WorksheetsPath $work_dir/worksheets -SFWarehouse SUPERNEWWAREHOUSE
 
 
-.EXAMPLE
----------------- Mix of assets without a Role provided (default role is ACCOUNTADMIN) ----------------
-Update-Documents -SFObjectTypes 'worksheet, dashboard, filter' -FiltersPath $work_dir/filters -DashboardsPath $work_dir/Dashboards -WorksheetsPath $work_dir/worksheets -SFWarehouse SUPERNEWWAREHOUSE
-#>
+    .EXAMPLE
+    ---------------- Mix of assets without a Role provided (default role is ACCOUNTADMIN) ----------------
+    Update-Documents -SFObjectTypes 'worksheet, dashboard, filter' -FiltersPath $work_dir/filters -DashboardsPath $work_dir/Dashboards -WorksheetsPath $work_dir/worksheets -SFWarehouse SUPERNEWWAREHOUSE
+    #>
 
-}
+
 }
 
 function Update-Filters ()
