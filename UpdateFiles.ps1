@@ -15,38 +15,41 @@ function Update-Documents ()
 
     if ($SFObjectTypes.Trim().ToLower() -eq "all") {
         if (-Not ($WorksheetsPath, $DashboardsPath, $FiltersPath)) {
-            echo "Please supply a path for each object type (-WorksheetsPath, -DashboardsPath, -FiltersPath)"
+            Write-Host "Please supply a path for each object type (-WorksheetsPath, -DashboardsPath, -FiltersPath)" -ForegroundColor Yellow
             break
         }
 
         $tmp_filters = Get-ChildItem $FiltersPath
         if ($tmp_filters) {
-            echo "`r`nFound files at $FiltersPath"
-            $tmp_filters
+            Write-Host "`r`nFound Files at $FiltersPath" -ForegroundColor Cyan
+            echo "`r"
+            echo $tmp_filters.NAME
             echo "`r`n"
         }
         else {
-            echo "`r`nNo files found at $FiltersPath"
+            Write-Host "`r`nNo files found at $FiltersPath" -ForegroundColor Yellow
         }
         
         $tmp_dashboards = Get-ChildItem $DashboardsPath
         if ($tmp_dashboards) {
-            echo "`r`nFound files at $DashboardsPath"
-            $tmp_dashboards
+            Write-Host "`r`nFound files at $DashboardsPath" -ForegroundColor Cyan
+            echo "`r"
+            echo $tmp_dashboards.Name
             echo "`r`n"
         }
         else {
-            echo "`r`nNo files found at $DashboardsPath"
+            Write-Host "`r`nNo files found at $DashboardsPath" -ForegroundColor Yellow
         }
     
         $tmp_worksheets = Get-ChildItem $WorksheetsPath
         if ($tmp_worksheets) {
-            echo "Found files at $WorksheetsPath"
-            $tmp_worksheets
+            Write-Host "Found files at $WorksheetsPath" -ForegroundColor Cyan
+            echo "`r"
+            echo $tmp_worksheets.Name
             echo "`r`n"
         }
         else {
-            echo "`r`nNo files found at $WorksheetsPath"
+            Write-Host "`r`nNo files found at $WorksheetsPath" -ForegroundColor Yellow
         }
 
         Invoke-Command -ScriptBlock {
@@ -59,131 +62,142 @@ function Update-Documents ()
         }
     } else {
 
-    $objs = $SFObjectTypes -Split ',' 
+        $objs = $SFObjectTypes -Split ',' 
 
-    # Begin for loop through array
-    foreach ($_ in $objs) {
-    $obj = $_.Trim().ToLower()
+        # Begin for loop through array
+        foreach ($_ in $objs) {
+                $obj = $_.Trim().ToLower()
 
-    echo "`r`nSearching for $obj files.`r`n"
+                Write-Host "`r`nSearching for $obj files.`r`n" -ForegroundColor Magenta
 
-    if($obj -eq "filter") {
-        if (-Not ($FiltersPath)) {
-            echo "Please supply a path for -FiltersPath argument. Skipping."
-            continue
-        }
-        $tmp_filters = Get-ChildItem $FiltersPath
-        if ($tmp_filters) {
-            echo "`r`nFound files at $FiltersPath"
-            $tmp_filters
-            echo "`r`n"
-        }
-        else {
-            echo "`r`nNo files found at $FiltersPath. Skipping."
-            continue
-        }
-        Invoke-Command -ScriptBlock { Update-Filters -FiltersPath $FiltersPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
-        echo "`r`n"
+                if($obj -eq "filter") {
+                    if (-Not ($FiltersPath)) {
+                        echo "Please supply a path for -FiltersPath argument. Skipping."
+                        continue
+                    }
+                    $tmp_filters = Get-ChildItem $FiltersPath
+                    if ($tmp_filters) {
+                        Write-Host "`r`nFound Files at $FiltersPath" -ForegroundColor Cyan
+                        echo "`r"
+                        $tmp_filters.Name
+                        echo "`r`n"
+                    }
+                    else {
+                        Write-Host "`r`nNo files found at $FiltersPath. Skipping." -ForegroundColor Yellow
+                        continue
+                    }
+                    Invoke-Command -ScriptBlock { Update-Filters -FiltersPath $FiltersPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
+                    echo "`r`n"
+                }
+
+                elseif ($obj -eq "dashboard") {
+                    if (-Not ($FiltersPath)) {
+                        echo "Please supply a path for -DashboardsPath argument. Skipping."
+                        continue
+                    }
+                    $tmp_dashboards = Get-ChildItem $DashboardsPath
+                    if ($tmp_dashboards) {
+                        Write-Host "`r`nFound files at $DashboardsPath" -ForegroundColor Cyan
+                        echo "`r"
+                        echo $tmp_dashboards.Name
+                        echo "`r`n"
+                    }
+                    else {
+                        Write-Host "`r`nNo files Found at $DashboardsPath. Skipping." -ForegroundColor Yellow
+                        continue
+                    }
+
+                    Invoke-Command -ScriptBlock { Update-Dashboards -DashboardsPath $DashboardsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
+                }
+
+                elseif ($obj -eq "worksheet") {
+                    if (-Not ($FiltersPath)) {
+                        echo "Please supply a path for -WorksheetsPath argument. Skipping."
+                        continue
+                    }
+                    $tmp_worksheets = Get-ChildItem $WorksheetsPath
+                    if ($tmp_worksheets) {
+                        Write-Host "`r`nFound files at $WorksheetsPath" -ForegroundColor Cyan
+                        echo "`r"
+                        echo $tmp_worksheets.Name
+                        echo "`r`n"
+                    }
+                    else {
+                        Write-Host "`r`nNo files found at $WorksheetsPath" -ForegroundColor Yellow
+                        continue
+                    }
+
+                    Invoke-Command -ScriptBlock { Update-Worksheets -WorksheetsPath $WorksheetsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
+                } 
+                else {
+                    Write-Host "$obj not a valid object. Use 'Filter, Dashboard, Worksheet, a combination of the three in a comma seperated list, or All.'`r`n" -ForegroundColor Magenta
+                    continue
+                }
+            }
     }
 
-    elseif ($obj -eq "dashboard") {
-        if (-Not ($FiltersPath)) {
-            echo "Please supply a path for -DashboardsPath argument. Skipping."
-            continue
-        }
-        $tmp_dashboards = Get-ChildItem $DashboardsPath
-        if ($tmp_dashboards) {
-            echo "`r`nFound files at $DashboardsPath"
-            $tmp_dashboards
-            echo "`r`n"
-        }
-        else {
-            echo "`r`nNo files Found at $DashboardsPath. Skipping."
-            continue
-        }
+    <#
+    .SYNOPSIS
+    Update Snowflake context for Filters, Dashboards, or Worksheets files together or separately. 
 
-        Invoke-Command -ScriptBlock { Update-Dashboards -DashboardsPath $DashboardsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
-    }
+    .DESCRIPTION
+    This function allows the user to update the Snowflake context, such as Role, Virtual Warehouse, Database, or Schema 
+    in the exported Filter, Dashboard, or Worksheet files together or separately. 
+    Please refer to the examples for syntax. If a Role is not provided, ACCOUNTADMIN will be the designated Role.
 
-    elseif ($obj -eq "worksheet") {
-        if (-Not ($FiltersPath)) {
-            echo "Please supply a path for -WorksheetsPath argument. Skipping."
-            continue
-        }
-        $tmp_worksheets = Get-ChildItem $WorksheetsPath
-        if ($tmp_worksheets) {
-            echo "`r`nFound files at $WorksheetsPath"
-            $tmp_worksheets
-            echo "`r`n"
-        }
-        else {
-            echo "`r`nNo files found at $WorksheetsPath"
-            continue
-        }
+    .PARAMETER SFObjectTypes
+    Specifies the object type being updated. 
+    Filter, Dashboard, Worksheet, or or any combination of the three can be entered.
+    Choose All to update Filters, Dashboards, and Worksheets with one command. 
+    Casing, ordering, and spaces are not important for this argument. 'filter,dashboard,worksheet' = 'Worksheet, Dashboard, Filter'
 
-        Invoke-Command -ScriptBlock { Update-Worksheets -WorksheetsPath $WorksheetsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
-    } 
-    else {
-        echo "$obj not a valid object. Use 'Filter, Dashboard, Worksheet, a combination of the three in a comma seperated list, or All.'`r`n"
-        continue
-    }
-}
-}
+    Do not enter All in combination with any of the other selections or duplicate objects/files will be created.
 
-<#
-.SYNOPSIS
- Update Snowflake Role and Warehouse in Filters, Dashboards, or Worksheets files together or separately. 
-.DESCRIPTION
- This function allows the user to update the Snowflake Role and Warehouse in the exported Filter, Dashboard, or Worksheet files together or separately. Please refer to the examples for syntax. If a Role is not provided, ACCOUNTADMIN will be the designated Role.
+    .PARAMETER FiltersPath
+    Specifies the path to the directory where the filters are located. Case sensitive.
 
-.PARAMETER SFObjectTypes
-Specifies the object type being updated. Use Filter, Dashboard, Worksheet, or or a combination of the three (do not use all with the others or duplicates will be created) can be entered.
-Choose All to update Filters, Dashboards, and Worksheets at the same time. Casing, ordering, and spaces do not matter for this argument do not matter. 'filter,dashboard,worksheet' = 'Worksheet, Dashboard, Filter'."
+    .PARAMETER DashboardsPath
+    Specifies the path to the directory where the dashboards are located. Case sensitive.
 
-.PARAMETER FiltersPath
-Specifies the path to the directory where the filters are located. Case sensitive.
+    .PARAMETER WorksheetsPath
+    Specifies the path to the directory where the worksheets are located. Case sensitive.
 
-.PARAMETER DashboardsPath
-Specifies the path to the directory where the dashboards are located. Case sensitive.
+    .PARAMETER SFRole
+    Specifies the Snowflake Role required to run the specific object. Default is ACCOUNTADMIN.
 
-.PARAMETER WorksheetsPath
-Specifies the path to the directory where the worksheets are located. Case sensitive.
+    .PARAMETER SFWarehouse
+    Specifies the Snowflake Warehouse required to run the specific object. An error will display if no warehouse is designated.
 
-.PARAMETER SFRole
-Specifies the Snowflake Role required to run the specific object. Default is ACCOUNTADMIN.
+    .PARAMETER OutputDirectory
+    A relative or fully qualified path where files will be placed.
 
-.PARAMETER SFWarehouse
-Specifies the Snowflake Warehouse required to run the specific object. An error will display if no warehouse is designated.
+    .INPUTS
+    None. You cannot pipe objects to Update-Documents.
 
-.PARAMETER OutputDirectory
-A relative or fully qualified path where files will be placed. This directory needs to exist already
+    .OUTPUTS
+    set-content. Update-Documents updates the JSON values of the Snowflake context in order to ensure the respective object works appropriately.
+    
+    .EXAMPLE
+    ---------------- All ----------------
+    Update-Documents -SFObjectTypes 'All' -FiltersPath <path-to-filters-dir>  -DashboardsPath <path-to-dashboards-dir> -WorksheetsPath <path-to-worksheets-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
-.INPUTS
-None. You cannot pipe objects to Update-Documents.
+    .EXAMPLE
+    ---------------- Filters ----------------
+    Update-Documents -SFObjectTypes 'Filter' -FiltersPath <path-to-filters-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
-.OUTPUTS
-set-content. Update-Documents updates the JSON value for the Snowflake Role and Warehouse in order to ensure the respective object works appropriately.
- 
-.EXAMPLE
----------------- All ----------------
-Update-Documents -SFObjectTypes 'All' -FiltersPath $work_dir/filters  -DashboardsPath $work_dir/dashboards -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
-.EXAMPLE
----------------- Filters ----------------
-Update-Documents -SFObjectTypes 'Filter' -FiltersPath $work_dir/filters -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
+    .EXAMPLE
+    ---------------- Dashboard ----------------
+    Update-Documents -SFObjectTypes 'Dashboard' -DashboardsPath <path-to-dashboards-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
-.EXAMPLE
----------------- Dashboard ----------------
-Update-Documents -SFObjectTypes 'Dashboard' -DashboardsPath $work_dir/dashboards -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
+    .EXAMPLE
+    ---------------- Worksheet ----------------
+    Update-Documents -SFObjectTypes 'Worksheet' -WorksheetsPath <path-to-worksheets-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
-.EXAMPLE
----------------- Worksheet ----------------
-Update-Documents -SFObjectTypes 'Worksheet' -WorksheetsPath $work_dir/worksheets -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
+    .EXAMPLE
+    ---------------- Mix of assets ----------------
+    Update-Documents -SFObjectTypes 'dashboard, filter, worksheet' -FiltersPath <path-to-filters-dir> -DashboardsPath <path-to-dashboards-dir> -WorksheetsPath <path-to-worksheets-dir> -SFWarehouse SUPERNEWWAREHOUSE
 
-.EXAMPLE
----------------- Mix of assets ----------------
-Update-Documents -SFObjectTypes 'dashboard, filter, worksheet' -FiltersPath $work_dir/filters -DashboardsPath $work_dir/Dashboards -WorksheetsPath $work_dir/worksheets -SFWarehouse SUPERNEWWAREHOUSE
-
-#>
+    #>
 }
 
 
