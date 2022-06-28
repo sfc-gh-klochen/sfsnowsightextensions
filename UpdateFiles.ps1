@@ -70,7 +70,7 @@ function Update-Documents ()
 
                 Write-Host "`r`nSearching for $obj files.`r`n" -ForegroundColor Magenta
 
-                if($obj -eq "filter") {
+                if($obj -eq "filters") {
                     if (-Not ($FiltersPath)) {
                         echo "Please supply a path for -FiltersPath argument. Skipping."
                         continue
@@ -90,7 +90,7 @@ function Update-Documents ()
                     echo "`r`n"
                 }
 
-                elseif ($obj -eq "dashboard") {
+                elseif ($obj -eq "dashboards") {
                     if (-Not ($DashboardsPath)) {
                         echo "Please supply a path for -DashboardsPath argument. Skipping."
                         continue
@@ -110,7 +110,7 @@ function Update-Documents ()
                     Invoke-Command -ScriptBlock { Update-Dashboards -DashboardsPath $DashboardsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
                 }
 
-                elseif ($obj -eq "worksheet") {
+                elseif ($obj -eq "worksheets") {
                     if (-Not ($WorksheetsPath)) {
                         echo "Please supply a path for -WorksheetsPath argument. Skipping."
                         continue
@@ -183,19 +183,19 @@ function Update-Documents ()
 
     .EXAMPLE
     ---------------- Filters ----------------
-    Update-Documents -SFObjectTypes 'Filter' -FiltersPath <path-to-filters-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
+    Update-Documents -SFObjectTypes 'Filters' -FiltersPath <path-to-filters-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
     .EXAMPLE
     ---------------- Dashboard ----------------
-    Update-Documents -SFObjectTypes 'Dashboard' -DashboardsPath <path-to-dashboards-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
+    Update-Documents -SFObjectTypes 'Dashboards' -DashboardsPath <path-to-dashboards-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
     .EXAMPLE
     ---------------- Worksheet ----------------
-    Update-Documents -SFObjectTypes 'Worksheet' -WorksheetsPath <path-to-worksheets-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
+    Update-Documents -SFObjectTypes 'Worksheets' -WorksheetsPath <path-to-worksheets-dir> -SFRole THISMEANSEVERYTHINGWORKS  -SFWarehouse SUPERNEWWAREHOUSE
 
     .EXAMPLE
     ---------------- Mix of assets ----------------
-    Update-Documents -SFObjectTypes 'dashboard, filter, worksheet' -FiltersPath <path-to-filters-dir> -DashboardsPath <path-to-dashboards-dir> -WorksheetsPath <path-to-worksheets-dir> -SFWarehouse SUPERNEWWAREHOUSE
+    Update-Documents -SFObjectTypes 'dashboards, filters, worksheets' -FiltersPath <path-to-filters-dir> -DashboardsPath <path-to-dashboards-dir> -WorksheetsPath <path-to-worksheets-dir> -SFWarehouse SUPERNEWWAREHOUSE
 
     #>
 }

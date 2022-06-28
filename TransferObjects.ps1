@@ -193,14 +193,7 @@ function Transfer-Objects ()
                 }
             }
             elseif ($obj -eq "worksheets") {
-                Invoke-Command -ScriptBlock { Update-Documents 
-                    -SFObjectTypes $SFObjectTypes 
-                    -SFRole $SFRole  
-                    -SFWarehouse $SFWarehouse 
-                    -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets
-                    -SFDatabase $SFDatabase
-                    -SFSchema $SFSchema
-                    -OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets-SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
                 }
                 $tmp_worksheets = Get-ChildItem "$OutPath/worksheets"
 
