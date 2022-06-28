@@ -38,6 +38,7 @@ function Transfer-Objects ()
             # Pull down objects + update object wh, role, db, schema
             if ($obj -eq "all") {
                 $SourceFilters = Get-SFFilters -AuthContext $SourceContext
+                #TODO: PARSE OUT DATERANGE AND DATEBUCKET
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
 
