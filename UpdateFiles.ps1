@@ -110,7 +110,7 @@ function Update-Documents ()
                     Invoke-Command -ScriptBlock { Update-Dashboards -DashboardsPath $DashboardsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
                 }
 
-                elseif ($obj -eq "worksheets") {
+                elseif ($obj -eq "worksheet") {
                     if (-Not ($WorksheetsPath)) {
                         echo "Please supply a path for -WorksheetsPath argument. Skipping."
                         continue
@@ -347,6 +347,7 @@ function Update-Worksheets ()
         # Update WORKSHEET files
         foreach ($f in $tmp_worksheets){
             $fparam = Get-Content $f.FullName | ConvertFrom-JSON
+            $fname = $f.Name
             $fparam.update | % {
                 Write-Host 'Updating WORKSHEET values for' -ForegroundColor Cyan
                 Write-Host $f.Name -ForegroundColor Yellow
