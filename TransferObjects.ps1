@@ -144,80 +144,80 @@ function Transfer-Objects ()
     } 
     # Begin Filepath Logic
     else {
-    if ($OutputDirectory) {
-        $OutPath = $OutputDirectory
-    }
-    else {
-        echo "`r`nNo OutputDirectory provided. Using input directory to write target files: $SourceAccountLocatorOrFilepath"
-        $OutPath = $SourceAccountLocatorOrFilepath
-    }
-
-    $TargetAccounts -Split ',' | ForEach-Object {
-        $TargetAccountLocator = $_
-        $TargetPath = "$OutPath/$TargetAccountLocator"
-
-        if (SSO-Prompt($TargetAccountLocator)){ 
-            $TargetContext = Connect-SFApp -Account $TargetAccountLocator -SSO
+        if ($OutputDirectory) {
+            $OutPath = $OutputDirectory
         }
         else {
-            $TargetContext = Connect-SFApp -Account $TargetAccountLocator
+            echo "`r`nNo OutputDirectory provided. Using input directory to write target files: $SourceAccountLocatorOrFilepath"
+            $OutPath = $SourceAccountLocatorOrFilepath
         }
 
-        $SFObjectTypes -Split ',' | ForEach-Object {
-            $obj = $_.Trim().ToLower() 
-                       
-            if ($obj -eq "all") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
-                }
+        $TargetAccounts -Split ',' | ForEach-Object {
+            $TargetAccountLocator = $_
+            $TargetPath = "$OutPath/$TargetAccountLocator"
 
-                $TargetFilters = Get-ChildItem "$TargetPath/filters"
-                $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
-                $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
-                
-                foreach ($f in $TargetFilters){
-                    New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
-                }
-
-                foreach ($f in $TargetDashboards){
-                    New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
-                }
-
-                foreach ($f in $TargetWorksheets){
-                    New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
-                }
-            }
-            elseif($obj -eq "filters") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
-                }
-                $TargetFilters = Get-ChildItem "$TargetPath/filters"
-
-                foreach ($f in $TargetFilters){
-                    New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
-                }
-            }
-            elseif ($obj -eq "dashboards") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
-                }
-                $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
-
-                foreach ($f in $TargetDashboards){
-                    New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
-                }
-            }
-            elseif ($obj -eq "worksheets") {
-                Invoke-Command -ScriptBlock {Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole -SFWarehouse $SFWarehouse -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
-                }
-                $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
-
-                foreach ($f in $TargetWorksheets){
-                    New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
-                }
+            if (SSO-Prompt($TargetAccountLocator)){ 
+                $TargetContext = Connect-SFApp -Account $TargetAccountLocator -SSO
             }
             else {
-                echo "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
+                $TargetContext = Connect-SFApp -Account $TargetAccountLocator
+            }
+
+            $SFObjectTypes -Split ',' | ForEach-Object {
+                $obj = $_.Trim().ToLower() 
+                        
+                if ($obj -eq "all") {
+                    Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
+                    }
+
+                    $TargetFilters = Get-ChildItem "$TargetPath/filters"
+                    $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
+                    $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
+                    
+                    foreach ($f in $TargetFilters){
+                        New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
+                    }
+
+                    foreach ($f in $TargetDashboards){
+                        New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
+                    }
+
+                    foreach ($f in $TargetWorksheets){
+                        New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
+                    }
+                }
+                elseif($obj -eq "filters") {
+                    Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
+                    }
+                    $TargetFilters = Get-ChildItem "$TargetPath/filters"
+
+                    foreach ($f in $TargetFilters){
+                        New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
+                    }
+                }
+                elseif ($obj -eq "dashboards") {
+                    Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
+                    }
+                    $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
+
+                    foreach ($f in $TargetDashboards){
+                        New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
+                    }
+                }
+                elseif ($obj -eq "worksheets") {
+                    Invoke-Command -ScriptBlock {Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole -SFWarehouse $SFWarehouse -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
+                    }
+                    $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
+
+                    foreach ($f in $TargetWorksheets){
+                        New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
+                    }
+                }
+                else {
+                    echo "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
+                }
             }
         }
-    }
 }
 
 <#
