@@ -110,7 +110,7 @@ function Update-Documents ()
                     Invoke-Command -ScriptBlock { Update-Dashboards -DashboardsPath $DashboardsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
                 }
 
-                elseif ($obj -eq "worksheet") {
+                elseif ($obj -eq "worksheets") {
                     if (-Not ($WorksheetsPath)) {
                         echo "Please supply a path for -WorksheetsPath argument. Skipping."
                         continue
@@ -130,7 +130,7 @@ function Update-Documents ()
                     Invoke-Command -ScriptBlock { Update-Worksheets -WorksheetsPath $WorksheetsPath -SFRole $SFRole  -SFWarehouse $SFWarehouse }
                 } 
                 else {
-                    Write-Host "$obj not a valid object. Use 'Filter, Dashboard, Worksheet, a combination of the three in a comma seperated list, or All.'`r`n" -ForegroundColor Magenta
+                    Write-Host "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n" -ForegroundColor Magenta
                     continue
                 }
             }

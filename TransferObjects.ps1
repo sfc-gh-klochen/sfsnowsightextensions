@@ -16,7 +16,7 @@ function Transfer-Objects ()
     if (-Not (Test-Path $SourceAccountLocatorOrFilepath )) {
         # Process Account Import
         if (SSO-Prompt($SourceAccountLocatorOrFilepath)){ 
-        $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath --SSO
+        $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath -SSO
         }
         else {
         $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath
@@ -90,7 +90,7 @@ function Transfer-Objects ()
             $TargetAccountLocator = $_
             $TargetPath = "$OutPath/$TargetAccountLocator"
             if (SSO-Prompt($TargetAccountLocator)){ 
-                $TargetContext = Connect-SFApp -Account $TargetAccountLocator --SSO
+                $TargetContext = Connect-SFApp -Account $TargetAccountLocator -SSO
                 }
                 else {
                     $TargetContext = Connect-SFApp -Account $TargetAccountLocator
@@ -145,23 +145,23 @@ function Transfer-Objects ()
         $TargetAccountLocator = $_
         $TargetPath = "$OutPath/$TargetAccountLocator"
 
+        if (SSO-Prompt($TargetAccountLocator)){ 
+            $TargetContext = Connect-SFApp -Account $TargetAccountLocator -SSO
+        }
+        else {
+            $TargetContext = Connect-SFApp -Account $TargetAccountLocator
+        }
+
         $SFObjectTypes -Split ',' | ForEach-Object {
-            $obj = $_.Trim().ToLower()            
+            $obj = $_.Trim().ToLower() 
+                       
             if ($obj -eq "all") {
-                Invoke-Command -RunAsAdministrator -ScriptBlock { 
-                    Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
                 }
 
                 $TargetFilters = Get-ChildItem "$TargetPath/filters"
-                $TargetFashboards = Get-ChildItem "$TargetPath/dashboards"
+                $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
                 $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
-
-                if (SSO-Prompt($TargetAccountLocator)){ 
-                    $TargetContext = Connect-SFApp -Account $TargetAccountLocator --SSO
-                }
-                else {
-                    $TargetContext = Connect-SFApp -Account $TargetAccountLocator
-                }
                 
                 foreach ($f in $TargetFilters){
                     New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
@@ -176,7 +176,7 @@ function Transfer-Objects ()
                 }
             }
             elseif($obj -eq "filters") {
-                Invoke-Command -RunAsAdministrator -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
                 }
                 $TargetFilters = Get-ChildItem "$TargetPath/filters"
 
@@ -185,7 +185,7 @@ function Transfer-Objects ()
                 }
             }
             elseif ($obj -eq "dashboards") {
-                Invoke-Command -RunAsAdministrator -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
                 }
                 $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
 
@@ -194,8 +194,7 @@ function Transfer-Objects ()
                 }
             }
             elseif ($obj -eq "worksheets") {
-                Create-Path("$TargetPath/worksheets")
-                Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole -SFWarehouse $SFWarehouse -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock {Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole -SFWarehouse $SFWarehouse -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                 }
                 $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
 
