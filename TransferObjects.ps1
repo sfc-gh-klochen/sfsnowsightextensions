@@ -45,6 +45,9 @@ function Transfer-Objects ()
                 $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
                 $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
                 $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
+                
+                # Clean source file?
+                # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceFilters){
                     Update-Filter-Object($f)
@@ -59,6 +62,8 @@ function Transfer-Objects ()
             elseif($obj -eq "filters") {
                 $SourceFilters = Get-SFFilters -AuthContext $SourceContext
                 $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
+                # Clean source file?
+                # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceFilters){
                     Update-Filter-Object($f)
@@ -67,6 +72,8 @@ function Transfer-Objects ()
             elseif ($obj -eq "dashboards") {
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
                 $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
+                # Clean source file?
+                # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceDashboards){
                     Update-Dashboard-Object($f)
@@ -75,6 +82,9 @@ function Transfer-Objects ()
             elseif ($obj -eq "worksheets") {
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
                 $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
+
+                # Clean source file?
+                # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceWorksheets){
                     Update-Worksheet-Object($f)
@@ -156,7 +166,7 @@ function Transfer-Objects ()
             $obj = $_.Trim().ToLower() 
                        
             if ($obj -eq "all") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                 }
 
                 $TargetFilters = Get-ChildItem "$TargetPath/filters"
@@ -176,7 +186,7 @@ function Transfer-Objects ()
                 }
             }
             elseif($obj -eq "filters") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                 }
                 $TargetFilters = Get-ChildItem "$TargetPath/filters"
 
@@ -185,7 +195,7 @@ function Transfer-Objects ()
                 }
             }
             elseif ($obj -eq "dashboards") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                 }
                 $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
 
