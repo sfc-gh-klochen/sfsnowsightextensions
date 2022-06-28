@@ -91,7 +91,7 @@ function Update-Documents ()
                 }
 
                 elseif ($obj -eq "dashboard") {
-                    if (-Not ($FiltersPath)) {
+                    if (-Not ($DashboardsPath)) {
                         echo "Please supply a path for -DashboardsPath argument. Skipping."
                         continue
                     }
@@ -111,7 +111,7 @@ function Update-Documents ()
                 }
 
                 elseif ($obj -eq "worksheet") {
-                    if (-Not ($FiltersPath)) {
+                    if (-Not ($WorksheetsPath)) {
                         echo "Please supply a path for -WorksheetsPath argument. Skipping."
                         continue
                     }
@@ -207,6 +207,7 @@ function Update-Filters ()
         # Update Filters files
         foreach ($f in $tmp_filters){
             $fparam = Get-Content $f.FullName | ConvertFrom-JSON
+            $fname = $f.Name
             $fparam.update | % { #Manual Filter Update
                 if($fparam.Type -eq 'manual'){
                     Write-Host 'Updating MANUAL FILTER values for' -ForegroundColor Cyan 
@@ -263,8 +264,9 @@ function Update-Filters ()
                     # Create the directory if not exists
                     New-Item $OutputDirectory/filters -ItemType Directory
                     Write-Host "Created path $OutputDirectory/filters"
+                    $fparam | ConvertTo-JSON -depth 10| Out-File -FilePath $OutputDirectory/filters/$fname
                 } else {
-                $fparam | ConvertTo-JSON -depth 10| set-content $OutputDirectory/filters/$f.FullName
+                    $fparam | ConvertTo-JSON -depth 10| Out-File -FilePath $OutputDirectory/filters/$fname
                 }
             }
             else {
@@ -282,6 +284,7 @@ function Update-Dashboards ()
         # Update DASHBOARD files
             foreach ($f in $tmp_dashboards){
                 $fparam = Get-Content $f.FullName | ConvertFrom-JSON
+                $fname = $f.Name
                 $fparam.update | % {
                     Write-Host 'Updating DASHBOARD values for' -ForegroundColor Cyan
                     Write-Host $f.Name -ForegroundColor Yellow
@@ -324,12 +327,13 @@ function Update-Dashboards ()
                     # Create the directory if not exists
                     New-Item $OutputDirectory/dashboards -ItemType Directory
                     Write-Host "Created path $OutputDirectory/dashboards"
+                    $fparam | ConvertTo-JSON -depth 10| Out-File -FilePath $OutputDirectory/dashboards/$fname
                 }
                 else {
-                $fparam | ConvertTo-JSON -depth 10| set-content $OutputDirectory/dashboards/$f.FullName
+                $fparam | ConvertTo-JSON -depth 10| Out-File -FilePath $OutputDirectory/dashboards/$fname
                 }
             } else {
-            $fparam | ConvertTo-JSON -depth 10| set-content $f.FullName
+            $fparam | ConvertTo-JSON -depth 10| Set-Content $f.FullName
             }
         }
     }
@@ -364,8 +368,9 @@ function Update-Worksheets ()
                     # Create the directory if not exists
                     New-Item $OutputDirectory/worksheets -ItemType Directory
                     Write-Host "Created path $OutputDirectory/worksheets"
+                    $fparam | ConvertTo-JSON -depth 10| Out-File -FilePath $OutputDirectory/worksheets/$fname
                 } else {
-                $fparam | ConvertTo-JSON -depth 10| set-content $OutputDirectory/worksheets/$f.FullName
+                    $fparam | ConvertTo-JSON -depth 10| Out-File -FilePath $OutputDirectory/worksheets/$fname
                 }
             }
             else {
