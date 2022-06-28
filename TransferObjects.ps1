@@ -131,6 +131,7 @@ function Transfer-Objects ()
             }
         }
     } 
+    # Begin Filepath Logic
     else {
     if ($OutputDirectory) {
         $OutPath = $OutputDirectory
@@ -147,14 +148,14 @@ function Transfer-Objects ()
         $SFObjectTypes -Split ',' | ForEach-Object {
             $obj = $_.Trim().ToLower()            
             if ($obj -eq "all") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets"-DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards"-FiltersPath "$SourceAccountLocatorOrFilepath/filters"-SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -RunAsAdministrator -ScriptBlock { 
+                    Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
                 }
 
-                $tmp_filters = Get-ChildItem "$TargetPath/filters"
-                $tmp_dashboards = Get-ChildItem "$TargetPath/dashboards"
-                $tmp_worksheets = Get-ChildItem "$TargetPath/worksheets"
+                $TargetFilters = Get-ChildItem "$TargetPath/filters"
+                $TargetFashboards = Get-ChildItem "$TargetPath/dashboards"
+                $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
 
-                        
                 if (SSO-Prompt($TargetAccountLocator)){ 
                     $TargetContext = Connect-SFApp -Account $TargetAccountLocator --SSO
                 }
@@ -162,42 +163,43 @@ function Transfer-Objects ()
                     $TargetContext = Connect-SFApp -Account $TargetAccountLocator
                 }
                 
-                foreach ($f in $tmp_filters){
+                foreach ($f in $TargetFilters){
                     New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
                 }
 
-                foreach ($f in $tmp_dashboards){
+                foreach ($f in $TargetDashboards){
                     New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
                 }
 
-                foreach ($f in $tmp_worksheets){
+                foreach ($f in $TargetWorksheets){
                     New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
                 }
             }
             elseif($obj -eq "filters") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters"-SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -RunAsAdministrator -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
                 }
-                $tmp_filters = Get-ChildItem "$OutPath/filters"
+                $TargetFilters = Get-ChildItem "$TargetPath/filters"
 
-                foreach ($f in $tmp_filters){
+                foreach ($f in $TargetFilters){
                     New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
                 }
             }
             elseif ($obj -eq "dashboards") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards"-SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Invoke-Command -RunAsAdministrator -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
                 }
-                $tmp_dashboards = Get-ChildItem "$OutPath/dashboards"
+                $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
 
-                foreach ($f in $tmp_dashboards){
+                foreach ($f in $TargetDashboards){
                     New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
                 }
             }
             elseif ($obj -eq "worksheets") {
-                Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets-SFDatabase $SFDatabase-SFSchema $SFSchema-OutputDirectory $TargetPath
+                Create-Path("$TargetPath/worksheets")
+                Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole -SFWarehouse $SFWarehouse -WorksheetsPath $SourceAccountLocatorOrFilepath/worksheets -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                 }
-                $tmp_worksheets = Get-ChildItem "$OutPath/worksheets"
+                $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
 
-                foreach ($f in $tmp_worksheets){
+                foreach ($f in $TargetWorksheets){
                     New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
                 }
             }
