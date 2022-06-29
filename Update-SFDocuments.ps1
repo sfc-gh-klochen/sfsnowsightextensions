@@ -1,4 +1,4 @@
-function Update-Documents ()
+function Update-SFDocuments ()
 {
     [CmdletBinding()]
     param (
