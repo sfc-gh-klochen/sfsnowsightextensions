@@ -37,8 +37,8 @@ function Transfer-Objects ()
             
             # Pull down objects + update object wh, role, db, schema
             if ($obj -eq "all") {
-                $SourceFilters = Get-SFFilters -AuthContext $SourceContext
-                #TODO: PARSE OUT DATERANGE AND DATEBUCKET
+                $AllFilters = Get-SFFilters -AuthContext $SourceContext
+                $SourceFilters = $AllFilters | Where-Object { 'datebucket','daterange' –notcontains $_.keyword }
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
 
@@ -47,7 +47,7 @@ function Transfer-Objects ()
                 $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
                 $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
                 
-                # Clean source file?
+
                 # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceFilters){
@@ -61,9 +61,10 @@ function Transfer-Objects ()
                 }
             }
             elseif($obj -eq "filters") {
-                $SourceFilters = Get-SFFilters -AuthContext $SourceContext
+                $AllFilters = Get-SFFilters -AuthContext $SourceContext
+                $SourceFilters = $AllFilters | Where-Object { 'datebucket','daterange' –notcontains $_.keyword }
                 $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
-                # Clean source file?
+
                 # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceFilters){
@@ -73,7 +74,7 @@ function Transfer-Objects ()
             elseif ($obj -eq "dashboards") {
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
                 $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
-                # Clean source file?
+
                 # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceDashboards){
@@ -84,7 +85,7 @@ function Transfer-Objects ()
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
                 $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
 
-                # Clean source file?
+
                 # Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -SFDatabase $SFDatabase -SFSchema $SFSchema
 
                 foreach ($f in $SourceWorksheets){
@@ -170,7 +171,7 @@ function Transfer-Objects ()
                     Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                     }
 
-                    $TargetFilters = Get-ChildItem "$TargetPath/filters"
+                    $TargetFilters = Get-ChildItem "$TargetPath/filters" -recurse -exclude '*.daterange.*','*.datebucket.*'
                     $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
                     $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
                     
@@ -189,7 +190,7 @@ function Transfer-Objects ()
                 elseif($obj -eq "filters") {
                     Invoke-Command -ScriptBlock { Update-Documents -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                     }
-                    $TargetFilters = Get-ChildItem "$TargetPath/filters"
+                    $TargetFilters = Get-ChildItem "$TargetPath/filters" -recurse -exclude '*.daterange.*','*.datebucket.*'
 
                     foreach ($f in $TargetFilters){
                         New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
