@@ -13,7 +13,7 @@ function Transfer-SFObjects ()
     )
 
     # Retrieve Source Account Objects
-    if (-Not (Test-Path $SourceAccountLocatorOrFilepath )) {
+    if (-Not (Test-Path $SourceAccountLocatorOrFilepath)) {
         # Process Account Import
         if (SSO-Prompt($SourceAccountLocatorOrFilepath)){ 
         $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath -SSO
@@ -37,7 +37,9 @@ function Transfer-SFObjects ()
             
             # Pull down objects + update object wh, role, db, schema
             if ($obj -eq "all") {
-                $SourceFilters = Get-SFFilters -AuthContext $SourceContext | Where-Object { $_.scope  -ne 'global'}
+                $SourceFilters = Get-SFFilters -AuthContext $SourceContext 
+                $SourceFilters = $SourceFilters | Where-Object { $_.Scope  -ne 'global'}
+
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
 
@@ -60,7 +62,8 @@ function Transfer-SFObjects ()
                 }
             }
             elseif($obj -eq "filters") {
-                $SourceFilters = Get-SFFilters -AuthContext $SourceContext | Where-Object { $_.scope -ne 'global'}
+                $SourceFilters = Get-SFFilters -AuthContext $SourceContext
+                $SourceFilters = $SourceFilters | Where-Object { $_.Scope -ne 'global'}
                 $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
 
                 Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema 
@@ -404,7 +407,6 @@ function Update-Worksheet-Object ($fparam)
     }
 }
 
-
 function SSO-Prompt([string]$inputString){
     do {
         $UserInput = Read-Host -Prompt "`r`nDoes the account at $inputString use SSO? Use y/n"
@@ -416,15 +418,5 @@ function SSO-Prompt([string]$inputString){
     }
     else{
         return $false
-    }
-}
-
-function Create-Path([string]$Path){
-    if ($Path) {
-        if (-Not (Test-Path $Path)) {
-            # Create the directory if not exists
-            New-Item $Path -ItemType Directory
-            Write-Host "Created path $Path"
-        }
     }
 }
