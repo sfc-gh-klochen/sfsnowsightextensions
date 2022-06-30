@@ -15,6 +15,12 @@ Senior Solution Architect at Snowflake Professional Services.
 # Install
 All binaries are located in [Releases](https://github.com/Snowflake-Labs/sfsnowsightextensions/releases)
 
+##### NOTE: You can use the [Download-SFBinaries](https://github.com/Snowflake-Labs/sfsnowsightextensions/Download-SFBinaries.ps1) file to automate the download and setup of your session like so:
+
+```pwsh
+pwsh -File ./Download-SFBinaries.ps1
+```
+
 ## Install PowerShell
 Install Powershell 7 from [Powershell GitHub Releases](https://github.com/PowerShell/PowerShell/releases) or [Powershell Landing page](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell).
 
