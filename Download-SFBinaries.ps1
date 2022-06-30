@@ -17,4 +17,6 @@ curl "https://github.com/Snowflake-Labs/sfsnowsightextensions/releases/download/
 
 Expand-Archive "~/Downloads/SnowflakePS.$os.$version_number.zip" -DestinationPath "~/Downloads/SnowflakePS.$os.$version_number" -Force
 
-Import-Module "~/Downloads/SnowflakePS.$os.$version_number/$os/SnowflakePS.psd1" -Force
+Import-Module "~/Downloads/SnowflakePS.$os.$version_number/$os/SnowflakePS.psd1" -Force -Verbose
+
+Get-Command -Module SnowflakePS
