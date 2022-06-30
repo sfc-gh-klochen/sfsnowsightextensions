@@ -294,6 +294,19 @@ function Update-Dashboards ()
                     $fparam.Warehouse = $SFWarehouse
                     $fparam.Database = $SFDatabase
                     $fparam.Schema = $SFSchema
+                    $fparam.Database = $SFDatabase
+                    $fparam.Schema = $SFSchema
+                    $fparam.FileSystemSafeName = ""
+                    $fparam.AccountName = ""
+                    $fparam.AccountFullName = ""
+                    $fparam.AccountUrl = ""
+                    $fparam.OrganizationID = ""
+                    $fparam.Region = ""
+                    $fparam.Contents.context.role = $SFRole
+                    $fparam.Contents.context.warehouse = $SFWarehouse
+                    $fparam.Contents.context.database = $SFDatabase
+                    $fparam.Contents.context.schema = $SFSchema
+                    $fparam.URL = ""
                     foreach ($worksheet in $fparam.Worksheets) {
                         $worksheet.OwnerUserID = ""
                         $worksheet.OwnerUserName = ""
@@ -307,19 +320,9 @@ function Update-Dashboards ()
                         $worksheet.AccountUrl = ""
                         $worksheet.OrganizationID = ""
                         $worksheet.Region = ""
+                        $worksheet.URL = ""
                     }
-                    $fparam.Database = $SFDatabase
-                    $fparam.Schema = $SFSchema
-                    $fparam.FileSystemSafeName = ""
-                    $fparam.AccountName = ""
-                    $fparam.AccountFullName = ""
-                    $fparam.AccountUrl = ""
-                    $fparam.OrganizationID = ""
-                    $fparam.Region = ""
-                    $fparam.Contents.context.role = $SFRole
-                    $fparam.Contents.context.warehouse = $SFWarehouse
-                    $fparam.Contents.context.database = $SFDatabase
-                    $fparam.Contents.context.schema = $SFSchema
+
                 }
 
             if ($OutputDirectory) {
@@ -363,6 +366,7 @@ function Update-Worksheets ()
                 $fparam.AccountUrl = ""
                 $fparam.OrganizationID = ""
                 $fparam.Region = ""
+                $fparam.URL = ""
             }
             if ($OutputDirectory) {
                 if (-Not (Test-Path $OutputDirectory/worksheets)) {
