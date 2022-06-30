@@ -12,13 +12,10 @@ Do { $os = Read-Host -Prompt "Which os are you downloading the binaries for? Use
     while ('osx', 'win', 'linux' -notcontains $os )
 
 if ($os -eq 'win'){
-    $download_path = "%userprofile%\Downloads"
-}
-elseif ($os -eq 'osx'){
-    $download_path = '~/Downloads'
+    $download_path = "$home/Downloads"
 }
 else {
-    $download_path = '/usr/local'
+    $download_path = '~/Downloads'
 }
 
 Write-Host "`r`nAttempting to download file if it exists at https://github.com/Snowflake-Labs/sfsnowsightextensions/releases/download/$version_number/SnowflakePS.$os.$version_number.zip`r`n" -ForegroundColor Cyan
