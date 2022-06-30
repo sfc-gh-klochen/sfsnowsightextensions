@@ -173,9 +173,10 @@ function Transfer-SFObjects ()
 
                 $SFObjectTypes -Split ',' | ForEach-Object {
                     $obj = $_.Trim().ToLower() 
+                    Write-Host "OBJECT TYPE: $obj" -ForegroundColor red
                             
                     if ($obj -eq "all") {
-                        Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath }
+                        Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath 
                         }
 
                         $TargetFilters = Get-ChildItem "$TargetPath/filters" -recurse -exclude '*.daterange.*','*.datebucket.*','*.timezone.*'
@@ -227,8 +228,10 @@ function Transfer-SFObjects ()
                 }
             }
         # No TargetAccounts Supplied
+        }
         else { Write-Host "`r`nNo target accounts supplied, ending program run successfully." -ForegroundColor Cyan }
-    }
+}
+    
 
 <#
 .SYNOPSIS
