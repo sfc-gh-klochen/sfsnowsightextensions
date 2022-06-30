@@ -27,7 +27,7 @@
 RootModule = 'SnowflakePS.dll'
 
 # Version number of this module.
-ModuleVersion = '2022.6.2.0'
+ModuleVersion = '2022.6.29.1'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -48,7 +48,7 @@ Copyright = 'Copyright © 2021-2022'
 Description = 'Snowflake Snowsight Extensions provide access to Snowflake features via console'
 
 # Minimum version of the PowerShell engine required by this module
-PowerShellVersion = '7.1'
+PowerShellVersion = '7.2.4'
 
 # Name of the PowerShell host required by this module
 # PowerShellHostName = ''
