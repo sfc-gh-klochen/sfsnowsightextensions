@@ -15,7 +15,7 @@ Senior Solution Architect at Snowflake Professional Services.
 # Install
 All binaries are located in [Releases](https://github.com/Snowflake-Labs/sfsnowsightextensions/releases)
 
-##### NOTE: You can use the [Download-SFBinaries](https://github.com/Snowflake-Labs/sfsnowsightextensions/Download-SFBinaries.ps1) file to automate the download and setup of your session like so:
+##### NOTE: You can use the [Download-SFBinaries](https://github.com/Snowflake-Labs/sfsnowsightextensions/blob/main/Download-SFBinaries.ps1) file to automate the download and setup of your session like so:
 
 ```pwsh
 pwsh -File ./Download-SFBinaries.ps1
