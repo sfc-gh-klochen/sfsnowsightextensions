@@ -9,12 +9,23 @@ function Transfer-SFObjects ()
         [Parameter()] [String]$SFWarehouse='COMPUTE_WH',
         [Parameter()] [String]$SFDatabase,
         [Parameter()] [String]$SFSchema,
-        [Parameter()] [String]$OutputDirectory
+        [Parameter()] [String]$OutputDirectory,
+        [Parameter()] [String]$CleanSourceFiles=$false,
+        [Parameter()] [String]$SkipOrCreateNewObjects=$true
     )
+
+    # Build a hashtable of values for iterating through in target account uploads
+    $SourceReplacementValues = @{
+        Role = $SFRole
+        Warehouse = $SFWarehouse
+        Database = $SFDatabase
+        Schema = $SFSchema
+    }
 
     # Retrieve Source Account Objects
     if (-Not (Test-Path $SourceAccountLocatorOrFilepath)) {
         # Process Account Import
+    
         if (SSO-Prompt($SourceAccountLocatorOrFilepath)){ 
         $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath -SSO
         }
@@ -25,15 +36,11 @@ function Transfer-SFObjects ()
         if ($OutputDirectory) {
             $OutPath = "$OutputDirectory/$SourceAccountLocatorOrFilepath"
         }
-        else {
-            echo "No OutputDirectory provided. Using present working directory to write source files for source account: $pwd"
-            $OutPath = "$pwd/$SourceAccountLocatorOrFilepath"
-        }
 
         # Import Each Object Type
         $SFObjectTypes -Split ',' | ForEach-Object {
             $obj = $_.Trim().ToLower()
-            echo "`r`nRetreiving $obj from source account.`r`n"
+            Write-Host "`r`nRetreiving $obj from source account.`r`n"
             
             # Pull down objects + update object wh, role, db, schema
             if ($obj -eq "all") {
@@ -43,67 +50,65 @@ function Transfer-SFObjects ()
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
 
-                # Save the source objects as files
-                $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
-                $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
-                $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
+                # If an outpath is provided, write to it.
+                if ($OutPath){
+                    # Save the source objects as files
+                    $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
+                    $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
+                    $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
 
-                Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema 
-                }
-
-                foreach ($f in $SourceFilters){
-                    Update-Filter-Object($f)
-                }
-                foreach ($f in $SourceDashboards){
-                    Update-Dashboard-Object($f)
-                }
-                foreach ($f in $SourceWorksheets){
-                    Update-Worksheet-Object($f)
+                    # if CleanSourceFiles, rename and clean the source account file.
+                    if ($CleanSourceFiles){
+                        Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema 
+                        }
+                    }
                 }
             }
             elseif($obj -eq "filters") {
                 $SourceFilters = Get-SFFilters -AuthContext $SourceContext
                 $SourceFilters = $SourceFilters | Where-Object { $_.Scope -ne 'global'}
-                $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
-
-                Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema 
-                }
-
-                foreach ($f in $SourceFilters){
-                    Update-Filter-Object($f)
+                if ($OutPath){
+                    $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
+                    
+                    if ($CleanSourceFiles) {
+                        Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -FiltersPath "$OutPath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema 
+                        }
+                    }
                 }
             }
             elseif ($obj -eq "dashboards") {
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
-                $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
+                if ($OutPath){
+                    $SourceDashboards | foreach {$_.SaveToFolder("$OutPath/dashboards")}
 
-                Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -SFDatabase $SFDatabase -SFSchema $SFSchema 
-                }
-
-                foreach ($f in $SourceDashboards){
-                    Update-Dashboard-Object($f)
+                    if ($CleanSourceFiles) {
+                        Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -DashboardsPath "$OutPath/dashboards" -SFDatabase $SFDatabase -SFSchema $SFSchema 
+                        }
+                    }
                 }
             }
             elseif ($obj -eq "worksheets") {
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
-                $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
+                if ($OutPath){
+                    $SourceWorksheets | foreach {$_.SaveToFolder("$OutPath/worksheets")}
 
-                Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -SFDatabase $SFDatabase -SFSchema $SFSchema 
-                }
-
-                foreach ($f in $SourceWorksheets){
-                    Update-Worksheet-Object($f)
+                    if ($CleanSourceFiles) {
+                        Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$OutPath/worksheets" -SFDatabase $SFDatabase -SFSchema $SFSchema 
+                        }
+                    }
                 }
             }
             else {
-                echo "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
+                Write-Host "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
             }
         }
         if ($TargetAccounts) {
             # Begin the upload to target account process
             $TargetAccounts -Split ',' | ForEach-Object {
                 $TargetAccountLocator = $_
+                $TargetReplacementValues = RenameTargetObjectsPrompt($SourceReplacementValues, $TargetAccountLocator)
                 $TargetPath = "$OutPath/$TargetAccountLocator"
+
                 if (SSO-Prompt($TargetAccountLocator)){ 
                     $TargetContext = Connect-SFApp -Account $TargetAccountLocator -SSO
                     }
@@ -111,37 +116,43 @@ function Transfer-SFObjects ()
                         $TargetContext = Connect-SFApp -Account $TargetAccountLocator
                     }
                 $SFObjectTypes -Split ',' | ForEach-Object {
-                    $obj = $_.Trim().ToLower()            
+                    $obj = $_.Trim().ToLower()
                     if ($obj -eq "all") {
                         foreach ($f in $SourceFilters){
+                            Update-Filter-Object($f, $TargetReplacementValues)
                             New-SFFilter -AuthContext $TargetContext -Filter $f -ActionIfExists Skip
                         }
         
                         foreach ($f in $SourceDashboards){
+                            Update-Dashboard-Object($f, $TargetReplacementValues)
                             New-SFDashboard -AuthContext $TargetContext -Dashboard $f -ActionIfExists CreateNew
                         }
-        
                         foreach ($f in $SourceWorksheets){
+                            Update-Worksheet-Object($f, $TargetReplacementValues)
                             New-SFWorksheet -AuthContext $TargetContext -Worksheet $f -ActionIfExists CreateNew
                         }
                     }
                     elseif ($obj -eq "filters") {
                         foreach ($f in $SourceFilters){
+                            Update-Filter-Object($f, $TargetReplacementValues)
                             New-SFFilter -AuthContext $TargetContext -Filter $f -ActionIfExists Skip
+
                         }
                     }
                     elseif ($obj -eq "dashboards") {
                         foreach ($f in $SourceDashboards){
+                            Update-Dashboard-Object($f, $TargetReplacementValues)
                             New-SFDashboard -AuthContext $TargetContext -Dashboard $f -ActionIfExists CreateNew
                         }
                     }
                     elseif ($obj -eq "worksheets") {
                         foreach ($f in $SourceWorksheets){
+                            Update-Dashboard-Object($f, $TargetReplacementValues)
                             New-SFWorksheet -AuthContext $TargetContext -Worksheet $f -ActionIfExists CreateNew
                         }
                     }
                     else {
-                        echo "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
+                        Write-Host "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
                     } 
                 }
             }
@@ -155,13 +166,14 @@ function Transfer-SFObjects ()
             $OutPath = $OutputDirectory
         }
         else {
-            echo "`r`nNo OutputDirectory provided. Using input directory to write target files: $SourceAccountLocatorOrFilepath"
+            Write-Host "`r`nNo OutputDirectory provided. Using input directory to write target files: $SourceAccountLocatorOrFilepath"
             $OutPath = $SourceAccountLocatorOrFilepath
         }
 
         if ($TargetAccounts){
             $TargetAccounts -Split ',' | ForEach-Object {
                 $TargetAccountLocator = $_
+                
                 $TargetPath = "$OutPath/$TargetAccountLocator"
 
                 if (SSO-Prompt($TargetAccountLocator)){ 
@@ -173,7 +185,7 @@ function Transfer-SFObjects ()
 
                 $SFObjectTypes -Split ',' | ForEach-Object {
                     $obj = $_.Trim().ToLower() 
-                    Write-Host "OBJECT TYPE: $obj" -ForegroundColor red
+                    Write-Host "OBJECT TYPE: $obj" -ForegroundColor Yellow
                             
                     if ($obj -eq "all") {
                         Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath 
@@ -223,7 +235,7 @@ function Transfer-SFObjects ()
                         }
                     }
                     else {
-                        echo "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
+                        Write-Host "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
                     }
                 }
             }
@@ -235,41 +247,51 @@ function Transfer-SFObjects ()
 
 <#
 .SYNOPSIS
-Takes a single account locator or filepath to existing files pulled from an account and uploads the specified objects to one or many accounts.
+Transfer-SFObjects is a wrapper module which invokes several other modules in sequence including:
+Import-Dashboards
+Update-SFDocuments.ps1
+taks a single account locator or filepath to existing files pulled from an account and uploads the specified objects to one or many accounts. 
+You can also run it without any target accounts to simply pull down files from the source account.
 
 .DESCRIPTION
-Use this function as a one stop shop for taking snowsight objects between accounts.
+Use this function for taking snowsight objects between accounts in a one line command. 
 
 .PARAMETER SFObjectTypes
-Required: Specifies the object type being updated. Filters, Dashboards, Worksheets, or or a combination of the three (do not use all with the others or duplicates will be created) can be entered.
+Required [string]: SFObjectTypes specifies the object type being updated. Filters, Dashboards, Worksheets, or or a combination of the three (do not use all with the others or duplicates will be created) can be entered.
 Choose All to update Filters, Dashboards, and Worksheets at the same time. Casing, ordering, and spaces do not matter for this argument do not matter. 'filter,dashboard,worksheet' = 'Worksheet, Dashboard, Filter'."
 
 .Parameter SourceAccountLocatorOrFilepath
-Required: A string with the account locator or file path of the source objects you want to transfer to target accounts. If supplied with a value that is not a file path, this will evaluate as an account locator and attempt to connect. See the -Connect-SFApp method for more details on how connections will be made.
+Required [string]: SourceAccountLocatorOrFilepath contains account locator or file path of the source objects you want to transfer to target accounts. If supplied with a value that is not a file path, this will evaluate as an account locator and attempt to connect. See the -Connect-SFApp method for more details on how connections will be made.
 When supplied with a value that is a valid path on your filesystem, this paremeter will evaluate this path and use it to read in files from the following subdirectories:
 /filters, /dashboards, /worksheets.
 
 .Parameter TargetAccounts
-Optional: A comma separated string with the account locators you wish to upload snowflake objects from SourceAccountLocatorOrFilepath to.
+Optional [string]: A comma separated string with the account locators you wish to upload snowflake objects from SourceAccountLocatorOrFilepath to.
 Ex: 'xy12345.us-east-1,MyGCPAcct.us-central1,xy12345.west-us-2.azure,MyPrivateLinkAcct.privatelink.snowflakecomputing.com'
 
 .PARAMETER SFRole
-Optional: Specifies the Snowflake Role required to run the specific object in new accounts. Default is ACCOUNTADMIN.
+Optional [string]: SFRole Specifies the Snowflake Role required to run the specific object in new accounts. Default is ACCOUNTADMIN.
 
 .PARAMETER SFWarehouse
-Optional: Specifies the Snowflake Warehouse required to run the specific object in new accounts. An error will display if no warehouse is designated. Default is COMPUTE_WH
+Optional [string]: SFWarehouse [Optional string specifies the Snowflake Warehouse required to run the specific object in new accounts. Default is COMPUTE_WH.]
 
 .PARAMETER SFDatabase
-Optional: SFDatabase [Optional, name of database to use in target accounts for context]
+Optional: SFDatabase [Optional string with name of database to use in target accounts for context]
 
 .PARAMETER SFSchema
-Optional: SFSchema [Optional name of schema to use in target accounts for context]
+Optional: SFSchema [Optional string with name of schema to use in target accounts for context]
 
 .PARAMETER OutputDirectory
 Optional: OutputDirectory [Optional string with a parent level dir determining where source and target accounts should create sub dirs]
 
+.PARAMETER RenameObjects
+Optional: RenameObjects [Determines whether files pulled down from a source account or created for target accounts are 'cleaned' of identifiable information including locators, urls, role, warehouse, database, and schema. Default is false.]
+
+.PARAMETER SkipOrCreateObjects
+Optional: SkipOrCreateObjects [Optional string with a parent level dir determining where source and target accounts should create sub dirs]
+
 .INPUTS
-None. You cannot pipe objects to Transfer-Objects.
+The program will take input. You cannot pipe objects to Transfer-Objects.
 
 .OUTPUTS
 Directories with files for the relevant SFObjectTypes in the OutputDirectory or PWD
@@ -302,19 +324,19 @@ Transfer-Objects -SFObjectTypes 'filters, dashboards, worksheets' -SourceAccount
 }
 
 
-function Update-Filter-Object ($fparam)
+function Update-Filter-Object ($fparam, $values)
 {
     $fparam.update | % { #Manual Filter Update
         if($fparam.Type -eq 'manual'){
-            $fparam.Role = $SFRole
-            $fparam.Warehouse = $SFWarehouse
-            $fparam.Configuration.context.role = $SFRole
-            $fparam.Configuration.context.warehouse = $SFWarehouse
-            $fparam.Database = $SFDatabase
-            $fparam.Schema = $SFSchema
-            $fparam.Configuration.context.database = $SFSchema
-            $fparam.Configuration.context.schema = $SFSchema
-            $fparam.FileSystemSafeName = ""
+            $fparam.Role = $values.Role
+            $fparam.Warehouse = $values.Warehouse
+            $fparam.Configuration.context.role = $values.Role
+            $fparam.Configuration.context.warehouse = $values.Warehouse
+            $fparam.Database = $values.Database
+            $fparam.Schema = $values.Schema
+            $fparam.Configuration.context.database = $values.Database
+            $fparam.Configuration.context.schema = $values.Schema
+            # $fparam.FileSystemSafeName = ""
             $fparam.AccountName = ""
             $fparam.AccountFullName = ""
             $fparam.AccountUrl = ""
@@ -325,25 +347,25 @@ function Update-Filter-Object ($fparam)
         elseif($fparam.Type -eq 'query') {
             $fparam.Worksheet.OwnerUserID = ""
             $fparam.Worksheet.OwnerUserName = ""
-            $fparam.Worksheet.Role = $SFRole
-            $fparam.Worksheet.Warehouse = $SFWarehouse
-            $fparam.Worksheet.FileSystemSafeName = ""
+            $fparam.Worksheet.Role = $values.Role
+            $fparam.Worksheet.Warehouse = $values.Warehouse
+            # $fparam.Worksheet.FileSystemSafeName = ""
             $fparam.Worksheet.AccountName = ""
             $fparam.Worksheet.AccountFullName = ""
             $fparam.Worksheet.AccountUrl = ""
             $fparam.Worksheet.OrganizationID = ""
             $fparam.Worksheet.Region = ""
-            $fparam.Worksheet.Database = $SFDatabase
-            $fparam.Worksheet.Schema = $SFSchema
-            $fparam.Role = $SFRole
-            $fparam.Warehouse = $SFWarehouse
-            $fparam.Configuration.context.role = $SFRole
-            $fparam.Configuration.context.warehouse = $SFWarehouse
-            $fparam.Database = $SFDatabase
-            $fparam.Schema = $SFSchema
-            $fparam.Configuration.context.database = $SFDatabase
-            $fparam.Configuration.context.schema = $SFSchema
-            $fparam.FileSystemSafeName = ""
+            $fparam.Worksheet.Database = $values.Database
+            $fparam.Worksheet.Schema = $values.Schema
+            $fparam.Role = $values.Role
+            $fparam.Warehouse = $values.Warehouse
+            $fparam.Configuration.context.role = $values.Role
+            $fparam.Configuration.context.warehouse = $values.Warehouse
+            $fparam.Database = $values.Database
+            $fparam.Schema = $values.Schema
+            $fparam.Configuration.context.database = $values.Database
+            $fparam.Configuration.context.schema = $values.Schema
+            # $fparam.FileSystemSafeName = ""
             $fparam.AccountName = ""
             $fparam.AccountFullName = ""
             $fparam.AccountUrl = ""
@@ -353,55 +375,55 @@ function Update-Filter-Object ($fparam)
         }
 }
 
-function Update-Dashboard-Object ($fparam) 
+function Update-Dashboard-Object ($fparam, $values)
 {
     $fparam.update | % {
         $fparam.OwnerUserID = ""
         $fparam.OwnerUserName = ""
-        $fparam.Role = $SFRole
-        $fparam.Warehouse = $SFWarehouse
-        $fparam.Database = $SFDatabase
-        $fparam.Schema = $SFSchema
+        $fparam.Role = $values.Role
+        $fparam.Warehouse = $values.Warehouse
+        $fparam.Database = $values.Database
+        $fparam.Schema = $values.Schema
         foreach ($worksheet in $fparam.Worksheets) {
             $worksheet.OwnerUserID = ""
             $worksheet.OwnerUserName = ""
-            $worksheet.Role = $SFRole
-            $worksheet.Warehouse = $SFWarehouse
-            $worksheet.Database = $SFDatabase
-            $worksheet.Schema = $SFSchema
-            $worksheet.FileSystemSafeName = ""
+            $worksheet.Role = $values.Role
+            $worksheet.Warehouse = $values.Warehouse
+            $worksheet.Database = $values.Database
+            $worksheet.Schema = $values.Schema
+            # $worksheet.FileSystemSafeName = ""
             $worksheet.AccountName = ""
             $worksheet.AccountFullName = ""
             $worksheet.AccountUrl = ""
             $worksheet.OrganizationID = ""
             $worksheet.Region = ""
         }
-        $fparam.Database = $SFDatabase
-        $fparam.Schema = $SFSchema
-        $fparam.FileSystemSafeName = ""
+        $fparam.Database = $values.Database
+        $fparam.Schema = $values.Schema
+        # $fparam.FileSystemSafeName = ""
         $fparam.AccountName = ""
         $fparam.AccountFullName = ""
         $fparam.AccountUrl = ""
         $fparam.OrganizationID = ""
         $fparam.Region = ""
-        $fparam.Contents.context.role = $SFRole
-        $fparam.Contents.context.warehouse = $SFWarehouse
-        $fparam.Contents.context.database = $SFDatabase
-        $fparam.Contents.context.schema = $SFSchema
+        $fparam.Contents.context.role = $values.Role
+        $fparam.Contents.context.warehouse = $values.Warehouse
+        $fparam.Contents.context.database = $values.Database
+        $fparam.Contents.context.schema = $values.Schema
     }
 }
 
 
-function Update-Worksheet-Object ($fparam)
+function Update-Worksheet-Object ($fparam, $values)
 {
     $fparam.update | % {
         $fparam.OwnerUserID = ""
         $fparam.OwnerUserName = ""
-        $fparam.Role = $SFRole
-        $fparam.Warehouse = $SFWarehouse
-        $fparam.Database = $SFDatabase
-        $fparam.Schema = $SFSchema
-        $fparam.FileSystemSafeName = ""
+        $fparam.Role = $values.Role
+        $fparam.Warehouse = $values.Warehouse
+        $fparam.Database = $values.Database
+        $fparam.Schema = $values.Schema
+        # $fparam.FileSystemSafeName = ""
         $fparam.AccountName = ""
         $fparam.AccountFullName = ""
         $fparam.AccountUrl = ""
@@ -411,8 +433,20 @@ function Update-Worksheet-Object ($fparam)
 }
 
 function SSO-Prompt([string]$inputString){
+    return yes-no "Does the account at $inputString use SSO?"
+}
+
+function RenameTargetObjectsPrompt($values, $account){
+    if (yes-no "Would you like to change any of the context values (Role, Warehouse, Database, or Schema) for the account at $($account)? Current Values: `r`n$($values)") {
+        $TargetReplacementValues = ChangeValues($values)
+        return $TargetReplacementValues
+    }
+    else {return $SourceReplacementValues}
+}
+
+function yes-no([string]$inputString){
     do {
-        $UserInput = Read-Host -Prompt "`r`nDoes the account at $inputString use SSO? Use y/n"
+        $UserInput = take_input "`r`n$inputString`r`nUse y/n: "
     } while (
        'y','yes','n','no' -notcontains $UserInput
     )
@@ -422,4 +456,32 @@ function SSO-Prompt([string]$inputString){
     else{
         return $false
     }
+}
+
+function take_input() {
+    param
+    (
+        [Parameter(Position = 0, ValueFromPipeline = $true)]
+        [string]$msg,
+        [string]$ForegroundColor = "Cyan"
+    )
+
+    Write-Host -ForegroundColor $ForegroundColor -NoNewline $msg;
+    return Read-Host
+}
+
+
+function ChangeValues($values){
+    $OutHash = @{}
+    foreach ($h in $values.GetEnumerator()) {
+        $k = $h.Name
+        $v = $h.Value
+        $UserInput = take_input "Please provide a value for $($k). Current value is $($v), hit enter to use this value: "
+        if ($UserInput) {
+            $OutHash.$k = $UserInput
+        }
+        else {$OutHash.$k = $v 
+        }
+    }
+    return $OutHash
 }
