@@ -10,8 +10,12 @@ function Transfer-SFObjects ()
         [Parameter()] [String]$SFDatabase,
         [Parameter()] [String]$SFSchema,
         [Parameter()] [String]$OutputDirectory,
-        [Parameter()] [String]$CleanSourceFiles=$false,
-        [Parameter()] [String]$SkipOrCreateNewObjects=$true
+        [Parameter()] [ValidateSet("CreateNew", "Skip")] [String]$ActionIfExistsDashboard='Skip',
+        [Parameter()] [ValidateSet("Skip", "Overwrite")] [String]$ActionIfExistsFilter='Skip',
+        [Parameter()] [ValidateSet("CreateNew", "Skip", "Overwrite")] [String]$ActionIfExistsWorksheet='Skip',
+        [Parameter()] [bool]$SSO=$false,
+        [Parameter()] [bool]$CleanSourceFiles=$false,
+        [Parameter()] [bool]$InteractiveMode=$false
     )
 
     # Build a hashtable of values for iterating through in target account uploads
@@ -21,6 +25,8 @@ function Transfer-SFObjects ()
         Database = $SFDatabase
         Schema = $SFSchema
     }
+
+    $test = RenameTargetObjectsPrompt($SourceReplacementValues, 'test_acct_name')
 
     # Retrieve Source Account Objects
     if (-Not (Test-Path $SourceAccountLocatorOrFilepath)) {
@@ -120,35 +126,35 @@ function Transfer-SFObjects ()
                     if ($obj -eq "all") {
                         foreach ($f in $SourceFilters){
                             Update-Filter-Object($f, $TargetReplacementValues)
-                            New-SFFilter -AuthContext $TargetContext -Filter $f -ActionIfExists Skip
+                            New-SFFilter -AuthContext $TargetContext -Filter $f -ActionIfExists $ActionIfExistsFilter
                         }
         
                         foreach ($f in $SourceDashboards){
                             Update-Dashboard-Object($f, $TargetReplacementValues)
-                            New-SFDashboard -AuthContext $TargetContext -Dashboard $f -ActionIfExists CreateNew
+                            New-SFDashboard -AuthContext $TargetContext -Dashboard $f -ActionIfExists $ActionIfExistsDashboard
                         }
                         foreach ($f in $SourceWorksheets){
                             Update-Worksheet-Object($f, $TargetReplacementValues)
-                            New-SFWorksheet -AuthContext $TargetContext -Worksheet $f -ActionIfExists CreateNew
+                            New-SFWorksheet -AuthContext $TargetContext -Worksheet $f -ActionIfExists $ActionIfExistsWorksheet
                         }
                     }
                     elseif ($obj -eq "filters") {
                         foreach ($f in $SourceFilters){
                             Update-Filter-Object($f, $TargetReplacementValues)
-                            New-SFFilter -AuthContext $TargetContext -Filter $f -ActionIfExists Skip
+                            New-SFFilter -AuthContext $TargetContext -Filter $f -ActionIfExists $ActionIfExistsFilter
 
                         }
                     }
                     elseif ($obj -eq "dashboards") {
                         foreach ($f in $SourceDashboards){
                             Update-Dashboard-Object($f, $TargetReplacementValues)
-                            New-SFDashboard -AuthContext $TargetContext -Dashboard $f -ActionIfExists CreateNew
+                            New-SFDashboard -AuthContext $TargetContext -Dashboard $f -ActionIfExists $ActionIfExistsDashboard
                         }
                     }
                     elseif ($obj -eq "worksheets") {
                         foreach ($f in $SourceWorksheets){
                             Update-Dashboard-Object($f, $TargetReplacementValues)
-                            New-SFWorksheet -AuthContext $TargetContext -Worksheet $f -ActionIfExists CreateNew
+                            New-SFWorksheet -AuthContext $TargetContext -Worksheet $f -ActionIfExists $ActionIfExistsWorksheet
                         }
                     }
                     else {
@@ -196,15 +202,15 @@ function Transfer-SFObjects ()
                         $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
                         
                         foreach ($f in $TargetFilters){
-                            New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
+                            New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists $ActionIfExistsFilter
                         }
 
                         foreach ($f in $TargetDashboards){
-                            New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
+                            New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists $ActionIfExistsDashboard
                         }
 
                         foreach ($f in $TargetWorksheets){
-                            New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
+                            New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists $ActionIfExistsWorksheet
                         }
                     }
                     elseif($obj -eq "filters") {
@@ -213,7 +219,7 @@ function Transfer-SFObjects ()
                         $TargetFilters = Get-ChildItem "$TargetPath/filters" -recurse -exclude '*.daterange.*','*.datebucket.*','*.timezone.*'
 
                         foreach ($f in $TargetFilters){
-                            New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists Skip
+                            New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists $ActionIfExistsFilter
                         }
                     }
                     elseif ($obj -eq "dashboards") {
@@ -222,7 +228,7 @@ function Transfer-SFObjects ()
                         $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
 
                         foreach ($f in $TargetDashboards){
-                            New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists CreateNew
+                            New-SFDashboard -AuthContext $TargetContext -DashboardFile $f.FullName -ActionIfExists $ActionIfExistsDashboard
                         }
                     }
                     elseif ($obj -eq "worksheets") {
@@ -231,7 +237,7 @@ function Transfer-SFObjects ()
                         $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
 
                         foreach ($f in $TargetWorksheets){
-                            New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists CreateNew
+                            New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists $ActionIfExistsWorksheet
                         }
                     }
                     else {
@@ -261,7 +267,7 @@ Required [string]: SFObjectTypes specifies the object type being updated. Filter
 Choose All to update Filters, Dashboards, and Worksheets at the same time. Casing, ordering, and spaces do not matter for this argument do not matter. 'filter,dashboard,worksheet' = 'Worksheet, Dashboard, Filter'."
 
 .Parameter SourceAccountLocatorOrFilepath
-Required [string]: SourceAccountLocatorOrFilepath contains account locator or file path of the source objects you want to transfer to target accounts. If supplied with a value that is not a file path, this will evaluate as an account locator and attempt to connect. See the -Connect-SFApp method for more details on how connections will be made.
+Required [string]: Contains account locator or file path of the source objects you want to transfer to target accounts. If supplied with a value that is not a file path, this will evaluate as an account locator and attempt to connect. See the -Connect-SFApp method for more details on how connections will be made.
 When supplied with a value that is a valid path on your filesystem, this paremeter will evaluate this path and use it to read in files from the following subdirectories:
 /filters, /dashboards, /worksheets.
 
@@ -270,25 +276,38 @@ Optional [string]: A comma separated string with the account locators you wish t
 Ex: 'xy12345.us-east-1,MyGCPAcct.us-central1,xy12345.west-us-2.azure,MyPrivateLinkAcct.privatelink.snowflakecomputing.com'
 
 .PARAMETER SFRole
-Optional [string]: SFRole Specifies the Snowflake Role required to run the specific object in new accounts. Default is ACCOUNTADMIN.
+Optional [string]: The name of the Snowflake Role required to run the specific object in target accounts or cleaned source files. Default is ACCOUNTADMIN. This value can be changed within the program with InteractiveMode set to true.
 
 .PARAMETER SFWarehouse
-Optional [string]: SFWarehouse [Optional string specifies the Snowflake Warehouse required to run the specific object in new accounts. Default is COMPUTE_WH.]
+Optional [string]: The name of the Snowflake virtual warehouse required to run the specific object in target accounts or cleaned source files for context. Default is COMPUTE_WH. This value can be changed within the program with InteractiveMode set to true.
 
 .PARAMETER SFDatabase
-Optional: SFDatabase [Optional string with name of database to use in target accounts for context]
+Optional [string]: The name of the database to use in target accounts or cleaned source files for context. This value can be changed within the program with InteractiveMode set to true.
 
 .PARAMETER SFSchema
-Optional: SFSchema [Optional string with name of schema to use in target accounts for context]
+Optional [string]: The name of the schema to use in target accounts or cleaned source files for for context. This value can be changed within the program with InteractiveMode set to true.
 
 .PARAMETER OutputDirectory
-Optional: OutputDirectory [Optional string with a parent level dir determining where source and target accounts should create sub dirs]
+Optional [string]: A parent level dir determining where source and target accounts should create sub dirs. Subdirs will be whichever objects are provided in ObjectTypes (worksheets/,dashboards/,filters/)
 
-.PARAMETER RenameObjects
-Optional: RenameObjects [Determines whether files pulled down from a source account or created for target accounts are 'cleaned' of identifiable information including locators, urls, role, warehouse, database, and schema. Default is false.]
+.PARAMETER ActionIfExistsDashboard
+Optional [bool] {CreateNew, Skip}: The desired behavior when a Dashboard with the same name is found. Default is Skip. 
 
-.PARAMETER SkipOrCreateObjects
-Optional: SkipOrCreateObjects [Optional string with a parent level dir determining where source and target accounts should create sub dirs]
+.PARAMETER ActionIfExistsFilter
+Optional [bool] {Overwrite, Skip}: The desired behavior when a Filter with the same name is found. Default is Skip.
+
+.PARAMETER ActionIfExistsWorksheet
+Optional [bool] {Overwrite, CreateNew, Skip}: The desired behavior when a Worksheet with the same name is found. Default is Skip.
+
+.PARAMETER CleanSourceFiles
+Optional [bool]: Determines whether files pulled down from a source account are 'cleaned' of identifiable information including account locator, urls, role, warehouse, database, and schema. Default is false.
+
+.PARAMETER SSO
+Optional [bool]: Required when not in InteractiveMode, else the user will be prompted on an account by account basis for target accounts. default is False.
+
+.PARAMETER InteractiveMode
+Optional [bool]: InteractiveMode specifies that the user can provide inputs during runtime for values such as the context values and SSOs.
+
 
 .INPUTS
 The program will take input. You cannot pipe objects to Transfer-Objects.
@@ -336,7 +355,7 @@ function Update-Filter-Object ($fparam, $values)
             $fparam.Schema = $values.Schema
             $fparam.Configuration.context.database = $values.Database
             $fparam.Configuration.context.schema = $values.Schema
-            # $fparam.FileSystemSafeName = ""
+            $fparam.FileSystemSafeName = ""
             $fparam.AccountName = ""
             $fparam.AccountFullName = ""
             $fparam.AccountUrl = ""
@@ -365,7 +384,7 @@ function Update-Filter-Object ($fparam, $values)
             $fparam.Schema = $values.Schema
             $fparam.Configuration.context.database = $values.Database
             $fparam.Configuration.context.schema = $values.Schema
-            # $fparam.FileSystemSafeName = ""
+            $fparam.FileSystemSafeName = ""
             $fparam.AccountName = ""
             $fparam.AccountFullName = ""
             $fparam.AccountUrl = ""
@@ -391,7 +410,7 @@ function Update-Dashboard-Object ($fparam, $values)
             $worksheet.Warehouse = $values.Warehouse
             $worksheet.Database = $values.Database
             $worksheet.Schema = $values.Schema
-            # $worksheet.FileSystemSafeName = ""
+            $worksheet.FileSystemSafeName = ""
             $worksheet.AccountName = ""
             $worksheet.AccountFullName = ""
             $worksheet.AccountUrl = ""
@@ -400,7 +419,7 @@ function Update-Dashboard-Object ($fparam, $values)
         }
         $fparam.Database = $values.Database
         $fparam.Schema = $values.Schema
-        # $fparam.FileSystemSafeName = ""
+        $fparam.FileSystemSafeName = ""
         $fparam.AccountName = ""
         $fparam.AccountFullName = ""
         $fparam.AccountUrl = ""
@@ -423,7 +442,7 @@ function Update-Worksheet-Object ($fparam, $values)
         $fparam.Warehouse = $values.Warehouse
         $fparam.Database = $values.Database
         $fparam.Schema = $values.Schema
-        # $fparam.FileSystemSafeName = ""
+        $fparam.FileSystemSafeName = ""
         $fparam.AccountName = ""
         $fparam.AccountFullName = ""
         $fparam.AccountUrl = ""
@@ -437,7 +456,7 @@ function SSO-Prompt([string]$inputString){
 }
 
 function RenameTargetObjectsPrompt($values, $account){
-    if (yes-no "Would you like to change any of the context values (Role, Warehouse, Database, or Schema) for the account at $($account)? Current Values: `r`n$($values)") {
+    if (yes-no "Would you like to change any of the context values (Role, Warehouse, Database, or Schema) for the account at $($account)? Current values are: {}" {
         $TargetReplacementValues = ChangeValues($values)
         return $TargetReplacementValues
     }
