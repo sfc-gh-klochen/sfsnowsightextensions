@@ -324,11 +324,13 @@ function Update-Dashboards ()
                         $worksheet.Region = ""
                         $worksheet.URL = ""
                         #CHARTS
-                        $worksheet.Charts.AccountName = ""
-                        $worksheet.Charts.AccountFullName = ""
-                        $worksheet.Charts.AccountUrl = ""
-                        $worksheet.Charts.OrganizationID = ""
-                        $worksheet.Charts.Region = ""
+                        foreach ($chart in $fparam.Worksheets.Charts) {
+                            $chart.AccountName = ""
+                            $chart.AccountFullName = ""
+                            $chart.AccountUrl = ""
+                            $chart.OrganizationID = ""
+                            $chart.Region = ""
+                        }
                     }
 
                 }
