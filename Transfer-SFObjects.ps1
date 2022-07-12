@@ -26,19 +26,30 @@ function Transfer-SFObjects ()
         Schema = $SFSchema
     }
 
-    $test = RenameTargetObjectsPrompt($SourceReplacementValues, 'test_acct_name')
+    # TODO: DELETE
+    # RenameTargetObjectsPrompt($SourceReplacementValues, "test_acct_name")
 
     # Retrieve Source Account Objects
-    if (-Not (Test-Path $SourceAccountLocatorOrFilepath)) {
-        # Process Account Import
-    
-        if (SSO-Prompt($SourceAccountLocatorOrFilepath)){ 
-        $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath -SSO
+    if (-Not (Test-Path $SourceAccountLocatorOrFilepath)) {        
+        # If InteractiveMode, prompt for SSO Input per every source and target account
+        if ($InteractiveMode){
+            if (SSO-Prompt($SourceAccountLocatorOrFilepath)){ 
+            $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath -SSO
+            }
+            else {
+            $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath
+            }
         }
         else {
-        $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath
+            if ($SSO){ 
+                $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath -SSO
+                }
+            else {
+                $SourceContext =  Connect-SFApp -Account $SourceAccountLocatorOrFilepath
+                }
         }
 
+        # OutputDirectory used to create an account specific OutPath aka MyOutputDirectory/MyAcctLocator123/[filters,dashboards,worksheets]
         if ($OutputDirectory) {
             $OutPath = "$OutputDirectory/$SourceAccountLocatorOrFilepath"
         }
@@ -46,17 +57,16 @@ function Transfer-SFObjects ()
         # Import Each Object Type
         $SFObjectTypes -Split ',' | ForEach-Object {
             $obj = $_.Trim().ToLower()
-            Write-Host "`r`nRetreiving $obj from source account.`r`n"
+            Write-Host "`r`nRetreiving $obj from source account.`r`n" -ForegroundColor Cyan
             
             # Pull down objects + update object wh, role, db, schema
             if ($obj -eq "all") {
                 $SourceFilters = Get-SFFilters -AuthContext $SourceContext 
-                $SourceFilters = $SourceFilters | Where-Object { $_.Scope  -ne 'global'}
-
+                $SourceFilters = $SourceFilters | Where-Object { $_.Scope  -ne 'global'} # Ensure the global snowflake filters are not retrieved at all
                 $SourceDashboards = Get-SFDashboards -AuthContext $SourceContext
                 $SourceWorksheets = Get-SFWorksheets -AuthContext $SourceContext
 
-                # If an outpath is provided, write to it.
+                # If an OutputDirectory is provided, write to it
                 if ($OutPath){
                     # Save the source objects as files
                     $SourceFilters | foreach {$_.SaveToFolder("$OutPath/filters")}
@@ -70,6 +80,7 @@ function Transfer-SFObjects ()
                     }
                 }
             }
+            # Individual object handling
             elseif($obj -eq "filters") {
                 $SourceFilters = Get-SFFilters -AuthContext $SourceContext
                 $SourceFilters = $SourceFilters | Where-Object { $_.Scope -ne 'global'}
@@ -112,21 +123,37 @@ function Transfer-SFObjects ()
             # Begin the upload to target account process
             $TargetAccounts -Split ',' | ForEach-Object {
                 $TargetAccountLocator = $_
-                $TargetReplacementValues = RenameTargetObjectsPrompt($SourceReplacementValues, $TargetAccountLocator)
                 $TargetPath = "$OutPath/$TargetAccountLocator"
+                if ($InteractiveMode) {
+                    # Prompt for replacement values and SSO if InteractiveMode  
+                    $TargetReplacementValues = RenameTargetObjectsPrompt($SourceReplacementValues, $TargetAccountLocator)
+                    
+                    if (SSO-Prompt($TargetAccountLocator)){
+                        $TargetContext =  Connect-SFApp -Account $TargetAccountLocator -SSO
+                        }
+                        else {
+                        $TargetContext =  Connect-SFApp -Account $TargetAccountLocator
+                        }
+                    }
+                else {
+                    $TargetReplacementValues = $SourceReplacementValues
 
-                if (SSO-Prompt($TargetAccountLocator)){ 
-                    $TargetContext = Connect-SFApp -Account $TargetAccountLocator -SSO
+                    if ($SSO){ 
+                        $TargetContext =  Connect-SFApp -Account $TargetAccountLocator -SSO
+                        }
+                    else {TargetContext
+                        $SourceContext =  Connect-SFApp -Account $TargetAccountLocator
+                        }
                     }
-                    else {
-                        $TargetContext = Connect-SFApp -Account $TargetAccountLocator
-                    }
+               
+                # Parse through SFObjects for upload
                 $SFObjectTypes -Split ',' | ForEach-Object {
                     $obj = $_.Trim().ToLower()
                     if ($obj -eq "all") {
                         foreach ($f in $SourceFilters){
                             Update-Filter-Object($f, $TargetReplacementValues)
                             New-SFFilter -AuthContext $TargetContext -Filter $f -ActionIfExists $ActionIfExistsFilter
+                            
                         }
         
                         foreach ($f in $SourceDashboards){
@@ -172,35 +199,42 @@ function Transfer-SFObjects ()
             $OutPath = $OutputDirectory
         }
         else {
-            Write-Host "`r`nNo OutputDirectory provided. Using input directory to write target files: $SourceAccountLocatorOrFilepath"
             $OutPath = $SourceAccountLocatorOrFilepath
         }
-
         if ($TargetAccounts){
             $TargetAccounts -Split ',' | ForEach-Object {
                 $TargetAccountLocator = $_
-                
                 $TargetPath = "$OutPath/$TargetAccountLocator"
-
-                if (SSO-Prompt($TargetAccountLocator)){ 
-                    $TargetContext = Connect-SFApp -Account $TargetAccountLocator -SSO
-                }
+                if ($InteractiveMode) {
+                    # Prompt for replacement values and SSO if InteractiveMode  
+                    $TargetReplacementValues = RenameTargetObjectsPrompt($SourceReplacementValues, $TargetAccountLocator)
+                    
+                    if (SSO-Prompt($TargetAccountLocator)){
+                        $TargetContext =  Connect-SFApp -Account $TargetAccountLocator -SSO
+                        }
+                        else {
+                        $TargetContext =  Connect-SFApp -Account $TargetAccountLocator
+                        }
+                    }
                 else {
-                    $TargetContext = Connect-SFApp -Account $TargetAccountLocator
-                }
+                    $TargetReplacementValues = $SourceReplacementValues
+
+                    if ($SSO){ 
+                        $TargetContext =  Connect-SFApp -Account $TargetAccountLocator -SSO
+                        }
+                    else {TargetContext
+                        $SourceContext =  Connect-SFApp -Account $TargetAccountLocator
+                        }
+                    }
 
                 $SFObjectTypes -Split ',' | ForEach-Object {
                     $obj = $_.Trim().ToLower() 
-                    Write-Host "OBJECT TYPE: $obj" -ForegroundColor Yellow
                             
                     if ($obj -eq "all") {
-                        Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -WorksheetsPath "$SourceAccountLocatorOrFilepath/worksheets" -DashboardsPath "$SourceAccountLocatorOrFilepath/dashboards" -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath 
-                        }
-
                         $TargetFilters = Get-ChildItem "$TargetPath/filters" -recurse -exclude '*.daterange.*','*.datebucket.*','*.timezone.*'
                         $TargetDashboards = Get-ChildItem "$TargetPath/dashboards"
                         $TargetWorksheets = Get-ChildItem "$TargetPath/worksheets"
-                        
+                            
                         foreach ($f in $TargetFilters){
                             New-SFFilter -AuthContext $TargetContext -FilterFile $f.FullName -ActionIfExists $ActionIfExistsFilter
                         }
@@ -213,7 +247,7 @@ function Transfer-SFObjects ()
                             New-SFWorksheet -AuthContext $TargetContext -WorksheetFile $f.FullName -ActionIfExists $ActionIfExistsWorksheet
                         }
                     }
-                    elseif($obj -eq "filters") {
+                    elseif ($obj -eq "filters") {
                         Invoke-Command -ScriptBlock { Update-SFDocuments -SFObjectTypes $SFObjectTypes -SFRole $SFRole  -SFWarehouse $SFWarehouse -FiltersPath "$SourceAccountLocatorOrFilepath/filters" -SFDatabase $SFDatabase -SFSchema $SFSchema -OutputDirectory $TargetPath
                         }
                         $TargetFilters = Get-ChildItem "$TargetPath/filters" -recurse -exclude '*.daterange.*','*.datebucket.*','*.timezone.*'
@@ -243,13 +277,17 @@ function Transfer-SFObjects ()
                     else {
                         Write-Host "$obj not a valid object. Use 'Filters, Dashboards, Worksheets, a combination of the three in a comma seperated list, or All.'`r`n"
                     }
+                # If no output directory was provided, delete the target account dir
+                if (-Not($OutputDirectory)) {
+                    Remove-Item $TargetPath -Recurse
+                    }
                 }
             }
         # No TargetAccounts Supplied
         }
         else { Write-Host "`r`nNo target accounts supplied, ending program run successfully." -ForegroundColor Cyan }
 }
-    
+
 
 <#
 .SYNOPSIS
@@ -342,7 +380,6 @@ Transfer-Objects -SFObjectTypes 'filters, dashboards, worksheets' -SourceAccount
 #>
 }
 
-
 function Update-Filter-Object ($fparam, $values)
 {
     $fparam.update | % { #Manual Filter Update
@@ -432,7 +469,6 @@ function Update-Dashboard-Object ($fparam, $values)
     }
 }
 
-
 function Update-Worksheet-Object ($fparam, $values)
 {
     $fparam.update | % {
@@ -456,25 +492,14 @@ function SSO-Prompt([string]$inputString){
 }
 
 function RenameTargetObjectsPrompt($values, $account){
-    if (yes-no "Would you like to change any of the context values (Role, Warehouse, Database, or Schema) for the account at $($account)? Current values are: {}" {
+    Write-Host -ForegroundColor Red "Account Values: $($account)"
+    Write-Output ($values | Out-String)
+    $yn_str = "Would you like to change any of the context values (Role, Warehouse, Database, or Schema) for the account at $($account)?"
+    if (yes-no $yn_str) {
         $TargetReplacementValues = ChangeValues($values)
         return $TargetReplacementValues
     }
     else {return $SourceReplacementValues}
-}
-
-function yes-no([string]$inputString){
-    do {
-        $UserInput = take_input "`r`n$inputString`r`nUse y/n: "
-    } while (
-       'y','yes','n','no' -notcontains $UserInput
-    )
-    if ('y','yes' -contains $UserInput){
-        return $true
-    }
-    else{
-        return $false
-    }
 }
 
 function take_input() {
@@ -489,6 +514,19 @@ function take_input() {
     return Read-Host
 }
 
+function yes-no([string]$inputString){
+    do {
+        $UserInput = take_input "`r`n$($inputString). Use y/n: "
+    } while (
+       'y','yes','n','no' -notcontains $UserInput
+    )
+    if ('y','yes' -contains $UserInput){
+        return $true
+    }
+    else{
+        return $false
+    }
+}
 
 function ChangeValues($values){
     $OutHash = @{}
