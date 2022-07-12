@@ -290,6 +290,7 @@ function Update-Dashboards ()
                     Write-Host $f.Name -ForegroundColor Yellow
                     $fparam.OwnerUserID = ""
                     $fparam.OwnerUserName = ""
+                    $fparam.URL = ""
                     $fparam.Role = $SFRole
                     $fparam.Warehouse = $SFWarehouse
                     $fparam.Database = $SFDatabase
@@ -310,6 +311,7 @@ function Update-Dashboards ()
                     foreach ($worksheet in $fparam.Worksheets) {
                         $worksheet.OwnerUserID = ""
                         $worksheet.OwnerUserName = ""
+                        $worksheet.URL = ""
                         $worksheet.Role = $SFRole
                         $worksheet.Warehouse = $SFWarehouse
                         $worksheet.Database = $SFDatabase
@@ -321,6 +323,14 @@ function Update-Dashboards ()
                         $worksheet.OrganizationID = ""
                         $worksheet.Region = ""
                         $worksheet.URL = ""
+                        #CHARTS
+                        foreach ($chart in $fparam.Worksheets.Charts) {
+                            $chart.AccountName = ""
+                            $chart.AccountFullName = ""
+                            $chart.AccountUrl = ""
+                            $chart.OrganizationID = ""
+                            $chart.Region = ""
+                        }
                     }
 
                 }
