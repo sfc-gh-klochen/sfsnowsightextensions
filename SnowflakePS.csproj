@@ -5,10 +5,10 @@
     <AssemblyName>SnowflakePS</AssemblyName>
     <RootNamespace>Snowflake.Powershell</RootNamespace>
 
-    <Version>2022.6.29.2</Version>
-    <FileVersion>2022.6.29.2</FileVersion>
-    <AssemblyVersion>2022.6.29.2</AssemblyVersion>
-    <Authors>Daniel Odievich (daniel.odievich@snowflake.com)</Authors>
+    <Version>2022.7.14.0</Version>
+    <FileVersion>2022.7.14.0</FileVersion>
+    <AssemblyVersion>2022.7.14.0</AssemblyVersion>
+    <Authors>Daniel Odievich (daniel.odievich@snowflake.com),Ryan Bacastow,</Authors>
     <Company>Snowflake Computing</Company>
     <Product>Snowflake Snowsight Extensions</Product>
     <NeutralLanguage>en</NeutralLanguage>
