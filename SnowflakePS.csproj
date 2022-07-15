@@ -5,9 +5,9 @@
     <AssemblyName>SnowflakePS</AssemblyName>
     <RootNamespace>Snowflake.Powershell</RootNamespace>
 
-    <Version>2022.7.14.0</Version>
-    <FileVersion>2022.7.14.0</FileVersion>
-    <AssemblyVersion>2022.7.14.0</AssemblyVersion>
+    <Version>2022.7.15.0</Version>
+    <FileVersion>2022.7.15.0</FileVersion>
+    <AssemblyVersion>2022.7.15.0</AssemblyVersion>
     <Authors>Daniel Odievich (daniel.odievich@snowflake.com),Ryan Bacastow,</Authors>
     <Company>Snowflake Computing</Company>
     <Product>Snowflake Snowsight Extensions</Product>
@@ -45,7 +45,7 @@
     <None Update="SnowflakePS.format.ps1xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Transfer-SFObjects.ps1">
+    <None Update="Copy-SFObjects.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Update-SFDocuments.ps1">
