@@ -45,7 +45,7 @@
     <None Update="SnowflakePS.format.ps1xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Transfer-SFObjects.ps1">
+    <None Update="Copy-SFObjects.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Update-SFDocuments.ps1">
