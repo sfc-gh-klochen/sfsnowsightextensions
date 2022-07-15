@@ -27,7 +27,7 @@
 RootModule = 'SnowflakePS.dll'
 
 # Version number of this module.
-ModuleVersion = '2022.7.14.0'
+ModuleVersion = '2022.7.15.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -81,10 +81,10 @@ PowerShellVersion = '7.2.4'
 FormatsToProcess = @("SnowflakePS.format.ps1xml")
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-NestedModules = @("Transfer-SFObjects.ps1", "Update-SFDocuments.ps1")
+NestedModules = @("Copy-SFObjects.ps1", "Update-SFDocuments.ps1")
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = @("Transfer-SFObjects", "Update-SFDocuments")
+FunctionsToExport = @("Copy-SFObjects", "Update-SFDocuments")
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
