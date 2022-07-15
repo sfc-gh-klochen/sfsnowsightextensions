@@ -31,22 +31,23 @@ namespace Snowflake.Powershell
         public string UserID { get; set; }
         public string UserName { get; set; }
         public string ServerVersion { get; set; }
-        public string ContextURL 
+        public string ContextUrl { get; set; }
+        public string ContextUserNameUrl 
         { 
             get 
             {
-                if (this.AccountUrl.Contains("privatelink", StringComparison.InvariantCultureIgnoreCase) == true)
-                {
-                    // For privatelink, it is username::accounturl without the privatelink
-                    // X-Snowflake-Context: MAJ93::https://amerdev01.us-east-1.snowflakecomputing.com
-                    // X-Snowflake-Privatelink-Host: https://app.us-east-1.privatelink.snowflakecomputing.com
-                    // Remove privatelink. from the string
-                    return String.Format("{0}::{1}", this.UserName, this.AccountUrl.Replace("privatelink.", "", true, System.Globalization.CultureInfo.InvariantCulture));
-                }
-                else
-                {
-                    return String.Format("{0}::{1}", this.UserName, this.AccountUrl);
-                }
+                // if (this.AccountUrl.Contains("privatelink", StringComparison.InvariantCultureIgnoreCase) == true)
+                // {
+                //     // For privatelink, it is username::accounturl without the privatelink
+                //     // X-Snowflake-Context: MAJ93::https://amerdev01.us-east-1.snowflakecomputing.com
+                //     // X-Snowflake-Privatelink-Host: https://app.us-east-1.privatelink.snowflakecomputing.com
+                //     // Remove privatelink. from the string
+                //     return String.Format("{0}::{1}", this.UserName, this.AccountUrl.Replace("privatelink.", "", true, System.Globalization.CultureInfo.InvariantCulture));
+                // }
+                // else
+                // {
+                    return String.Format("{0}::{1}", this.UserName, this.ContextUrl);
+                //}
             }
         }
 

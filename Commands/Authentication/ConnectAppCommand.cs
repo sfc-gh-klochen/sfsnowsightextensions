@@ -597,18 +597,38 @@ namespace Snowflake.Powershell
                     {
                         string userAccountParams = match.Groups[1].Value;
 
-                        JObject userAccountParamsObject = JObject.Parse(userAccountParams);
-                        if (userAccountParamsObject != null)
+                        JObject userAndAccountParamsObject = JObject.Parse(userAccountParams);
+                        if (userAndAccountParamsObject != null)
                         {
-                            string userName = JSONHelper.getStringValueFromJToken(userAccountParamsObject["user"], "username");
+                            string userName = JSONHelper.getStringValueFromJToken(userAndAccountParamsObject["user"], "username");
                             // Only set the Username if it is indeed different from LoginName
                             if (String.Compare(userName, appUserContext.UserName, true) != 0)
                             {
                                 appUserContext.UserName = userName;
                                 logger.Info("UserName(different)={0}", userName);
                             }
+
+                            appUserContext.ContextUrl = JSONHelper.getStringValueFromJToken(userAndAccountParamsObject["org"], "url");
+                            logger.Info("ContextUrl={0}", appUserContext.ContextUrl);
                         }
                     }
+                }
+
+                if (appUserContext.ContextUrl.Length == 0)
+                {
+                    if (appUserContext.AccountUrl.Contains("privatelink", StringComparison.InvariantCultureIgnoreCase) == true)
+                    {
+                        // For privatelink, it is username::accounturl without the privatelink
+                        // X-Snowflake-Context: MAJ93::https://amerdev01.us-east-1.snowflakecomputing.com
+                        // X-Snowflake-Privatelink-Host: https://app.us-east-1.privatelink.snowflakecomputing.com
+                        // Remove privatelink. from the string
+                        appUserContext.ContextUrl = appUserContext.AccountUrl.Replace("privatelink.", "", true, System.Globalization.CultureInfo.InvariantCulture);
+                    }
+                    else
+                    {
+                        appUserContext.ContextUrl = appUserContext.AccountUrl;
+                    }
+                    logger.Info("ContextUrl={0}", appUserContext.ContextUrl);
                 }
 
                 #endregion
