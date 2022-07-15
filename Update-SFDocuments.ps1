@@ -290,24 +290,11 @@ function Update-Dashboards ()
                     Write-Host $f.Name -ForegroundColor Yellow
                     $fparam.OwnerUserID = ""
                     $fparam.OwnerUserName = ""
+                    $fparam.URL = ""
                     $fparam.Role = $SFRole
                     $fparam.Warehouse = $SFWarehouse
                     $fparam.Database = $SFDatabase
                     $fparam.Schema = $SFSchema
-                    foreach ($worksheet in $fparam.Worksheets) {
-                        $worksheet.OwnerUserID = ""
-                        $worksheet.OwnerUserName = ""
-                        $worksheet.Role = $SFRole
-                        $worksheet.Warehouse = $SFWarehouse
-                        $worksheet.Database = $SFDatabase
-                        $worksheet.Schema = $SFSchema
-                        $worksheet.FileSystemSafeName = ""
-                        $worksheet.AccountName = ""
-                        $worksheet.AccountFullName = ""
-                        $worksheet.AccountUrl = ""
-                        $worksheet.OrganizationID = ""
-                        $worksheet.Region = ""
-                    }
                     $fparam.Database = $SFDatabase
                     $fparam.Schema = $SFSchema
                     $fparam.FileSystemSafeName = ""
@@ -320,6 +307,32 @@ function Update-Dashboards ()
                     $fparam.Contents.context.warehouse = $SFWarehouse
                     $fparam.Contents.context.database = $SFDatabase
                     $fparam.Contents.context.schema = $SFSchema
+                    $fparam.URL = ""
+                    foreach ($worksheet in $fparam.Worksheets) {
+                        $worksheet.OwnerUserID = ""
+                        $worksheet.OwnerUserName = ""
+                        $worksheet.URL = ""
+                        $worksheet.Role = $SFRole
+                        $worksheet.Warehouse = $SFWarehouse
+                        $worksheet.Database = $SFDatabase
+                        $worksheet.Schema = $SFSchema
+                        $worksheet.FileSystemSafeName = ""
+                        $worksheet.AccountName = ""
+                        $worksheet.AccountFullName = ""
+                        $worksheet.AccountUrl = ""
+                        $worksheet.OrganizationID = ""
+                        $worksheet.Region = ""
+                        $worksheet.URL = ""
+                        #CHARTS
+                        foreach ($chart in $fparam.Worksheets.Charts) {
+                            $chart.AccountName = ""
+                            $chart.AccountFullName = ""
+                            $chart.AccountUrl = ""
+                            $chart.OrganizationID = ""
+                            $chart.Region = ""
+                        }
+                    }
+
                 }
 
             if ($OutputDirectory) {
@@ -363,6 +376,7 @@ function Update-Worksheets ()
                 $fparam.AccountUrl = ""
                 $fparam.OrganizationID = ""
                 $fparam.Region = ""
+                $fparam.URL = ""
             }
             if ($OutputDirectory) {
                 if (-Not (Test-Path $OutputDirectory/worksheets)) {
