@@ -22,7 +22,7 @@ Write-Host "`r`nAttempting to download file if it exists at https://github.com/S
 
 curl "https://github.com/Snowflake-Labs/sfsnowsightextensions/releases/download/$version_number/SnowflakePS.$os.$version_number.zip" -O --output-dir ~/Downloads -o -J -Lclear
 
-Expand-Archive "$download_path/SnowflakePS.$os.$version_number.zip" -DestinationPath "~/Downloads" -Force
+Expand-Archive "$download_path/SnowflakePS.$os.$version_number.zip" -DestinationPath "$download_path/SnowflakePS.$os.$version_number" -Force
 
 Import-Module "$download_path/SnowflakePS.$os.$version_number/SnowflakePS.psd1" -Force -Verbose -Global
 
