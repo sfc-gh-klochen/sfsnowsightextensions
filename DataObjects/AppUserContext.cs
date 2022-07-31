@@ -49,6 +49,8 @@ namespace Snowflake.Powershell
                     return String.Format("{0}::{1}", this.UserName, this.ContextUrl);
                 //}
             }
+            set 
+            {}
         }
 
         public override string FileSystemSafeName
