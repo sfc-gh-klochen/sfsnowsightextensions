@@ -26,6 +26,7 @@ namespace Snowflake.Powershell
     [Cmdlet
         (VerbsCommon.Get,
         "SFWorksheets",
+        DefaultParameterSetName="WorksheetName",
         SupportsPaging=false,
         SupportsShouldProcess=false)]
     [OutputType(typeof(String))]
@@ -43,6 +44,33 @@ namespace Snowflake.Powershell
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Application user context from authentication process")]
         public AppUserContext AuthContext { get; set; }
+
+        [Parameter(
+            Mandatory = false,
+            Position = 1,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Name of Worksheet to retrieve",
+            ParameterSetName = "WorksheetName")]
+        public string WorksheetName { get; set; }
+
+        [Parameter(
+            Mandatory = false,
+            Position = 1,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "ID of Worksheet to retrieve",
+            ParameterSetName = "WorksheetID")]
+        public string WorksheetID { get; set; }
+        
+        [Parameter(
+            Mandatory = false,
+            Position = 2,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Should WorksheetName be checked anywhere in name of the Worksheet",
+            ParameterSetName = "WorksheetName")]
+        public SwitchParameter UseContains { get; set; }
 
         protected override void BeginProcessing()
         {
@@ -93,12 +121,58 @@ namespace Snowflake.Powershell
                     // Only deal with "query" objects, which are worksheets
                     if (JSONHelper.getStringValueFromJToken(entityObject, "entityType") != "query") continue;
 
-                    Worksheet worksheet = new Worksheet(entityObject, worksheetsPayloadObject, this.AuthContext);
+                    Worksheet potentialTargetWorksheet = new Worksheet(entityObject, worksheetsPayloadObject, this.AuthContext);
+                    logger.Info(potentialTargetWorksheet);
 
-                    logger.Info(worksheet);
-                    loggerConsole.Trace("Found Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
+                    bool keepThisObject = false;
 
-                    worksheetsList.Add(worksheet);
+                    switch (this.ParameterSetName)
+                    {                 
+                        case "WorksheetName":
+                            if (this.WorksheetName == null || this.WorksheetName.Length == 0)
+                            {
+                                // If no parameter passed, assume them all
+                                keepThisObject = true;
+                            }
+                            else
+                            {
+                                if (this.UseContains.IsPresent == false)
+                                {
+                                    if ((String.Compare(this.WorksheetName, potentialTargetWorksheet.WorksheetName, true) == 0))
+                                    {
+                                        logger.Info("Found Match by Full Name: {0}={1}", this.WorksheetName, potentialTargetWorksheet);
+                                        keepThisObject = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if ((potentialTargetWorksheet.WorksheetName.Contains(this.WorksheetName, StringComparison.InvariantCultureIgnoreCase) == true))
+                                    {
+                                        logger.Info("Found Match by Contains Name: {0}={1}", this.WorksheetName, potentialTargetWorksheet);
+                                        keepThisObject = true;
+                                    }
+                                }
+                            }
+                            break;
+
+                        case "WorksheetID":                            
+                            if (this.WorksheetID == potentialTargetWorksheet.WorksheetID) 
+                            {
+                                logger.Info("Found Match by ID: {0}={1}", this.WorksheetID, potentialTargetWorksheet);
+                                keepThisObject = true;
+                            }
+                            break;
+
+                        default:
+                            throw new ArgumentException(String.Format("Unknown parameter set {0}", this.ParameterSetName));
+                    }
+
+                    if (keepThisObject == true)
+                    {
+                        loggerConsole.Trace("Found Worksheet {0} ({1})", potentialTargetWorksheet.WorksheetName, potentialTargetWorksheet.WorksheetID);
+
+                        worksheetsList.Add(potentialTargetWorksheet);
+                    }
                 }
 
                 worksheetsList = worksheetsList.OrderBy(w => w.FolderName).ThenBy(w => w.WorksheetName).ToList();

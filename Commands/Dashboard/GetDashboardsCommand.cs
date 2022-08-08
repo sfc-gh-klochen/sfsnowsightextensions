@@ -26,6 +26,7 @@ namespace Snowflake.Powershell
     [Cmdlet
         (VerbsCommon.Get,
         "SFDashboards",
+        DefaultParameterSetName="DashboardName",
         SupportsPaging=false,
         SupportsShouldProcess=false)]
     [OutputType(typeof(String))]
@@ -43,6 +44,33 @@ namespace Snowflake.Powershell
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Application user context from authentication process")]
         public AppUserContext AuthContext { get; set; }
+
+        [Parameter(
+            Mandatory = false,
+            Position = 1,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Name of Dashboard to retrieve",
+            ParameterSetName = "DashboardName")]
+        public string DashboardName { get; set; }
+
+        [Parameter(
+            Mandatory = false,
+            Position = 1,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "ID of Dashboard to retrieve",
+            ParameterSetName = "DashboardID")]
+        public string DashboardID { get; set; }
+
+        [Parameter(
+            Mandatory = false,
+            Position = 2,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Should DashboardName be checked anywhere in name of the Dashboard",
+            ParameterSetName = "DashboardName")]
+        public SwitchParameter UseContains { get; set; }
 
         protected override void BeginProcessing()
         {
@@ -93,41 +121,89 @@ namespace Snowflake.Powershell
                     // Only deal with "folder" objects, which are dashboards
                     if (JSONHelper.getStringValueFromJToken(entityObject, "entityType") != "folder") continue;
 
-                    Dashboard dashboard = new Dashboard(entityObject, dashboardsPayloadObject, this.AuthContext);
+                    Dashboard potentialTargetDashboard = new Dashboard(entityObject, dashboardsPayloadObject, this.AuthContext);
 
-                    logger.Info(dashboard);
-                    loggerConsole.Info("Found Dashboard {0} ({1}) with {2} Worksheets", dashboard.DashboardName, dashboard.DashboardID, dashboard.Worksheets.Count);
+                    logger.Info(potentialTargetDashboard);
 
-                    // Fill in the chart information
-                    for (int i = 0; i < dashboard.Worksheets.Count; i++)
-                    {
-                        Worksheet worksheet = dashboard.Worksheets[i];
+                    bool keepThisObject = false;
 
-                        if (worksheet.Charts.Count > 0)
-                        {
-                            loggerConsole.Trace("{0}/{1}: Worksheet {2} ({3}) has {4} charts", i + 1, dashboard.Worksheets.Count, worksheet.WorksheetName, worksheet.WorksheetID, worksheet.Charts.Count);
-                        }
-
-                        foreach (Chart chart in worksheet.Charts)
-                        {
-                            loggerConsole.Trace("Worksheet {0} ({1}), details of Chart {2} ({3})", worksheet.WorksheetName, worksheet.WorksheetID, chart.ChartName, chart.ChartID);
-                            
-                            // Get chart details
-                            string chartDetailApiResult = SnowflakeDriver.GetChart(this.AuthContext, chart.WorksheetID, chart.ChartID);
-                            
-                            if (chartDetailApiResult.Length == 0)
+                    switch (this.ParameterSetName)
+                    {                 
+                        case "DashboardName":
+                            if (this.DashboardName == null || this.DashboardName.Length == 0)
                             {
-                                logger.Warn("Invalid response from getting chart detail");
-                                continue;
-                            }                            
-                            
-                            JObject chartDetailPayloadObject = JObject.Parse(chartDetailApiResult);
+                                // If no parameter passed, assume them all
+                                keepThisObject = true;
+                            }
+                            else
+                            {
+                                if (this.UseContains.IsPresent == false)
+                                {
+                                    if ((String.Compare(this.DashboardName, potentialTargetDashboard.DashboardName, true) == 0))
+                                    {
+                                        logger.Info("Found Match by Full Name: {0}={1}", this.DashboardName, potentialTargetDashboard);
+                                        keepThisObject = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if ((potentialTargetDashboard.DashboardName.Contains(this.DashboardName, StringComparison.InvariantCultureIgnoreCase) == true))
+                                    {
+                                        logger.Info("Found Match by Contains Name: {0}={1}", this.DashboardName, potentialTargetDashboard);
+                                        keepThisObject = true;
+                                    }
+                                }
+                            }
+                            break;
 
-                            chart.AddConfigurationDetails(chartDetailPayloadObject);                    
-                        }
+                        case "DashboardID":                            
+                            if (this.DashboardID == potentialTargetDashboard.DashboardID) 
+                            {
+                                logger.Info("Found Match by ID: {0}={1}", this.DashboardID, potentialTargetDashboard);
+                                keepThisObject = true;
+                            }
+                            break;
+
+                        default:
+                            throw new ArgumentException(String.Format("Unknown parameter set {0}", this.ParameterSetName));
                     }
 
-                    dashboardsList.Add(dashboard);
+                    if (keepThisObject == true)
+                    {
+                        loggerConsole.Trace("Found Dashboard {0} ({1}) with {2} Worksheets", potentialTargetDashboard.DashboardName, potentialTargetDashboard.DashboardID, potentialTargetDashboard.Worksheets.Count);
+
+                        // Fill in the chart information
+                        for (int i = 0; i < potentialTargetDashboard.Worksheets.Count; i++)
+                        {
+                            Worksheet worksheet = potentialTargetDashboard.Worksheets[i];
+
+                            if (worksheet.Charts.Count > 0)
+                            {
+                                loggerConsole.Trace("{0}/{1}: Worksheet {2} ({3}) has {4} charts", i + 1, potentialTargetDashboard.Worksheets.Count, worksheet.WorksheetName, worksheet.WorksheetID, worksheet.Charts.Count);
+                            }
+
+                            foreach (Chart chart in worksheet.Charts)
+                            {
+                                loggerConsole.Trace("Worksheet {0} ({1}), details of Chart {2} ({3})", worksheet.WorksheetName, worksheet.WorksheetID, chart.ChartName, chart.ChartID);
+                                
+                                // Get chart details
+                                string chartDetailApiResult = SnowflakeDriver.GetChart(this.AuthContext, chart.WorksheetID, chart.ChartID);
+                                
+                                if (chartDetailApiResult.Length == 0)
+                                {
+                                    logger.Warn("Invalid response from getting chart detail");
+                                    continue;
+                                }                            
+                                
+                                JObject chartDetailPayloadObject = JObject.Parse(chartDetailApiResult);
+
+                                chart.AddConfigurationDetails(chartDetailPayloadObject);                    
+                            }
+                        }
+
+                        dashboardsList.Add(potentialTargetDashboard);
+                        
+                    }
                 }
 
                 dashboardsList = dashboardsList.OrderBy(d => d.DashboardName).ToList();

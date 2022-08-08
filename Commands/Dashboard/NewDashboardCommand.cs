@@ -259,7 +259,7 @@ namespace Snowflake.Powershell
 
                         if (createWorksheetApiResult.Length == 0)
                         {
-                            throw new ItemNotFoundException("Invalid response from creating new worksheet");
+                            throw new ItemNotFoundException("Invalid response from creating new Worksheet");
                         }
 
                         JObject createWorksheetPayloadObject = JObject.Parse(createWorksheetApiResult);
@@ -270,7 +270,7 @@ namespace Snowflake.Powershell
 
                         if (updateWorksheetApiResult.Length == 0)
                         {
-                            throw new ItemNotFoundException("Invalid response from updating existing worksheet");
+                            throw new ItemNotFoundException("Invalid response from updating existing Worksheet");
                         }
 
                         JObject updateWorksheetPayloadObject = JObject.Parse(updateWorksheetApiResult);
@@ -333,7 +333,7 @@ namespace Snowflake.Powershell
                                         else
                                         {
                                             // Insert new cell into existing row
-                                            string newCEllApiResult = SnowflakeDriver.UpdateDashboardInsertNewCellWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight, cellIndex);
+                                            string newCellApiResult = SnowflakeDriver.UpdateDashboardInsertNewCellWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight, cellIndex);
                                         }
                                     }
 
