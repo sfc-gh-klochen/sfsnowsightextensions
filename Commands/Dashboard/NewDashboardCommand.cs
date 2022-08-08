@@ -72,8 +72,17 @@ namespace Snowflake.Powershell
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "What to do when the Dashboard already exists")]
-        [ValidateSet ("CreateNew", "Skip")]
+        [ValidateSet ("CreateNew", "Skip", "Update")]
         public string ActionIfExists { get; set; } = "Skip";
+
+        [Parameter(
+            Mandatory = false,
+            Position = 3,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "How to search for a matching existing Dashboard")]
+        [ValidateSet ("Name", "ID", "Both")]
+        public string MatchType { get; set; } = "Both";
 
         protected override void BeginProcessing()
         {
@@ -147,41 +156,40 @@ namespace Snowflake.Powershell
                     entitiesArray = (JArray)dashboardsPayloadObject["entities"];
                 }
                 logger.Info("Number of Entities={0}", entitiesArray.Count);
-                
+
+                bool matchByID = this.MatchType == "Both" || this.MatchType == "ID";
+                bool matchByName = this.MatchType == "Both" || this.MatchType == "Name";
+                bool targetDashboardUnique = true;
+
+                // Try to find existing dashboard based on MatchType
                 foreach (JObject entityObject in entitiesArray)
                 {
                     // Only deal with "query" objects, which are Dashboards
                     if (JSONHelper.getStringValueFromJToken(entityObject, "entityType") != "folder") continue;
 
                     Dashboard potentialTargetDashboard = new Dashboard(entityObject, dashboardsPayloadObject, this.AuthContext);
+                    bool matched = false;
 
-                    if (this.Dashboard.DashboardID == potentialTargetDashboard.DashboardID) 
+                    if (matchByID && this.Dashboard.DashboardID == potentialTargetDashboard.DashboardID)
                     {
-                        targetDashboardToReplace = potentialTargetDashboard;
-
                         logger.Info("Found Match by ID: {0}=={1}", this.Dashboard, targetDashboardToReplace);
-                        break;
+                        matched = true;
                     }
-                }
-
-                // If didnt find it by the entity ID.
-                // Second, try to find it by the Dashboard name
-                if (targetDashboardToReplace == null)
-                {
-                    foreach (JObject entityObject in entitiesArray)
+                    else if (matchByName && this.Dashboard.DashboardName == potentialTargetDashboard.DashboardName)
                     {
-                        // Only deal with "query" objects, which are Dashboards
-                        if (JSONHelper.getStringValueFromJToken(entityObject, "entityType") != "folder") continue;
+                        logger.Info("Found Match by Name: {0}=={1}", this.Dashboard, targetDashboardToReplace);
+                        matched = true;
+                    }
 
-                        Dashboard potentialTargetDashboard = new Dashboard(entityObject, dashboardsPayloadObject, this.AuthContext);
-
-                        if (this.Dashboard.DashboardName == potentialTargetDashboard.DashboardName)
-                        {
-                            // Found first matching Dashboard with the same name and folder
-                            targetDashboardToReplace = potentialTargetDashboard;
-
-                            logger.Info("Found Match by Name: {0}=={1}", this.Dashboard, targetDashboardToReplace);
+                    if (matched)
+                    {
+                        // Only store first match, so if there is already a match just targetDashboardUnique false and stop
+                        if (targetDashboardToReplace != null) {
+                            targetDashboardUnique = false;
                             break;
+                        }
+                        else {
+                            targetDashboardToReplace = potentialTargetDashboard;
                         }
                     }
                 }
@@ -192,8 +200,13 @@ namespace Snowflake.Powershell
                     // Updating existing Dashboard
                     switch (this.ActionIfExists)
                     {
-                        case "Overwrite":
-                            logger.Info("Found {0} to overwrite and ActionIfExists={1}, will overwrite", targetDashboardToReplace, this.ActionIfExists);
+                        case "Update":
+                            // Fail to update if multiple target Dashboard matches were found
+                            if (!targetDashboardUnique) {
+                                throw new ArgumentException(String.Format("ActionIfExists parameter {0} but multiple existing dashboards matched target name", this.ActionIfExists));
+                            }
+
+                            logger.Info("Found {0} to overwrite and ActionIfExists={1}, will update", targetDashboardToReplace, this.ActionIfExists);
                             loggerConsole.Info("Existing Dashboard {0} ({1}) will be overwritten because ActionIfExists is {2}", targetDashboardToReplace.DashboardName, targetDashboardToReplace.DashboardID, this.ActionIfExists);
                             
                             break;
@@ -220,15 +233,31 @@ namespace Snowflake.Powershell
                 {
                     logger.Info("No match for Dashboard {0}, new one will be created", this.Dashboard);
                     loggerConsole.Info("Creating new Dashboard {0}", this.Dashboard.DashboardName);
-}
+                }
 
                 Dashboard createdOrUpdatedDashboard = null;
+                string newDashboardID = null;
 
-                // Now actually make modifications
+                // Create or get the DashboardID to ultimately write to.
+                // If writing to an existing Dashboard, delete all of its contents first.
                 if (targetDashboardToReplace != null)
                 {
                     // Updating existing Dashboard
-                    throw new NotImplementedException("Replacement of the Dashboard is not yet implemented");
+                    newDashboardID = targetDashboardToReplace.DashboardID;
+                    logger.Info("Existing Target DashboardID={0}", newDashboardID);
+
+                    foreach (Worksheet worksheet in targetDashboardToReplace.Worksheets) {
+                        loggerConsole.Info("Deleting existing worksheet {0} ({1}) : {2} ({3})",
+                            targetDashboardToReplace.DashboardName, targetDashboardToReplace.DashboardID,
+                            worksheet.WorksheetName, worksheet.WorksheetID
+                        );
+                        logger.Info("Delete worksheet: {}", worksheet.ToString());
+                        string apiResponse = SnowflakeDriver.DeleteWorksheet(this.AuthContext, worksheet.WorksheetID);
+                        if (apiResponse.Length == 0)
+                        {
+                            throw new ItemNotFoundException("Invalid response from deleting Worksheet entity");
+                        }
+                    }
                 }
                 else
                 {
@@ -241,166 +270,166 @@ namespace Snowflake.Powershell
                     }
 
                     JObject createDashboardPayloadObject = JObject.Parse(createDashboardApiResult);
-                    string newDashboardID = JSONHelper.getStringValueFromJToken(createDashboardPayloadObject, "createdFolderId");
-                    logger.Info("New DashboardID={0}", newDashboardID);
+                    newDashboardID = JSONHelper.getStringValueFromJToken(createDashboardPayloadObject, "createdFolderId");
+                    logger.Info("Created Target DashboardID={0}", newDashboardID);
+                }
 
-                    Dictionary<string, Worksheet> oldToNewWorksheetsDictionary = new Dictionary<string, Worksheet>();
+                Dictionary<string, Worksheet> oldToNewWorksheetsDictionary = new Dictionary<string, Worksheet>();
 
-                    // Create new Worksheets and Charts
-                    for (int i = 0; i < this.Dashboard.Worksheets.Count; i++)
+                // Create new Worksheets and Charts
+                for (int i = 0; i < this.Dashboard.Worksheets.Count; i++)
+                {
+                    Worksheet worksheetToCreate = this.Dashboard.Worksheets[i];
+
+                    logger.Info("Creating new Worksheet for {0}", worksheetToCreate);
+                    loggerConsole.Trace("{0}/{1}: Creating new Worksheet for {2} ({3})", i + 1, this.Dashboard.Worksheets.Count, worksheetToCreate.WorksheetName, worksheetToCreate.WorksheetID);
+
+                    // Creating new worksheet
+                    string createWorksheetApiResult = SnowflakeDriver.CreateWorksheet(this.AuthContext, worksheetToCreate.WorksheetName, newDashboardID);
+
+                    if (createWorksheetApiResult.Length == 0)
                     {
-                        Worksheet worksheetToCreate = this.Dashboard.Worksheets[i];
+                        throw new ItemNotFoundException("Invalid response from creating new worksheet");
+                    }
 
-                        logger.Info("Creating new Worksheet for {0}", worksheetToCreate);
-                        loggerConsole.Trace("{0}/{1}: Creating new Worksheet for {2} ({3})", i + 1, this.Dashboard.Worksheets.Count, worksheetToCreate.WorksheetName, worksheetToCreate.WorksheetID);
+                    JObject createWorksheetPayloadObject = JObject.Parse(createWorksheetApiResult);
+                    string newWorksheetID = JSONHelper.getStringValueFromJToken(createWorksheetPayloadObject, "pid");
+                    logger.Info("Original WorksheetID={0} -> New WorksheetID={1}", worksheetToCreate.WorksheetID, newWorksheetID);
+
+                    string updateWorksheetApiResult = SnowflakeDriver.UpdateWorksheet(this.AuthContext, newWorksheetID, worksheetToCreate.Query, worksheetToCreate.Role, worksheetToCreate.Warehouse, worksheetToCreate.Database, worksheetToCreate.Schema);
+
+                    if (updateWorksheetApiResult.Length == 0)
+                    {
+                        throw new ItemNotFoundException("Invalid response from updating existing worksheet");
+                    }
+
+                    JObject updateWorksheetPayloadObject = JObject.Parse(updateWorksheetApiResult);
+
+                    Worksheet worksheetCreated = new Worksheet(newWorksheetID, updateWorksheetPayloadObject, this.AuthContext);
+
+                    logger.Info(worksheetCreated);
+                    loggerConsole.Trace("Created new Worksheet {0} ({1})", worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
+
+                    oldToNewWorksheetsDictionary.Add(worksheetToCreate.WorksheetID, worksheetCreated);
+
+                    // Create charts
+                    if (worksheetToCreate.Charts.Count > 0)
+                    {
+                        // Always create chart with maximum version number
+                        Chart chartToCreate = worksheetToCreate.Charts.OrderBy(c => c.Version).Last();
+
+                        logger.Info("Creating new Chart {0}", chartToCreate);
+                        loggerConsole.Trace("Creating new Chart {0} ({1}) in {2} ({3})", chartToCreate.ChartName, chartToCreate.ChartID, worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
 
                         // Creating new worksheet
-                        string createWorksheetApiResult = SnowflakeDriver.CreateWorksheet(this.AuthContext, worksheetToCreate.WorksheetName, newDashboardID);
-
-                        if (createWorksheetApiResult.Length == 0)
-                        {
-                            throw new ItemNotFoundException("Invalid response from creating new worksheet");
-                        }
-
-                        JObject createWorksheetPayloadObject = JObject.Parse(createWorksheetApiResult);
-                        string newWorksheetID = JSONHelper.getStringValueFromJToken(createWorksheetPayloadObject, "pid");
-                        logger.Info("Original WorksheetID={0} -> New WorksheetID={1}", worksheetToCreate.WorksheetID, newWorksheetID);
-
-                        string updateWorksheetApiResult = SnowflakeDriver.UpdateWorksheet(this.AuthContext, newWorksheetID, worksheetToCreate.Query, worksheetToCreate.Role, worksheetToCreate.Warehouse, worksheetToCreate.Database, worksheetToCreate.Schema);
-
-                        if (updateWorksheetApiResult.Length == 0)
-                        {
-                            throw new ItemNotFoundException("Invalid response from updating existing worksheet");
-                        }
-
-                        JObject updateWorksheetPayloadObject = JObject.Parse(updateWorksheetApiResult);
-
-                        Worksheet worksheetCreated = new Worksheet(newWorksheetID, updateWorksheetPayloadObject, this.AuthContext);
-
-                        logger.Info(worksheetCreated);
-                        loggerConsole.Trace("Created new Worksheet {0} ({1})", worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
-
-                        oldToNewWorksheetsDictionary.Add(worksheetToCreate.WorksheetID, worksheetCreated);
-
-                        // Create charts
-                        if (worksheetToCreate.Charts.Count > 0)
-                        {
-                            // Always create chart with maximum version number
-                            Chart chartToCreate = worksheetToCreate.Charts.OrderBy(c => c.Version).Last();
-
-                            logger.Info("Creating new Chart {0}", chartToCreate);
-                            loggerConsole.Trace("Creating new Chart {0} ({1}) in {2} ({3})", chartToCreate.ChartName, chartToCreate.ChartID, worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
-
-                            // Creating new worksheet
-                            string createChartApiResult = SnowflakeDriver.CreateChartFromWorksheet(this.AuthContext, worksheetCreated.WorksheetID, chartToCreate.Configuration.ToString(Newtonsoft.Json.Formatting.None));
-                        }
+                        string createChartApiResult = SnowflakeDriver.CreateChartFromWorksheet(this.AuthContext, worksheetCreated.WorksheetID, chartToCreate.Configuration.ToString(Newtonsoft.Json.Formatting.None));
                     }
+                }
 
-                    // Populate dashboard with widgets (Tables and Charts)
-                    if (JSONHelper.isTokenPropertyNull(this.Dashboard.Contents, "rows") == false)
+                // Populate dashboard with widgets (Tables and Charts)
+                if (JSONHelper.isTokenPropertyNull(this.Dashboard.Contents, "rows") == false)
+                {
+                    JArray rowsArray = (JArray)this.Dashboard.Contents["rows"];
+                    int rowIndex = 0;                        
+                    foreach (JObject rowObject in rowsArray)
                     {
-                        JArray rowsArray = (JArray)this.Dashboard.Contents["rows"];
-                        int rowIndex = 0;                        
-                        foreach (JObject rowObject in rowsArray)
+                        int rowHeight = JSONHelper.getIntValueFromJToken(rowObject, "height");
+
+                        if (JSONHelper.isTokenPropertyNull(rowObject, "cells") == false)
                         {
-                            int rowHeight = JSONHelper.getIntValueFromJToken(rowObject, "height");
-
-                            if (JSONHelper.isTokenPropertyNull(rowObject, "cells") == false)
+                            int cellIndex = 0;
+                            JArray cellsArray = (JArray)rowObject["cells"];
+                            foreach (JObject cellObject in cellsArray)
                             {
-                                int cellIndex = 0;
-                                JArray cellsArray = (JArray)rowObject["cells"];
-                                foreach (JObject cellObject in cellsArray)
+                                // Only deal with "query" objects, which are worksheets
+                                if (JSONHelper.getStringValueFromJToken(cellObject, "type") != "query") continue;
+
+                                string originalWorksheetID = JSONHelper.getStringValueFromJToken(cellObject, "pid");
+
+                                Worksheet worksheetCreated = null;
+                                if (oldToNewWorksheetsDictionary.TryGetValue(originalWorksheetID, out worksheetCreated) == true)
                                 {
-                                    // Only deal with "query" objects, which are worksheets
-                                    if (JSONHelper.getStringValueFromJToken(cellObject, "type") != "query") continue;
+                                    // This is either "table" or "chart". 
+                                    string displayMode = JSONHelper.getStringValueFromJToken(cellObject, "displayMode");
 
-                                    string originalWorksheetID = JSONHelper.getStringValueFromJToken(cellObject, "pid");
-
-                                    Worksheet worksheetCreated = null;
-                                    if (oldToNewWorksheetsDictionary.TryGetValue(originalWorksheetID, out worksheetCreated) == true)
+                                    logger.Info("Inserting {0} into cell ({1}, {2}) from Worksheet {3}", displayMode, rowIndex, cellIndex, worksheetCreated);
+                                    loggerConsole.Trace("Inserting {0} into cell ({1}, {2}) from Worksheet {3} ({4})", displayMode, rowIndex, cellIndex, worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
+                                    
+                                    if (cellIndex == 0)
                                     {
-                                        // This is either "table" or "chart". 
-                                        string displayMode = JSONHelper.getStringValueFromJToken(cellObject, "displayMode");
-
-                                        logger.Info("Inserting {0} into cell ({1}, {2}) from Worksheet {3}", displayMode, rowIndex, cellIndex, worksheetCreated);
-                                        loggerConsole.Trace("Inserting {0} into cell ({1}, {2}) from Worksheet {3} ({4})", displayMode, rowIndex, cellIndex, worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
-                                        
-                                        if (cellIndex == 0)
-                                        {
-                                            // Insert new row into the first cell
-                                            string newRowApiResult = SnowflakeDriver.UpdateDashboardNewRowWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight);
-                                        }
-                                        else
-                                        {
-                                            // Insert new cell into existing row
-                                            string newCEllApiResult = SnowflakeDriver.UpdateDashboardInsertNewCellWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight, cellIndex);
-                                        }
+                                        // Insert new row into the first cell
+                                        string newRowApiResult = SnowflakeDriver.UpdateDashboardNewRowWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight);
                                     }
-
-                                    cellIndex++;
+                                    else
+                                    {
+                                        // Insert new cell into existing row
+                                        string newCEllApiResult = SnowflakeDriver.UpdateDashboardInsertNewCellWithWorksheet(this.AuthContext, newDashboardID, worksheetCreated.WorksheetID, displayMode, rowIndex, rowHeight, cellIndex);
+                                    }
                                 }
+
+                                cellIndex++;
                             }
-                            rowIndex++;
                         }
+                        rowIndex++;
                     }
+                }
 
-                    // Execute worksheet
-                    foreach (Worksheet worksheetToCreate in this.Dashboard.Worksheets)
+                // Execute worksheet
+                foreach (Worksheet worksheetToCreate in this.Dashboard.Worksheets)
+                {
+                    Worksheet worksheetCreated = null;
+                    if (oldToNewWorksheetsDictionary.TryGetValue(worksheetToCreate.WorksheetID, out worksheetCreated) == true)
                     {
-                        Worksheet worksheetCreated = null;
-                        if (oldToNewWorksheetsDictionary.TryGetValue(worksheetToCreate.WorksheetID, out worksheetCreated) == true)
+                        logger.Info("Running new Worksheet {0}", worksheetCreated);
+                        loggerConsole.Trace("Running new Worksheet {0} ({1})", worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
+
+                        string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(this.AuthContext, 
+                            worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetToCreate.Parameters.ToString(Newtonsoft.Json.Formatting.None),
+                            worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
+
+                        // Check results
+                        JObject executeWorksheetPayloadObject = JObject.Parse(executeWorksheetApiResult);
+                        
+                        JObject queriesObject = new JObject();
+                        if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queries") == false)
                         {
-                            logger.Info("Running new Worksheet {0}", worksheetCreated);
-                            loggerConsole.Trace("Running new Worksheet {0} ({1})", worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
-
-                            string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(this.AuthContext, 
-                                worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetToCreate.Parameters.ToString(Newtonsoft.Json.Formatting.None),
-                                worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
-
-                            // Check results
-                            JObject executeWorksheetPayloadObject = JObject.Parse(executeWorksheetApiResult);
-                            
-                            JObject queriesObject = new JObject();
-                            if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queries") == false)
-                            {
-                                queriesObject = (JObject)executeWorksheetPayloadObject["models"]["queries"];
-                            }
-                            JObject queryResultsObject = new JObject();
-                            if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queryResults") == false)
-                            {
-                                queryResultsObject = (JObject)executeWorksheetPayloadObject["models"]["queryResults"];
-                            }
-
-                            JObject queryResultObject = (JObject)JSONHelper.getJTokenValueFromJToken(queryResultsObject, worksheetCreated.WorksheetID);
-                            if (queryResultObject != null)
-                            {
-                                string queryID = JSONHelper.getStringValueFromJToken(queryResultObject, "snowflakeQueryId");
-
-                                DateTime dateTimeValue = DateTime.MinValue;
-                                dateTimeValue = JSONHelper.getDateTimeValueFromJToken(queryResultObject, "modified");
-                                if (dateTimeValue == DateTime.MinValue)
-                                {
-                                    if (DateTime.TryParse(JSONHelper.getStringValueFromJToken(queryResultObject, "modified"), out dateTimeValue) == true) dateTimeValue = dateTimeValue.ToUniversalTime();
-                                }
-                                else
-                                {
-                                    dateTimeValue = dateTimeValue.ToUniversalTime();
-                                }
-
-                                if (JSONHelper.isTokenNull(queryResultObject["error"]) == true)
-                                {
-                                    logger.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
-                                    loggerConsole.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
-                                }
-                                else
-                                {
-                                    string errorMessage = JSONHelper.getStringValueFromJToken(queryResultObject["error"], "message");
-
-                                    logger.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
-                                    loggerConsole.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
-                                }
-                            }                                
+                            queriesObject = (JObject)executeWorksheetPayloadObject["models"]["queries"];
                         }
+                        JObject queryResultsObject = new JObject();
+                        if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queryResults") == false)
+                        {
+                            queryResultsObject = (JObject)executeWorksheetPayloadObject["models"]["queryResults"];
+                        }
+
+                        JObject queryResultObject = (JObject)JSONHelper.getJTokenValueFromJToken(queryResultsObject, worksheetCreated.WorksheetID);
+                        if (queryResultObject != null)
+                        {
+                            string queryID = JSONHelper.getStringValueFromJToken(queryResultObject, "snowflakeQueryId");
+
+                            DateTime dateTimeValue = DateTime.MinValue;
+                            dateTimeValue = JSONHelper.getDateTimeValueFromJToken(queryResultObject, "modified");
+                            if (dateTimeValue == DateTime.MinValue)
+                            {
+                                if (DateTime.TryParse(JSONHelper.getStringValueFromJToken(queryResultObject, "modified"), out dateTimeValue) == true) dateTimeValue = dateTimeValue.ToUniversalTime();
+                            }
+                            else
+                            {
+                                dateTimeValue = dateTimeValue.ToUniversalTime();
+                            }
+
+                            if (JSONHelper.isTokenNull(queryResultObject["error"]) == true)
+                            {
+                                logger.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                                loggerConsole.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                            }
+                            else
+                            {
+                                string errorMessage = JSONHelper.getStringValueFromJToken(queryResultObject["error"], "message");
+
+                                logger.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                                loggerConsole.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                            }
+                        }                                
                     }
 
                     // Get final dashboard
