@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
+using System.Threading;
 
 namespace Snowflake.Powershell
 {
@@ -83,6 +84,14 @@ namespace Snowflake.Powershell
             HelpMessage = "How to search for a matching existing Dashboard")]
         [ValidateSet ("Name", "ID", "Both")]
         public string MatchType { get; set; } = "Both";
+
+        [Parameter(
+            Mandatory = false,
+            Position = 4,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Use background threads to execute new Worksheet queries in parallel")]
+        public SwitchParameter ParallelWorksheetExec { get; set; } = false;
 
         protected override void BeginProcessing()
         {
@@ -374,78 +383,105 @@ namespace Snowflake.Powershell
                     }
                 }
 
+                List<Thread> queryExecThreads = new List<Thread>();
+
                 // Execute worksheet
                 foreach (Worksheet worksheetToCreate in this.Dashboard.Worksheets)
                 {
-                    Worksheet worksheetCreated = null;
-                    if (oldToNewWorksheetsDictionary.TryGetValue(worksheetToCreate.WorksheetID, out worksheetCreated) == true)
+                    Thread t = new Thread(() => 
                     {
-                        logger.Info("Running new Worksheet {0}", worksheetCreated);
-                        loggerConsole.Trace("Running new Worksheet {0} ({1})", worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
-
-                        string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(this.AuthContext, 
-                            worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetToCreate.Parameters.ToString(Newtonsoft.Json.Formatting.None),
-                            worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
-
-                        // Check results
-                        JObject executeWorksheetPayloadObject = JObject.Parse(executeWorksheetApiResult);
-                        
-                        JObject queriesObject = new JObject();
-                        if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queries") == false)
+                        Thread.CurrentThread.IsBackground = true; 
+                        Worksheet worksheetCreated = null;
+                        if (oldToNewWorksheetsDictionary.TryGetValue(worksheetToCreate.WorksheetID, out worksheetCreated) == true)
                         {
-                            queriesObject = (JObject)executeWorksheetPayloadObject["models"]["queries"];
+                            logger.Info("Running new Worksheet {0}", worksheetCreated);
+                            loggerConsole.Trace("Running new Worksheet {0} ({1})", worksheetCreated.WorksheetName, worksheetCreated.WorksheetID);
+
+                            string executeWorksheetApiResult = SnowflakeDriver.ExecuteWorksheet(this.AuthContext, 
+                                worksheetCreated.WorksheetID, worksheetCreated.Query, worksheetToCreate.Parameters.ToString(Newtonsoft.Json.Formatting.None),
+                                worksheetCreated.Role, worksheetCreated.Warehouse, worksheetCreated.Database, worksheetCreated.Schema);
+
+                            // Check results
+                            JObject executeWorksheetPayloadObject = JObject.Parse(executeWorksheetApiResult);
+                            
+                            JObject queriesObject = new JObject();
+                            if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queries") == false)
+                            {
+                                queriesObject = (JObject)executeWorksheetPayloadObject["models"]["queries"];
+                            }
+                            JObject queryResultsObject = new JObject();
+                            if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queryResults") == false)
+                            {
+                                queryResultsObject = (JObject)executeWorksheetPayloadObject["models"]["queryResults"];
+                            }
+
+                            JObject queryResultObject = (JObject)JSONHelper.getJTokenValueFromJToken(queryResultsObject, worksheetCreated.WorksheetID);
+                            if (queryResultObject != null)
+                            {
+                                string queryID = JSONHelper.getStringValueFromJToken(queryResultObject, "snowflakeQueryId");
+
+                                DateTime dateTimeValue = DateTime.MinValue;
+                                dateTimeValue = JSONHelper.getDateTimeValueFromJToken(queryResultObject, "modified");
+                                if (dateTimeValue == DateTime.MinValue)
+                                {
+                                    if (DateTime.TryParse(JSONHelper.getStringValueFromJToken(queryResultObject, "modified"), out dateTimeValue) == true) dateTimeValue = dateTimeValue.ToUniversalTime();
+                                }
+                                else
+                                {
+                                    dateTimeValue = dateTimeValue.ToUniversalTime();
+                                }
+
+                                if (JSONHelper.isTokenNull(queryResultObject["error"]) == true)
+                                {
+                                    logger.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                                    loggerConsole.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
+                                }
+                                else
+                                {
+                                    string errorMessage = JSONHelper.getStringValueFromJToken(queryResultObject["error"], "message");
+
+                                    logger.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                                    loggerConsole.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
+                                }
+                            }                                
                         }
-                        JObject queryResultsObject = new JObject();
-                        if (JSONHelper.isTokenPropertyNull(executeWorksheetPayloadObject["models"], "queryResults") == false)
-                        {
-                            queryResultsObject = (JObject)executeWorksheetPayloadObject["models"]["queryResults"];
-                        }
+                    });
 
-                        JObject queryResultObject = (JObject)JSONHelper.getJTokenValueFromJToken(queryResultsObject, worksheetCreated.WorksheetID);
-                        if (queryResultObject != null)
-                        {
-                            string queryID = JSONHelper.getStringValueFromJToken(queryResultObject, "snowflakeQueryId");
-
-                            DateTime dateTimeValue = DateTime.MinValue;
-                            dateTimeValue = JSONHelper.getDateTimeValueFromJToken(queryResultObject, "modified");
-                            if (dateTimeValue == DateTime.MinValue)
-                            {
-                                if (DateTime.TryParse(JSONHelper.getStringValueFromJToken(queryResultObject, "modified"), out dateTimeValue) == true) dateTimeValue = dateTimeValue.ToUniversalTime();
-                            }
-                            else
-                            {
-                                dateTimeValue = dateTimeValue.ToUniversalTime();
-                            }
-
-                            if (JSONHelper.isTokenNull(queryResultObject["error"]) == true)
-                            {
-                                logger.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
-                                loggerConsole.Info("Query {0} at {1} succeeded", queryID, dateTimeValue);
-                            }
-                            else
-                            {
-                                string errorMessage = JSONHelper.getStringValueFromJToken(queryResultObject["error"], "message");
-
-                                logger.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
-                                loggerConsole.Error("Query {0} at {1} failed with {2}", queryID, dateTimeValue, errorMessage);
-                            }
-                        }                                
-                    }
-
-                    // Get final dashboard
-                    string getDashboardApiResult = SnowflakeDriver.GetDashboard(this.AuthContext, newDashboardID);
-
-                    if (getDashboardApiResult.Length == 0)
+                    t.Start();
+                    if (this.ParallelWorksheetExec)
                     {
-                        throw new ItemNotFoundException("Invalid response from getting existing Dashboard");
+                        queryExecThreads.Add(t);
                     }
-
-                    JObject getDashboardPayloadObject = JObject.Parse(getDashboardApiResult);
-
-                    createdOrUpdatedDashboard = new Dashboard(newDashboardID, getDashboardPayloadObject, this.AuthContext);
-
-                    logger.Info("Returning new Dashboard {0}", createdOrUpdatedDashboard);
+                    else
+                    {
+                        t.Join();
+                    }
                 }
+
+                if (this.ParallelWorksheetExec)
+                {
+                    loggerConsole.Info("Waiting for Worksheet queries to finish");
+                    foreach (Thread t in queryExecThreads)
+                    {
+                        t.Join();
+                    }
+                    loggerConsole.Info("Queries finished.");
+                }
+
+                // Get final dashboard
+                loggerConsole.Info("Getting final dashboard");
+                string getDashboardApiResult = SnowflakeDriver.GetDashboard(this.AuthContext, newDashboardID);
+
+                if (getDashboardApiResult.Length == 0)
+                {
+                    throw new ItemNotFoundException("Invalid response from getting existing Dashboard");
+                }
+
+                JObject getDashboardPayloadObject = JObject.Parse(getDashboardApiResult);
+
+                createdOrUpdatedDashboard = new Dashboard(newDashboardID, getDashboardPayloadObject, this.AuthContext);
+
+                logger.Info("Returning new Dashboard {0}", createdOrUpdatedDashboard);
 
                 loggerConsole.Info("Returning Dashboard {0} ({1})", createdOrUpdatedDashboard.DashboardName, createdOrUpdatedDashboard.DashboardID);
 
