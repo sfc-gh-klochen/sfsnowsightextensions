@@ -182,7 +182,7 @@ namespace Snowflake.Powershell
 
                         if (this.Worksheet.WorksheetName == potentialTargetWorksheet.WorksheetName)
                         {
-                            // Found first matching worksheet with the same name and folder
+                            // Found first matching worksheet with the same name
                             targetWorksheetToReplace = potentialTargetWorksheet;
 
                             logger.Info("Found Match by Name: {0}=={1}", this.Worksheet, targetWorksheetToReplace);

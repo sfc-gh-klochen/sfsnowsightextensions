@@ -70,7 +70,7 @@ namespace Snowflake.Powershell
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Should WorksheetName be checked anywhere in name of the Worksheet",
             ParameterSetName = "WorksheetName")]
-        public SwitchParameter UseContains { get; set; }
+        public SwitchParameter WorksheetNameMatchPartial { get; set; }
 
         protected override void BeginProcessing()
         {
@@ -136,7 +136,7 @@ namespace Snowflake.Powershell
                             }
                             else
                             {
-                                if (this.UseContains.IsPresent == false)
+                                if (this.WorksheetNameMatchPartial.IsPresent == false)
                                 {
                                     if ((String.Compare(this.WorksheetName, potentialTargetWorksheet.WorksheetName, true) == 0))
                                     {

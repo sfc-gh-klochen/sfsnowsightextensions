@@ -70,7 +70,7 @@ namespace Snowflake.Powershell
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Should DashboardName be checked anywhere in name of the Dashboard",
             ParameterSetName = "DashboardName")]
-        public SwitchParameter UseContains { get; set; }
+        public SwitchParameter DashboardNameMatchPartial { get; set; }
 
         protected override void BeginProcessing()
         {
@@ -137,7 +137,7 @@ namespace Snowflake.Powershell
                             }
                             else
                             {
-                                if (this.UseContains.IsPresent == false)
+                                if (this.DashboardNameMatchPartial.IsPresent == false)
                                 {
                                     if ((String.Compare(this.DashboardName, potentialTargetDashboard.DashboardName, true) == 0))
                                     {
@@ -202,7 +202,6 @@ namespace Snowflake.Powershell
                         }
 
                         dashboardsList.Add(potentialTargetDashboard);
-                        
                     }
                 }
 
