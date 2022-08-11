@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
+using System.Text.RegularExpressions;
 
 namespace Snowflake.Powershell
 {
@@ -50,9 +51,9 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Name of Worksheet to retrieve",
+            HelpMessage = "Name or pattern of Worksheet to retrieve",
             ParameterSetName = "WorksheetName")]
-        public string WorksheetName { get; set; }
+        public string WorksheetNameRegex { get; set; }
 
         [Parameter(
             Mandatory = false,
@@ -62,15 +63,6 @@ namespace Snowflake.Powershell
             HelpMessage = "ID of Worksheet to retrieve",
             ParameterSetName = "WorksheetID")]
         public string WorksheetID { get; set; }
-        
-        [Parameter(
-            Mandatory = false,
-            Position = 2,
-            ValueFromPipeline = true,
-            ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Should WorksheetName be checked anywhere in name of the Worksheet",
-            ParameterSetName = "WorksheetName")]
-        public SwitchParameter WorksheetNameMatchPartial { get; set; }
 
         protected override void BeginProcessing()
         {
@@ -129,26 +121,26 @@ namespace Snowflake.Powershell
                     switch (this.ParameterSetName)
                     {                 
                         case "WorksheetName":
-                            if (this.WorksheetName == null || this.WorksheetName.Length == 0)
+                            if (this.WorksheetNameRegex == null || this.WorksheetNameRegex.Length == 0)
                             {
                                 // If no parameter passed, assume them all
                                 keepThisObject = true;
                             }
                             else
                             {
-                                if (this.WorksheetNameMatchPartial.IsPresent == false)
+                                // Adjust wildcard regex into a real wildcard regex
+                                // Just in case the users don't know how to use regex and just do a wildcard
+                                if (String.Compare(this.WorksheetNameRegex, "*", true) == 0)
                                 {
-                                    if ((String.Compare(this.WorksheetName, potentialTargetWorksheet.WorksheetName, true) == 0))
-                                    {
-                                        logger.Info("Found Match by Full Name: {0}={1}", this.WorksheetName, potentialTargetWorksheet);
-                                        keepThisObject = true;
-                                    }
+                                    this.WorksheetNameRegex = ".*";
                                 }
-                                else
+                                Regex regexVersion = new Regex(this.WorksheetNameRegex, RegexOptions.IgnoreCase);
+                                Match match = regexVersion.Match(potentialTargetWorksheet.WorksheetName);
+                                if (match != null)
                                 {
-                                    if ((potentialTargetWorksheet.WorksheetName.Contains(this.WorksheetName, StringComparison.InvariantCultureIgnoreCase) == true))
+                                    if (match.Success)
                                     {
-                                        logger.Info("Found Match by Contains Name: {0}={1}", this.WorksheetName, potentialTargetWorksheet);
+                                        logger.Info("Found Match by Worksheet Name Regex: {0}={1}", this.WorksheetNameRegex, potentialTargetWorksheet);
                                         keepThisObject = true;
                                     }
                                 }

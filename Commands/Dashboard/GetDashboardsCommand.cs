@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Management.Automation;
+using System.Text.RegularExpressions;
 
 namespace Snowflake.Powershell
 {
@@ -50,9 +51,9 @@ namespace Snowflake.Powershell
             Position = 1,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Name of Dashboard to retrieve",
+            HelpMessage = "Name or pattern of Dashboard to retrieve",
             ParameterSetName = "DashboardName")]
-        public string DashboardName { get; set; }
+        public string DashboardNameRegex { get; set; }
 
         [Parameter(
             Mandatory = false,
@@ -62,15 +63,6 @@ namespace Snowflake.Powershell
             HelpMessage = "ID of Dashboard to retrieve",
             ParameterSetName = "DashboardID")]
         public string DashboardID { get; set; }
-
-        [Parameter(
-            Mandatory = false,
-            Position = 2,
-            ValueFromPipeline = true,
-            ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Should DashboardName be checked anywhere in name of the Dashboard",
-            ParameterSetName = "DashboardName")]
-        public SwitchParameter DashboardNameMatchPartial { get; set; }
 
         protected override void BeginProcessing()
         {
@@ -130,29 +122,29 @@ namespace Snowflake.Powershell
                     switch (this.ParameterSetName)
                     {                 
                         case "DashboardName":
-                            if (this.DashboardName == null || this.DashboardName.Length == 0)
+                            if (this.DashboardNameRegex == null || this.DashboardNameRegex.Length == 0)
                             {
                                 // If no parameter passed, assume them all
                                 keepThisObject = true;
                             }
                             else
                             {
-                                if (this.DashboardNameMatchPartial.IsPresent == false)
+                                // Adjust wildcard regex into a real wildcard regex
+                                // Just in case the users don't know how to use regex and just do a wildcard
+                                if (String.Compare(this.DashboardNameRegex, "*", true) == 0)
                                 {
-                                    if ((String.Compare(this.DashboardName, potentialTargetDashboard.DashboardName, true) == 0))
+                                    this.DashboardNameRegex = ".*";
+                                }
+                                Regex regexVersion = new Regex(this.DashboardNameRegex, RegexOptions.IgnoreCase);
+                                Match match = regexVersion.Match(potentialTargetDashboard.DashboardName);
+                                if (match != null)
+                                {
+                                    if (match.Success)
                                     {
-                                        logger.Info("Found Match by Full Name: {0}={1}", this.DashboardName, potentialTargetDashboard);
+                                        logger.Info("Found Match by Dashboard Name Regex: {0}={1}", this.DashboardNameRegex, potentialTargetDashboard);
                                         keepThisObject = true;
                                     }
-                                }
-                                else
-                                {
-                                    if ((potentialTargetDashboard.DashboardName.Contains(this.DashboardName, StringComparison.InvariantCultureIgnoreCase) == true))
-                                    {
-                                        logger.Info("Found Match by Contains Name: {0}={1}", this.DashboardName, potentialTargetDashboard);
-                                        keepThisObject = true;
-                                    }
-                                }
+                                }                                
                             }
                             break;
 
