@@ -120,7 +120,7 @@ namespace Snowflake.Powershell
                     bool keepThisObject = false;
 
                     switch (this.ParameterSetName)
-                    {                 
+                    {
                         case "DashboardName":
                             if (this.DashboardNameRegex == null || this.DashboardNameRegex.Length == 0)
                             {

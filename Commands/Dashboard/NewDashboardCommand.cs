@@ -165,10 +165,6 @@ namespace Snowflake.Powershell
 
                 List<Dashboard> dashboardsList = new List<Dashboard>(entitiesArray.Count);
 
-                // bool matchByID = this.MatchType == "Both" || this.MatchType == "ID";
-                // bool matchByName = this.MatchType == "Both" || this.MatchType == "Name";
-                // bool targetDashboardUnique = true;
-
                 // Try to find existing dashboard in the target environment based on what is passed in and optional matches
                 foreach (JObject entityObject in entitiesArray)
                 {
@@ -244,6 +240,7 @@ namespace Snowflake.Powershell
                 // At this point, we either have the Dashboard to update, or the Dashboard we're trying to import is new
                 if (dashboardsList.Count > 0)
                 {
+                    // Take the first (and for update to succeed, it should be only) dashboard from the list we found
                     targetDashboardToReplace = dashboardsList[0];
 
                     // Updating existing Dashboard
