@@ -267,7 +267,7 @@ namespace Snowflake.Powershell
 
         public static string GetWorksheets(AppUserContext authContext)
         {
-            string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":1000,\"owner\":null,\"types\":[\"query\"],\"showNeverViewed\":\"if-invited\"}";
+            string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":500,\"owner\":null,\"types\":[\"query\"],\"showNeverViewed\":\"if-invited\"}";
 
             string requestBody = String.Format("options={0}&location=worksheets", HttpUtility.UrlEncode(optionsParam));
 
@@ -424,7 +424,7 @@ namespace Snowflake.Powershell
         public static string GetDashboards(
             AppUserContext authContext)
         {
-            string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":1000,\"owner\":null,\"types\":[\"dashboard\"],\"showNeverViewed\":\"if-invited\"}";
+            string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":500,\"owner\":null,\"types\":[\"dashboard\"],\"showNeverViewed\":\"if-invited\"}";
 
             string requestBody = String.Format("options={0}&location=worksheets", HttpUtility.UrlEncode(optionsParam));
 
@@ -725,7 +725,7 @@ namespace Snowflake.Powershell
         public static string GetFolders(
             AppUserContext authContext)
         {
-            string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":1000,\"owner\":null,\"types\":[\"folder\"],\"showNeverViewed\":\"if-invited\"}";
+            string optionsParam = "{\"sort\":{\"col\":\"viewed\",\"dir\":\"desc\"},\"limit\":500,\"owner\":null,\"types\":[\"folder\"],\"showNeverViewed\":\"if-invited\"}";
 
             string requestBody = String.Format("options={0}&location=worksheets", HttpUtility.UrlEncode(optionsParam));
 
