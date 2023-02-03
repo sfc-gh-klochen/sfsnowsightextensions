@@ -42,7 +42,7 @@ Author = 'Daniel Odievich (daniel.odievich@snowflake.com)'
 CompanyName = 'Snowflake Computing'
 
 # Copyright statement for this module
-Copyright = 'Copyright © 2021-2022'
+Copyright = 'Copyright © 2021-2023'
 
 # Description of the functionality provided by this module
 Description = 'Snowflake Snowsight Extensions provide access to Snowflake features via console'
