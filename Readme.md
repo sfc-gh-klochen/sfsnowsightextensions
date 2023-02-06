@@ -1,8 +1,9 @@
 # Snowflake Snowsight Extensions
 Snowflake Snowsight Extensions wrap Snowsight features that do not have API or SQL alternatives, such as manipulating Dashboards and Worksheets, and retrieving Query Profile and step timings.
 
-Written by Daniel Odievich (daniel.odievich@snowflake.com)
-Senior Solution Architect at Snowflake Professional Services.
+Created and developed by Daniel Odievich, Senior Solution Architect at Snowflake Professional Services.
+This repo is maintained by group of internal Snowflake associates. Please log issues in this repository.
+General questions can be directed to (michael.ybarra@snowflake.com)
 
 | :exclamation:        | This project is not an officialy supported product of Snowflake. Use at your own risk.     |
 |---------------|:------------------------|
