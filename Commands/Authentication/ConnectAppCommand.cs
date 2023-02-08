@@ -298,7 +298,7 @@ namespace Snowflake.Powershell
                 // AZWEST2  ClientID=uGWIv9zROgdvkWNlFHo4zi+F1M2joA==
                 logger.Info("ClientID={0}", appUserContext.ClientID);
 
-                logger.Info("OAuthNonce={0}", deploymentSnowSightClientIDRedirectResult.Item1);
+                logger.Info("OAuthNonce={0}", deploymentSnowSightClientIDRedirectResult.Item2);
 
                 #endregion
 

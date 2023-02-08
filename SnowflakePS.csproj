@@ -5,10 +5,10 @@
     <AssemblyName>SnowflakePS</AssemblyName>
     <RootNamespace>Snowflake.Powershell</RootNamespace>
 
-    <Version>2023.2.3.0</Version>
-    <FileVersion>2023.2.3.0</FileVersion>
-    <AssemblyVersion>2023.2.3.0</AssemblyVersion>
-    <Authors>Daniel Odievich (daniel.odievich@snowflake.com),Ryan Bacastow,Michael Ybarra</Authors>
+    <Version>2023.2.8.0</Version>
+    <FileVersion>2023.2.8.0</FileVersion>
+    <AssemblyVersion>2023.2.8.0</AssemblyVersion>
+    <Authors>Daniel Odievich, Ryan Bacastow, Michael Ybarra</Authors>
     <Company>Snowflake Computing</Company>
     <Product>Snowflake Snowsight Extensions</Product>
     <NeutralLanguage>en</NeutralLanguage>

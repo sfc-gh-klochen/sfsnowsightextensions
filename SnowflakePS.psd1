@@ -27,7 +27,7 @@
 RootModule = 'SnowflakePS.dll'
 
 # Version number of this module.
-ModuleVersion = '2022.8.12.0'
+ModuleVersion = '2022.2.8.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
