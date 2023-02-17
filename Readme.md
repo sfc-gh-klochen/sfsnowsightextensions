@@ -5,7 +5,7 @@ Created and developed by Daniel Odievich, Senior Solution Architect at Snowflake
 This repo is maintained by group of internal Snowflake associates. Please log issues in this repository.
 General questions can be directed to (michael.ybarra@snowflake.com)
 
-| :exclamation:        | This project is not an officialy supported product of Snowflake. Use at your own risk.     |
+| :exclamation:        | This project is not an officially supported product of Snowflake. Use at your own risk.     |
 |---------------|:------------------------|
 
 # Example
