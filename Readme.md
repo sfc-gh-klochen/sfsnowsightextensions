@@ -1193,7 +1193,7 @@ OrderPriority                       orderpriority             query             
 Execution took 00:00:05.6899666 (5689 ms)
 ```
 
-### New-SFWorksheet - Create or Update Worksheet From Worksheet File
+### New-SFFilter - Create or Update Filter From Filter File
 Create or update Filter from Filter file:
 ```
 PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Overwrite
@@ -1208,7 +1208,7 @@ OrderPriority                       orderpriority             query             
 Execution took 00:00:01.1230870 (1123 ms)
 ```
 
-### New-SFWorksheet - Create New Worksheet Only If It Does Not Exists From Worksheet File
+### New-SFFilter - Create New Filter Only If It Does Not Exists From Filter File
 Create new Filter from Filter file only if it doesn't already exist:
 ```
 PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Skip
@@ -1218,7 +1218,7 @@ Existing Worksheet OrderPriority (orderpriority) will be ignored and nothing wil
 Execution took 00:00:00.4108136 (410 ms)
 ```
 
-### New-SFWorksheet - Create Multiple New Worksheets from Worksheet Objects
+### New-SFFilter - Create Multiple New Filters from Worksheet Objects
 Create new and overwrite existing Filters from list of Filters in `$worksheets` array:
 ```
 PS > $filters | foreach {New-SFFilter -AuthContext $appContext -Filter $_ -ActionIfExists Overwrite}
