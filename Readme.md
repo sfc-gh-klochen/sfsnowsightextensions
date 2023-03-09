@@ -64,6 +64,25 @@ Run this command to load Snowflake Powershell module:
 PS > Import-Module <path to where you extracted binaries>/SnowflakePS.psd1
 ```
 
+## Add to PowerShell profile
+- Start Powershell using the command for your specific operating system
+- Run ``$profile`` to get the path of your powershell profile
+- Check if the profile exists by cd into the profile path. If it does not exit then
+manually create the profile file in the path specified by ``$profile`` command or run
+
+```
+New-Item -type file -path $profile -force
+```
+- Add Connect Command to PowerShell profile
+```
+ echo "function snowsightext(){Import-Module '~/<PATH TO FILE>/SnowflakePS.psd1' && Connect-SFApp -Account <YourSnowFlakeAccount> -Credential (Get-Credential)}">>$profile
+ exit
+```
+- You can now start the Powershell and simply run
+```
+snowsightext
+```
+
 # Use
 You can use this module directly in the shell or by scripting in ps1 files.
 
@@ -1174,7 +1193,7 @@ OrderPriority                       orderpriority             query             
 Execution took 00:00:05.6899666 (5689 ms)
 ```
 
-### New-SFWorksheet - Create or Update Worksheet From Worksheet File
+### New-SFFilter - Create or Update Filter From Filter File
 Create or update Filter from Filter file:
 ```
 PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Overwrite
@@ -1189,7 +1208,7 @@ OrderPriority                       orderpriority             query             
 Execution took 00:00:01.1230870 (1123 ms)
 ```
 
-### New-SFWorksheet - Create New Worksheet Only If It Does Not Exists From Worksheet File
+### New-SFFilter - Create New Filter Only If It Does Not Exists From Filter File
 Create new Filter from Filter file only if it doesn't already exist:
 ```
 PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Skip
@@ -1199,7 +1218,7 @@ Existing Worksheet OrderPriority (orderpriority) will be ignored and nothing wil
 Execution took 00:00:00.4108136 (410 ms)
 ```
 
-### New-SFWorksheet - Create Multiple New Worksheets from Worksheet Objects
+### New-SFFilter - Create Multiple New Filters from Worksheet Objects
 Create new and overwrite existing Filters from list of Filters in `$worksheets` array:
 ```
 PS > $filters | foreach {New-SFFilter -AuthContext $appContext -Filter $_ -ActionIfExists Overwrite}
