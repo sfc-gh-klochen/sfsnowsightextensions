@@ -214,6 +214,10 @@ namespace Snowflake.Powershell
                     loggerConsole.Trace("Deleting Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
                     
                     // Delete the Worksheet
+                    if(String.IsNullOrEmpty(worksheet.LocalPath) == false)
+                    {
+                          FileIOHelper.DeleteFile(worksheet.LocalPath);
+                    }
                     string worksheetDeleteApiResult = SnowflakeDriver.DeleteWorksheet(this.AuthContext, worksheet.WorksheetID);
                     if (worksheetDeleteApiResult.Length == 0)
                     {

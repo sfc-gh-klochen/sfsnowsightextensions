@@ -30,6 +30,7 @@ namespace Snowflake.Powershell
         public string URL { get; set; }
         public string WorksheetID { get; set; }
         public string WorksheetName { get; set; }
+        public string LocalPath {get; set;}
 
         // Worksheet Dates
         public DateTime StartedUtc { get; set; }
@@ -90,7 +91,7 @@ namespace Snowflake.Powershell
 
             this.WorksheetID = JSONHelper.getStringValueFromJToken(entityObject, "entityId");
             this.WorksheetName = JSONHelper.getStringValueFromJToken(entityObject["info"], "name");
-
+            this.LocalPath = String.Empty;
             this.Query = String.Empty;
             this.FolderName = String.Empty;
 
@@ -213,7 +214,7 @@ namespace Snowflake.Powershell
             this.Region = authContext.Region;
 
             this.WorksheetID = worksheetID;
-
+            this.LocalPath = String.Empty;
             this.Query = String.Empty;
             this.FolderName = String.Empty;
 

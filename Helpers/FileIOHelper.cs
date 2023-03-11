@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace Snowflake.Powershell
 {
@@ -295,10 +296,13 @@ namespace Snowflake.Powershell
         {
             string folderPath = Path.GetDirectoryName(jsonFilePath);
 
+ 
             if (CreateFolder(folderPath) == true)
             {
                 try
-                {
+                {   
+                    object boxedObject = RuntimeHelpers.GetObjectValue(objectToWrite);
+                    objectToWrite.GetType().GetProperty("LocalPath").SetValue(boxedObject, jsonFilePath);
                     logger.Info("Writing object {0} to file {1}", objectToWrite.GetType().Name, jsonFilePath);
 
                     using (StreamWriter sw = File.CreateText(jsonFilePath))
