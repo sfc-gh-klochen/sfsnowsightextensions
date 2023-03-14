@@ -189,15 +189,15 @@ namespace Snowflake.Powershell
                             if (this.Worksheet.WorksheetID == potentialTargetWorksheet.WorksheetID) 
                             {
                                 logger.Info("Found Match by ID: {0}={1}", this.Worksheet.WorksheetID, potentialTargetWorksheet);
-
-                                worksheetsToDeleteList.Add(potentialTargetWorksheet);
                             }
                             else if (String.Compare(this.Worksheet.WorksheetName, potentialTargetWorksheet.WorksheetName, true) == 0) 
                             {
                                 logger.Info("Found Match by Name: {0}={1}", this.Worksheet.WorksheetName, potentialTargetWorksheet);
-                                
-                                worksheetsToDeleteList.Add(potentialTargetWorksheet);
                             }
+                            
+                            potentialTargetWorksheet.LocalPath = this.Worksheet.LocalPath;
+                            worksheetsToDeleteList.Add(potentialTargetWorksheet);
+                            
                             break;
 
                         default:
@@ -214,7 +214,7 @@ namespace Snowflake.Powershell
                     loggerConsole.Trace("Deleting Worksheet {0} ({1})", worksheet.WorksheetName, worksheet.WorksheetID);
                     
                     // Delete the Worksheet
-                    if(String.IsNullOrEmpty(worksheet.LocalPath) == false)
+                    if(!String.IsNullOrEmpty(worksheet.LocalPath))
                     {
                           FileIOHelper.DeleteFile(worksheet.LocalPath);
                     }
