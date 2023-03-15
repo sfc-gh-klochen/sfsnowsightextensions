@@ -1331,7 +1331,7 @@ dotnet build
 Run this command to load Snowflake Powershell module:
 ```
  PS > Import-Module <path to development folder>/bin/debug/net6.0/SnowflakePS.psd1
-``
+```
 Connect to Snowflake using the ``Connect-SFApp`` command. Carry out other actions as found in the ReadME.
 
 
