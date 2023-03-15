@@ -1333,7 +1333,7 @@ dotnet build
 Then
 
 ```
- PS > Import-Module <path to where you development folder>/bin/debug/net6.0/SnowflakePS.psd1
+ PS > Import-Module <path to your snowsightextension cloned development folder>/bin/debug/net6.0/SnowflakePS.psd1
 ```
 
 
