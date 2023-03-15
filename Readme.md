@@ -1076,7 +1076,7 @@ Region             : us-west-2
 ```
 
 ### Get-SFFilters - Access Filter by Keyword Name
-Convert Filters in `$filters` array to `$filterssHash` hash table:
+Convert Filters in `$filters` array to `$filtersHash` hash table:
 
 ```
 PS > $filtersHash = @{}; $filters | foreach {$filtersHash[$_.Keyword] = $_}; $filtersHash
