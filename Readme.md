@@ -1076,7 +1076,7 @@ Region             : us-west-2
 ```
 
 ### Get-SFFilter - Access Filter by Keyword Name
-Convert Worksheets in `$worksheets` array to `$worksheetsHash` hash table:
+Convert Filters in `$filters` array to `$filterssHash` hash table:
 
 ```
 PS > $filtersHash = @{}; $filters | foreach {$filtersHash[$_.Keyword] = $_}; $filtersHash
@@ -1146,27 +1146,27 @@ SYNTAX
 Authentication context from Connect-SFApp command.
 
 ### New-SFFilter Parameter - FilterFile
-Path to the JSON file for Worksheet to create or update.
+Path to the JSON file for Filter to create or update.
 
 ### New-SFFilter Parameter - Filter
-Worksheet object to create or update.
+Filter object to create or update.
 
 ### New-SFFilter Parameter - ActionIfExists
-Specifies what to do if Account contain Worksheet with the same keyword:
+Specifies what to do if Account contains Filter with the same keyword:
 
 Option | Result
 -- | --
 Overwrite | Update existing Filter with the same keyword
 Skip | Skip creating Filter (Default) 
 
-### New-SFFilter - Create or Update Worksheet From List of Worksheets
+### New-SFFilter - Create or Update Filter From List of Filters
 Create or update Filter from one of the Filters objects in `$filters` array:
 ```
 PS > New-SFFilter -AuthContext $appContext -Filter $filters[4] -ActionIfExists Overwrite
 Getting Query Details for Filter OrderPriority (orderpriority) [query]
-Found Worksheet Param Query (4YGIJWpZapH)
-Existing Worksheet OrderPriority (orderpriority) will be overwritten because ActionIfExists is Overwrite
-Running Worksheet Param Query (4YGIJWpZapH)
+Found Filter Param Query (4YGIJWpZapH)
+Existing Filter OrderPriority (orderpriority) will be overwritten because ActionIfExists is Overwrite
+Running Filter Param Query (4YGIJWpZapH)
 
 DisplayName                         Keyword                   Type                      Scope
 -----------                         -------                   ----                      -----
@@ -1174,14 +1174,14 @@ OrderPriority                       orderpriority             query             
 Execution took 00:00:05.6899666 (5689 ms)
 ```
 
-### New-SFWorksheet - Create or Update Worksheet From Worksheet File
+### New-SFFilter - Create or Update Filter From Filter File
 Create or update Filter from Filter file:
 ```
 PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Overwrite
 Getting Query Details for Filter OrderPriority (orderpriority) [query]
-Found Worksheet Param Query (4YGIJWpZapH)
-Existing Worksheet OrderPriority (orderpriority) will be overwritten because ActionIfExists is Overwrite
-Running Worksheet Param Query (4YGIJWpZapH)
+Found Filter Param Query (4YGIJWpZapH)
+Existing Filter OrderPriority (orderpriority) will be overwritten because ActionIfExists is Overwrite
+Running Filter Param Query (4YGIJWpZapH)
 
 DisplayName                         Keyword                   Type                      Scope
 -----------                         -------                   ----                      -----
@@ -1189,18 +1189,18 @@ OrderPriority                       orderpriority             query             
 Execution took 00:00:01.1230870 (1123 ms)
 ```
 
-### New-SFWorksheet - Create New Worksheet Only If It Does Not Exists From Worksheet File
+### New-SFFilter - Create New Filter Only If It Does Not Exists From Filter File
 Create new Filter from Filter file only if it doesn't already exist:
 ```
 PS > New-SFFilter -AuthContext $appContext -FilterFile path/to/myfilter.json -ActionIfExists Skip
 Getting Query Details for Filter OrderPriority (orderpriority) [query]
-Found Worksheet Param Query (4YGIJWpZapH)
-Existing Worksheet OrderPriority (orderpriority) will be ignored and nothing will be done because ActionIfExists is Skip
+Found Filter Param Query (4YGIJWpZapH)
+Existing Filter OrderPriority (orderpriority) will be ignored and nothing will be done because ActionIfExists is Skip
 Execution took 00:00:00.4108136 (410 ms)
 ```
 
-### New-SFWorksheet - Create Multiple New Worksheets from Worksheet Objects
-Create new and overwrite existing Filters from list of Filters in `$worksheets` array:
+### New-SFFilter - Create Multiple New Filters from Filter Objects
+Create new and overwrite existing Filters from list of Filters in `$filters` array:
 ```
 PS > $filters | foreach {New-SFFilter -AuthContext $appContext -Filter $_ -ActionIfExists Overwrite}
 ```
