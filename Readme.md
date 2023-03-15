@@ -1321,3 +1321,20 @@ PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs ($queriesList | foreach {$_
 * Clone and open the project in VSCode
 * Restore project (Palette -> .NET: Restore All Projects)
 * Build the project (Palette -> Tasks: Run build task -> Build)
+
+## Testing Development
+
+After building the project using the above or by running
+
+``` 
+dotnet build
+
+```
+Then
+
+```
+ PS > Import-Module <path to where you development folder>/bin/debug/net6.0/SnowflakePS.psd1
+```
+
+
+
