@@ -64,6 +64,25 @@ Run this command to load Snowflake Powershell module:
 PS > Import-Module <path to where you extracted binaries>/SnowflakePS.psd1
 ```
 
+## Add to PowerShell profile
+- Start Powershell using the command for your specific operating system
+- Run ``$profile`` to get the path of your powershell profile
+- Check if the profile exists by cd into the profile path. If it does not exit then
+manually create the profile file in the path specified by ``$profile`` command or run
+
+```
+New-Item -type file -path $profile -force
+```
+- Add Connect Command to PowerShell profile
+```
+ echo "function snowsightext(){Import-Module '~/<PATH TO FILE>/SnowflakePS.psd1' && Connect-SFApp -Account <YourSnowFlakeAccount> -Credential (Get-Credential)}">>$profile
+ exit
+```
+- You can now start the Powershell and simply run
+```
+snowsightext
+```
+
 # Use
 You can use this module directly in the shell or by scripting in ps1 files.
 
