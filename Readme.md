@@ -1075,7 +1075,7 @@ OrganizationID     : 257859291703
 Region             : us-west-2
 ```
 
-### Get-SFFilter - Access Filter by Keyword Name
+### Get-SFFilters - Access Filter by Keyword Name
 Convert Filters in `$filters` array to `$filterssHash` hash table:
 
 ```
