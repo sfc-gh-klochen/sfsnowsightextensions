@@ -1325,16 +1325,15 @@ PS > Get-SFQueryProfile -AuthContext $auth -QueryIDs ($queriesList | foreach {$_
 ## Testing Development
 
 After building the project using the above or by running
-
 ``` 
 dotnet build
+```
+Run this command to load Snowflake Powershell module:
+```
+ PS > Import-Module <path to development folder>/bin/debug/net6.0/SnowflakePS.psd1
+``
+Connect to Snowflake using the ``Connect-SFApp`` command. Carry out other actions as found in the ReadME.
 
-```
-Then
-
-```
- PS > Import-Module <path to your snowsightextension cloned development folder>/bin/debug/net6.0/SnowflakePS.psd1
-```
 
 
 
