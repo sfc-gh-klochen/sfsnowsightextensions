@@ -381,12 +381,19 @@ namespace Snowflake.Powershell
             return null;
         }
         public static JObject LoadLocalPathSettings(){
+            try{
             LocalPath config = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                     .AddJsonFile("appsettings.json")
                     .Build()
                     .Get<LocalPath>();
             return JObject.FromObject(config);
+            }
+            catch(Exception ex){
+                logger.Error("Unable to write load configuration");
+                logger.Error(ex);
+            }
+            return null;
         }
 
 
