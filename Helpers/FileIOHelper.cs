@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Configuration;
 
 namespace Snowflake.Powershell
 {
@@ -300,6 +301,7 @@ namespace Snowflake.Powershell
             {
                 try
                 {
+                    WriteLocalPathToSettings(objectToWrite, jsonFilePath);
                     object boxedObject = RuntimeHelpers.GetObjectValue(objectToWrite);
                     objectToWrite.GetType().GetProperty("LocalPath").SetValue(boxedObject, jsonFilePath);
                     logger.Info("Writing object {0} to file {1}", objectToWrite.GetType().Name, jsonFilePath);
@@ -379,6 +381,39 @@ namespace Snowflake.Powershell
             return null;
         }
 
+
+        public static bool WriteLocalPathToSettings (object objectToWrite, string jsonFilePath){
+            try{
+                    string folderPath = Path.GetDirectoryName(jsonFilePath);
+                    string appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                    string settingsToWrite;
+                    LocalPath objLocalPath;
+                    string obj = objectToWrite.GetType().Name;
+                    if (File.Exists(appSettingsPath))
+                    {
+                        objLocalPath = new ConfigurationBuilder()
+                        .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                        .AddJsonFile("appsettings.json")
+                        .Build()
+                        .Get<LocalPath>();
+                    }
+                    else{
+                        objLocalPath = new LocalPath();
+                    }
+                    object boxed = RuntimeHelpers.GetObjectValue(objLocalPath);
+                    objLocalPath.GetType().GetProperty(obj).SetValue(boxed, folderPath);
+                    settingsToWrite = JsonConvert.SerializeObject(objLocalPath);
+                    logger.Info("Writing LocalPath settings for object {0} to appsettings.json",obj);
+                    File.WriteAllText(appSettingsPath, settingsToWrite);
+            }
+            catch (Exception ex)
+            {
+                logger.Error("Unable to write LocalPath settings for object {0} to appsettings.json", objectToWrite.GetType().Name);
+                logger.Error(ex);
+            }
+            return true;
+        }
+
         #endregion
 
         #region CSV reading and writing
@@ -393,7 +428,7 @@ namespace Snowflake.Powershell
             return WriteListToCSVFile(listToWrite, classMap, csvFilePath, appendToExistingFile, true);
 
         }
-        
+
         public static bool WriteListToCSVFile<T>(List<T> listToWrite, ClassMap<T> classMap, string csvFilePath, bool appendToExistingFile, bool includeHeader)
         {
             if (listToWrite == null) return true;
