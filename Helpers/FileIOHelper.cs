@@ -383,7 +383,7 @@ namespace Snowflake.Powershell
         public static JObject LoadLocalPathSettings(){
             try{
             LocalPath config = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json")
                     .Build()
                     .Get<LocalPath>();
@@ -400,7 +400,7 @@ namespace Snowflake.Powershell
         public static bool WriteLocalPathToSettings (object objectToWrite, string jsonFilePath){
             try{
                     string folderPath = Path.GetDirectoryName(jsonFilePath);
-                    string appSettingsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
+                    string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
                     string settingsToWrite;
                     LocalPath objLocalPath;
                     string obj = objectToWrite.GetType().Name;
