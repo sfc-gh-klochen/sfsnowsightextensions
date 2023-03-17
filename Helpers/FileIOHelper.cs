@@ -380,13 +380,13 @@ namespace Snowflake.Powershell
 
             return null;
         }
-        public static JObject LoadLocalPathSettings(){
+        public static JObject LoadConfig(){
             try{
-            LocalPath config = new ConfigurationBuilder()
+            Config config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json")
                     .Build()
-                    .Get<LocalPath>();
+                    .Get<Config>();
             return JObject.FromObject(config);
             }
             catch(Exception ex){
@@ -402,18 +402,19 @@ namespace Snowflake.Powershell
                     string folderPath = Path.GetDirectoryName(jsonFilePath);
                     string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
                     string settingsToWrite;
-                    LocalPath objLocalPath;
+                    Config config;
                     string obj = objectToWrite.GetType().Name;
                     if (File.Exists(appSettingsPath))
                     {  
-                       objLocalPath = LoadLocalPathSettings().ToObject<LocalPath>();
+                       config = LoadConfig().ToObject<Config>();
                     }
                     else{
-                        objLocalPath = new LocalPath();
+                        config = new Config();
                     }
-                    object boxed = RuntimeHelpers.GetObjectValue(objLocalPath);
-                    objLocalPath.GetType().GetProperty(obj).SetValue(boxed, folderPath);
-                    settingsToWrite = JsonConvert.SerializeObject(objLocalPath);
+
+                    object boxed = RuntimeHelpers.GetObjectValue(config.LocalPath);
+                    config.LocalPath.GetType().GetProperty(obj).SetValue(boxed, folderPath);
+                    settingsToWrite = JsonConvert.SerializeObject(config);
                     logger.Info("Writing LocalPath settings for object {0} to appsettings.json",obj);
                     File.WriteAllText(appSettingsPath, settingsToWrite);
             }
