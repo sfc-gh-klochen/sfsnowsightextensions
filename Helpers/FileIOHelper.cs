@@ -380,6 +380,14 @@ namespace Snowflake.Powershell
 
             return null;
         }
+        public static JObject LoadLocalPathSettings(){
+            LocalPath config = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                    .AddJsonFile("appsettings.json")
+                    .Build()
+                    .Get<LocalPath>();
+            return JObject.FromObject(config);
+        }
 
 
         public static bool WriteLocalPathToSettings (object objectToWrite, string jsonFilePath){
@@ -390,12 +398,8 @@ namespace Snowflake.Powershell
                     LocalPath objLocalPath;
                     string obj = objectToWrite.GetType().Name;
                     if (File.Exists(appSettingsPath))
-                    {
-                        objLocalPath = new ConfigurationBuilder()
-                        .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                        .AddJsonFile("appsettings.json")
-                        .Build()
-                        .Get<LocalPath>();
+                    {  
+                       objLocalPath = LoadLocalPathSettings().ToObject<LocalPath>();
                     }
                     else{
                         objLocalPath = new LocalPath();
