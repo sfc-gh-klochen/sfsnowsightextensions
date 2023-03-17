@@ -96,9 +96,12 @@ namespace Snowflake.Powershell
             this.FolderName = String.Empty;
             
             JObject localConfig = FileIOHelper.LoadConfig();
-            string worksheetLocalPath = JSONHelper.getStringValueFromJToken(localConfig["LocalPath"], "Worksheet");
+            string worksheetLocalPath = JSONHelper.getStringValueFromJToken(localConfig, "Worksheet");
             if(!String.IsNullOrEmpty(worksheetLocalPath)){
-                this.LocalPath = String.Concat(worksheetLocalPath, this._FileSystemSafeName);
+                this.LocalPath = 
+                    worksheetLocalPath + "/" +
+                    String.Format("Worksheet.{0}.{1}.{2}.json", FileIOHelper.GetFileSystemSafeString(this.AccountName), FileIOHelper.GetShortenedEntityNameForFileSystem(this.WorksheetName, 30), FileIOHelper.GetFileSystemSafeString(this.WorksheetID));
+                
 
             }
         

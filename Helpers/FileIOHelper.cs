@@ -382,11 +382,11 @@ namespace Snowflake.Powershell
         }
         public static JObject LoadConfig(){
             try{
-            Config config = new ConfigurationBuilder()
+            LocalPath config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                     .AddJsonFile("appsettings.json")
                     .Build()
-                    .Get<Config>();
+                    .Get<LocalPath>();
             return JObject.FromObject(config);
             }
             catch(Exception ex){
@@ -402,18 +402,18 @@ namespace Snowflake.Powershell
                     string folderPath = Path.GetDirectoryName(jsonFilePath);
                     string appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
                     string settingsToWrite;
-                    Config config;
+                    LocalPath config;
                     string obj = objectToWrite.GetType().Name;
                     if (File.Exists(appSettingsPath))
                     {  
-                       config = LoadConfig().ToObject<Config>();
+                       config = LoadConfig().ToObject<LocalPath>();
                     }
                     else{
-                        config = new Config();
+                        config = new LocalPath();
                     }
 
-                    object boxed = RuntimeHelpers.GetObjectValue(config.LocalPath);
-                    config.LocalPath.GetType().GetProperty(obj).SetValue(boxed, folderPath);
+                    object boxed = RuntimeHelpers.GetObjectValue(config);
+                    config.GetType().GetProperty(obj).SetValue(boxed, folderPath);
                     settingsToWrite = JsonConvert.SerializeObject(config);
                     logger.Info("Writing LocalPath settings for object {0} to appsettings.json",obj);
                     File.WriteAllText(appSettingsPath, settingsToWrite);
