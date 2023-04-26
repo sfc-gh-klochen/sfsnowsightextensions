@@ -36,8 +36,9 @@ PS > Import-Module <path to where you extracted binaries>\SnowflakePS.psd1
 ```
 
 ## Install on OSX
-| :exclamation:        | Please note that there is an executable SnowflakePS.arm.osx.<version>.zip and SnowflakePS.osx.<version>.zip. Please make sure to download the file related to your chipset     |
+| :exclamation:        | Please note that there is an executable SnowflakePS.osx-arm.<version>.zip and SnowflakePS.osx.<version>.zip. Please make sure to download the file related to your chipset     |
 |---------------|:------------------------|
+
 Download `SnowflakePS.osx.<version>.zip` but do not extract the archive yet.
 
 Open your terminal ([iTerm2](https://iterm2.com/) is recommended) and change working directory to where you saved the file to. 
