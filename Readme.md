@@ -142,9 +142,6 @@ Password of user as secure string.
 Username/password combination of user to authenticate as PSCredential.
 
 ### Connect-SFApp Parameter - SSO
-| :exclamation:        | Please note that using SSO to authenticate will require the use of `<account-locator>.<region>.<cloud>` if your account does not reside in AWS West (Oregon). For example: [XY12345.east-us-2.azure](https://docs.snowflake.com/en/user-guide/intro-regions.html#specifying-region-information-in-your-account-hostname)|
-|---------------|:------------------------|
-
 When specified, browser authentication with SSO provider is used.
 
 ### Connect-SFApp - Prompt for Username and Password
@@ -180,6 +177,9 @@ PS > $appContext = Connect-SFApp -Account aws_cas1 -UserName myusername -Passwor
 Obviously your password is in clear text, so use carefully.
 
 ### Connect-SFApp - Use SSO
+| :exclamation:        | Please note that using SSO to authenticate will require the use of `<account-locator>.<region>.<cloud>` if your account does not reside in AWS West (Oregon). For example: [XY12345.east-us-2.azure](https://docs.snowflake.com/en/user-guide/intro-regions.html#specifying-region-information-in-your-account-hostname)|
+|---------------|:------------------------|
+
 You must specify same username as the one you will use to authenticate with SSO:
 ```
 PS > $appContext = Connect-SFApp -Account aws_cas1 -UserName myusername -SSO
