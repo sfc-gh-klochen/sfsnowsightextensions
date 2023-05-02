@@ -36,7 +36,7 @@ PS > Import-Module <path to where you extracted binaries>\SnowflakePS.psd1
 ```
 
 ## Install on OSX
-| :exclamation:        | Please note that there is an executable for both ARM and Intel chipsets. SnowflakePS.osx-arm.<version>.zip and SnowflakePS.osx.<version>.zip. Please make sure to download the file related to your chipset     |
+| :exclamation:        | Please note that there is an executable for both ARM and Intel chipsets. `SnowflakePS.osx-arm.<version>.zip` and `SnowflakePS.osx.<version>.zip`. Please make sure to download the file related to your chipset     |
 |---------------|:------------------------|
 
 Download `SnowflakePS.osx.<version>.zip` but do not extract the archive yet.
@@ -142,7 +142,7 @@ Password of user as secure string.
 Username/password combination of user to authenticate as PSCredential.
 
 ### Connect-SFApp Parameter - SSO
-| :exclamation:        | Please note that using SSO to authenticate will require the use of <account-locator>.<region>.<cloud> if your account does not reside in AWS West (Oregon). For example: [XY12345.east-us-2.azure](https://docs.snowflake.com/en/user-guide/intro-regions.html#specifying-region-information-in-your-account-hostname)|
+| :exclamation:        | Please note that using SSO to authenticate will require the use of `<account-locator>.<region>.<cloud>` if your account does not reside in AWS West (Oregon). For example: [XY12345.east-us-2.azure](https://docs.snowflake.com/en/user-guide/intro-regions.html#specifying-region-information-in-your-account-hostname)|
 |---------------|:------------------------|
 
 When specified, browser authentication with SSO provider is used.
