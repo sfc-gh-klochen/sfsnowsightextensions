@@ -220,8 +220,8 @@ ServerVersion      : 5.17.1
 FileSystemSafeName : AppUserContext.account.dodievich.json
 _CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2021.5.18.0
-AccountName        : aws_cas1
-AccountFullName    : aws_cas1
+AccountName        : account
+AccountFullName    : account
 AccountUrl         : https://account.snowflakecomputing.com
 OrganizationID     : 
 Region             : us-west-2
