@@ -159,7 +159,7 @@ Password: ************
 ### Connect-SFApp - Prompt for Credentials
 You will get prompted for username and password:
 ```
-PS > $appContext = Connect-SFApp -Account aws_cas1 -Credential (Get-Credential)
+PS > $appContext = Connect-SFApp -Account account -Credential (Get-Credential)
 
 PowerShell credential request
 Enter your credentials.
@@ -182,7 +182,7 @@ Obviously your password is in clear text, so use carefully.
 
 You must specify same username as the one you will use to authenticate with SSO:
 ```
-PS > $appContext = Connect-SFApp -Account aws_cas1 -UserName myusername -SSO
+PS > $appContext = Connect-SFApp -Account account -UserName myusername -SSO
 ```
 
 ### Connect-SFApp - Get Authentication Token
@@ -277,10 +277,10 @@ PS > $worksheets
 
 WorksheetID   WorksheetName             FolderID   FolderName                AccountName          OwnerUserName   ModifiedUtc            Query
 -----------   -------------             --------   ----------                -----------          -------------   -----------            -----
-4Ylfm6mqkJB   2021-04-16 1:16pm                                              aws_cas1             DODIEVICH       4/21/2021 11:23:07 PM  test
-2zdJ1tNq2xY   Account and SSO                                                aws_cas1             DODIEVICH       4/21/2021 11:25:02 PM  USE ROLE AC…
-4zPK3cLsfd4   Azure Blob Integrations                                        aws_cas1             DODIEVICH       4/21/2021 11:25:02 PM  SHOW INTEGR…
-4nNfNmxeSHh   Create Roles                                                   aws_cas1             DODIEVICH       4/21/2021 11:25:03 PM  USE ROLE US…
+4Ylfm6mqkJB   2021-04-16 1:16pm                                              account              DODIEVICH       4/21/2021 11:23:07 PM  test
+2zdJ1tNq2xY   Account and SSO                                                account              DODIEVICH       4/21/2021 11:25:02 PM  USE ROLE AC…
+4zPK3cLsfd4   Azure Blob Integrations                                        account              DODIEVICH       4/21/2021 11:25:02 PM  SHOW INTEGR…
+4nNfNmxeSHh   Create Roles                                                   account              DODIEVICH       4/21/2021 11:25:03 PM  USE ROLE US…
 ...
 ```
 
@@ -289,17 +289,17 @@ View details of single Worksheet:
 ```
 PS > $worksheets[0] | Format-List
 
-AccountName        : aws_cas1
-AccountFullName    : aws_cas1
-AccountUrl         : https://aws_cas1.snowflakecomputing.com
-OrganizationID     : 257859291703
+AccountName        : account
+AccountFullName    : account
+AccountUrl         : https://account.snowflakecomputing.com
+OrganizationID     : 
 Region             : us-west-2
 FolderID           :
 FolderName         :
 OwnerUserID        : 87577248877
 OwnerUserName      : DODIEVICH
 Version            : 2
-URL                : /us-west-2/aws_cas1/w4Ylfm6mqkJB#query
+URL                : /us-west-2/account/w4Ylfm6mqkJB#query
 WorksheetID        : 4Ylfm6mqkJB
 WorksheetName      : 2021-04-16 1:16pm
 StartedUtc         : 4/21/2021 11:23:07 PM
@@ -321,10 +321,10 @@ PS > $worksheetsHash = @{}; $worksheets | foreach {$worksheetsHash[$_.WorksheetI
 
 Name                           Value
 ----                           -----
-CXCvscvEKJ                     Worksheet: Login and REST History (CXCvscvEKJ) in folder  () in aws_cas1 owned by DODIEVICH(87577248877)
-1eGl154YcxE                    Worksheet: Worksheet 6 (1eGl154YcxE) in folder  () in aws_cas1 owned by DODIEVICH(87577248877)
-y1s0KO81Zq                     Worksheet: RBAC BCI Environment (y1s0KO81Zq) in folder  () in aws_cas1 owned by DODIEVICH(87577248877)
-3MR8KWjzzEg                    Worksheet: KeithShareForDaniel (3MR8KWjzzEg) in folder  () in aws_cas1 owned by DODIEVICH(87577248877)
+CXCvscvEKJ                     Worksheet: Login and REST History (CXCvscvEKJ) in folder  () in account owned by DODIEVICH(87577248877)
+1eGl154YcxE                    Worksheet: Worksheet 6 (1eGl154YcxE) in folder  () in account owned by DODIEVICH(87577248877)
+y1s0KO81Zq                     Worksheet: RBAC BCI Environment (y1s0KO81Zq) in folder  () in account owned by DODIEVICH(87577248877)
+3MR8KWjzzEg                    Worksheet: KeithShareForDaniel (3MR8KWjzzEg) in folder  () in account owned by DODIEVICH(87577248877)
 ```
 
 Get Worksheet by ID from `$worksheetsHash` hashtable:
@@ -333,7 +333,7 @@ PS > $worksheetsHash["CXCvscvEKJ"]
 
 WorksheetID   WorksheetName             FolderID   FolderName                AccountName          OwnerUserName   ModifiedUtc            Query
 -----------   -------------             --------   ----------                -----------          -------------   -----------            -----
-CXCvscvEKJ    Login and REST History                                         aws_cas1             DODIEVICH       4/21/2021 11:25:04 PM  USE ROLE AC…
+CXCvscvEKJ    Login and REST History                                         account             DODIEVICH       4/21/2021 11:25:04 PM  USE ROLE AC…
 ```
 
 ### Get-SFWorksheets - Save All Worksheets to Local Files
@@ -376,7 +376,7 @@ FolderName         :
 OwnerUserID        : 87577248877
 OwnerUserName      : DODIEVICH
 Version            : 2
-URL                : /us-west-2/aws_cas1/w3MR8KWjzzEg#query
+URL                : /us-west-2/account/w3MR8KWjzzEg#query
 WorksheetID        : 3MR8KWjzzEg
 WorksheetName      : KeithShareForDaniel
 StartedUtc         : 4/21/2021 11:23:08 PM
@@ -388,13 +388,13 @@ Database           : SNOWFLAKE
 Schema             :
 Query              : SELECT 123;
 Charts             : {}
-FileSystemSafeName : Worksheet.aws_cas1.KeithShareForDaniel.3MR8KWjzzEg.json
+FileSystemSafeName : Worksheet.account.KeithShareForDaniel.3MR8KWjzzEg.json
 _CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2021.5.18.0
-AccountName        : aws_cas1
-AccountFullName    : aws_cas1
-AccountUrl         : https://aws_cas1.snowflakecomputing.com
-OrganizationID     : 257859291703
+AccountName        : account
+AccountFullName    : account
+AccountUrl         : https://account.snowflakecomputing.com
+OrganizationID     : 
 Region             : us-west-2
 ```
 
@@ -445,7 +445,7 @@ Returning Worksheet '2021-04-16 1:16pm (4Ylfm6mqkJB)'
 
 WorksheetID   WorksheetName             FolderID   FolderName                AccountName          OwnerUserName   ModifiedUtc            Query
 -----------   -------------             --------   ----------                -----------          -------------   -----------            -----
-4Ylfm6mqkJB   2021-04-16 1:16pm                                              aws_cas1             DODIEVICH       4/21/2021 11:23:07 PM  test
+4Ylfm6mqkJB   2021-04-16 1:16pm                                              account              DODIEVICH       4/21/2021 11:23:07 PM  test
 Execution took 00:00:00.4890137 (489 ms)
 ```
 
@@ -458,7 +458,7 @@ Returning Worksheet 'Login and REST History (CXCvscvEKJ)'
 
 WorksheetID   WorksheetName             FolderID   FolderName                AccountName          OwnerUserName   ModifiedUtc            Query
 -----------   -------------             --------   ----------                -----------          -------------   -----------            -----
-CXCvscvEKJ    Login and REST History                                         aws_cas1             DODIEVICH       4/21/2021 11:25:04 PM  USE ROLE AC…
+CXCvscvEKJ    Login and REST History                                         account              DODIEVICH       4/21/2021 11:25:04 PM  USE ROLE AC…
 Execution took 00:00:00.2634021 (263 ms)
 ```
 
@@ -471,7 +471,7 @@ Returning Worksheet '2021-04-16 1:16pm (4Ylfm6mqkJB)'
 
 WorksheetID   WorksheetName             FolderID   FolderName                AccountName          OwnerUserName   ModifiedUtc            Query
 -----------   -------------             --------   ----------                -----------          -------------   -----------            -----
-4Ylfm6mqkJB   2021-04-16 1:16pm                                              aws_cas1             DODIEVICH       4/21/2021 11:23:07 PM  test
+4Ylfm6mqkJB   2021-04-16 1:16pm                                              account              DODIEVICH       4/21/2021 11:23:07 PM  test
 Execution took 00:00:00.2612163 (261 ms)
 ```
 
@@ -484,7 +484,7 @@ Returning Worksheet '2021-04-16 1:16pm (4Ylfm6mqkJB)'
 
 WorksheetID   WorksheetName             FolderID   FolderName                AccountName          OwnerUserName   ModifiedUtc            Query
 -----------   -------------             --------   ----------                -----------          -------------   -----------            -----
-4Ylfm6mqkJB   2021-04-16 1:16pm                                              aws_cas1             DODIEVICH       4/21/2021 11:23:07 PM  test
+4Ylfm6mqkJB   2021-04-16 1:16pm                                              account              DODIEVICH       4/21/2021 11:23:07 PM  test
 Execution took 00:00:00.2563201 (256 ms)
 ```
 
@@ -497,7 +497,7 @@ Returning Worksheet 'TastyFruit (4iXVFbPHVkp)'
 
 WorksheetID   WorksheetName             FolderID   FolderName                AccountName          OwnerUserName   ModifiedUtc            Query
 -----------   -------------             --------   ----------                -----------          -------------   -----------            -----
-4iXVFbPHVkp   TastyFruit                                                     aws_cas1             DODIEVICH       4/22/2021 9:23:33 PM   USE ROLE SY…
+4iXVFbPHVkp   TastyFruit                                                     account              DODIEVICH       4/22/2021 9:23:33 PM   USE ROLE SY…
 Execution took 00:00:00.9035668 (903 ms)
 ```
 
@@ -728,14 +728,14 @@ PS > $dashboards
 
 DashboardID   DashboardName             AccountName          OwnerUserName   ModifiedUtc            NumRows    NumWidgets
 -----------   -------------             -----------          -------------   -----------            -------    ----------
-5JjYJohs      Copy of Dashboard 1       aws_cas1             DODIEVICH       4/29/2021 8:39:53 PM   1          4
-2pxRYuVz      Copy of Dashboard 1       aws_cas1             DODIEVICH       4/29/2021 8:39:35 PM   1          4
-RVmG8gIh      Dashboard 1               aws_cas1             DODIEVICH       4/28/2021 10:28:20 PM  2          4
-MMc0Mvsy      Dashboard 1               aws_cas1             DODIEVICH       4/28/2021 6:51:24 PM   3          5
-8WOgHrkO      Dashboard 2               aws_cas1             DODIEVICH       4/28/2021 10:30:01 PM  2          2
-OHuc0vF       Dashboard 2               aws_cas1             DODIEVICH       4/22/2021 10:53:39 PM  2          3
-SV53TLvb      Dashboard 3 - Empty       aws_cas1             DODIEVICH       4/14/2021 9:25:15 PM   1          1
-dU45rCqH      DashWithCharts            aws_cas1             DODIEVICH       5/18/2021 6:52:37 PM   4          8
+5JjYJohs      Copy of Dashboard 1       account             DODIEVICH       4/29/2021 8:39:53 PM   1          4
+2pxRYuVz      Copy of Dashboard 1       account             DODIEVICH       4/29/2021 8:39:35 PM   1          4
+RVmG8gIh      Dashboard 1               account             DODIEVICH       4/28/2021 10:28:20 PM  2          4
+MMc0Mvsy      Dashboard 1               account             DODIEVICH       4/28/2021 6:51:24 PM   3          5
+8WOgHrkO      Dashboard 2               account             DODIEVICH       4/28/2021 10:30:01 PM  2          2
+OHuc0vF       Dashboard 2               account             DODIEVICH       4/22/2021 10:53:39 PM  2          3
+SV53TLvb      Dashboard 3 - Empty       account             DODIEVICH       4/14/2021 9:25:15 PM   1          1
+dU45rCqH      DashWithCharts            account             DODIEVICH       5/18/2021 6:52:37 PM   4          8
 ...
 ```
 
@@ -746,7 +746,7 @@ PS > $dashboards[0] | Format-List
 
 OwnerUserID        : 87577248877
 OwnerUserName      : DODIEVICH
-URL                : /us-west-2/aws_cas1/copy-of-dashboard-1-d5JjYJohs
+URL                : /us-west-2/account/copy-of-dashboard-1-d5JjYJohs
 DashboardID        : 5JjYJohs
 DashboardName      : Copy of Dashboard 1
 RefreshedUtc       : 4/29/2021 8:39:48 PM
@@ -759,14 +759,14 @@ Schema             :
 Contents           : {rows, manualRefresh, context}
 NumRows            : 1
 NumWidgets         : 4
-Worksheets         : {Worksheet: Dashboard 1 Worksheet 1 (3d5CF0nwwcA) in folder Copy of Dashboard 1 (5JjYJohs) in account aws_cas1 is owned by
+Worksheets         : {Worksheet: Dashboard 1 Worksheet 1 (3d5CF0nwwcA) in folder Copy of Dashboard 1 (5JjYJohs) in account account is owned by
                      DODIEVICH (87577248877) with query text:
                      SELECT 'dashboard1', 'worksheet1', 1, Worksheet: ListOfTables (96JGncknkm) in folder Copy of Dashboard 1 (5JjYJohs) in account
-                     aws_cas1 is owned by DODIEVICH (87577248877) with query text:
+                     account is owned by DODIEVICH (87577248877) with query text:
                      SELECT * FROM TABLES;, Worksheet: Dashboard 1 Worksheet 2 (4XQXac29WMp) in folder Copy of Dashboard 1 (5JjYJohs) in account
-                     aws_cas1 is owned by DODIEVICH (87577248877) with query text:
+                     account is owned by DODIEVICH (87577248877) with query text:
                      SELECT 'dashboard1', 'worksheet2', 2, Worksheet: Create Users (4ZnWF0zZFtp) in folder Copy of Dashboard 1 (5JjYJohs) in account
-                     aws_cas1 is owned by DODIEVICH (87577248877) with query text:
+                     account is owned by DODIEVICH (87577248877) with query text:
                      USE ROLE SECURITYADMIN;
                      USE ROLE USERADMIN;
 
@@ -784,12 +784,12 @@ Worksheets         : {Worksheet: Dashboard 1 Worksheet 1 (3d5CF0nwwcA) in folder
 
                      CREATE OR REPLACE USER fbaggins
                          }
-FileSystemSafeName : Dashboard.aws_cas1.Copy of Dashboard 1.5JjYJohs.json
+FileSystemSafeName : Dashboard.account.Copy of Dashboard 1.5JjYJohs.json
 _CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2021.5.18.0
-AccountName        : aws_cas1
-AccountFullName    : aws_cas1
-AccountUrl         : https://aws_cas1.snowflakecomputing.com
+AccountName        : account
+AccountFullName    : account
+AccountUrl         : https://account.snowflakecomputing.com
 OrganizationID     : 257859291703
 Region             : us-west-2
 ```
@@ -889,7 +889,7 @@ Returning Dashboard 'DashWithCharts (V2HOYw2s)'
 
 DashboardID   DashboardName             AccountName          OwnerUserName   ModifiedUtc            NumRows    NumWidgets
 -----------   -------------             -----------          -------------   -----------            -------    ----------
-V2HOYw2s      DashWithCharts            aws_cas1             DODIEVICH       5/18/2021 10:13:10 PM  4          8
+V2HOYw2s      DashWithCharts            account             DODIEVICH       5/18/2021 10:13:10 PM  4          8
 Execution took 00:00:16.4291362 (16429 ms)
 ```
 
@@ -1064,19 +1064,19 @@ Scope              : org
 Type               : query
 Version            : 1
 WorksheetID        : icqOJDRRU8
-Worksheet          : Worksheet: Param Query (icqOJDRRU8) in account aws_cas1 is owned by DSILVA (291224489264) with query text:
+Worksheet          : Worksheet: Param Query (icqOJDRRU8) in account account is owned by DSILVA (291224489264) with query text:
                      select distinct account from MonthlyCustomerStats;
 Role               : ACCOUNTADMIN
 Warehouse          : DSILVA_WH
 Database           : 
 Schema             : 
 Configuration      : {scope, type, keyword, label…}
-FileSystemSafeName : Filter.aws_cas1.query.account.json
+FileSystemSafeName : Filter.account.query.account.json
 _CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2022.6.2.0
-AccountName        : aws_cas1
-AccountFullName    : aws_cas1
-AccountUrl         : https://aws_cas1.snowflakecomputing.com
+AccountName        : account
+AccountFullName    : account
+AccountUrl         : https://account.snowflakecomputing.com
 OrganizationID     : 257859291703
 Region             : us-west-2
 ```
@@ -1089,14 +1089,14 @@ PS > $filtersHash = @{}; $filters | foreach {$filtersHash[$_.Keyword] = $_}; $fi
 
 Name                           Value
 ----                           -----
-testfilterkeywordtesttest      Filter: Test Filter List Display Name (Test Filter Description) of org scope is used as testfilterkeywordtesttest in account aws_cas1 is ran by PROD_SYSADMIN role in PROD_WH warehouse
-timezone                       Filter: Time zone (A time zone) of global scope is used as timezone in account aws_cas1 is ran by  role in  warehouse
-testtest                       Filter: TestTest (testtest) of org scope is used as testtest in account aws_cas1 is ran by SYSADMIN role in  warehouse
-testqueryfilter1               Filter: testqueryfilter1 (testqueryfilter1) of org scope is used as testqueryfilter1 in account aws_cas1 is ran by SYSADMIN role in DODIEVICH_LOAD_WH warehouse
-testfilterlistkeyword          Filter: Test Filter List Display Name (Test Filter Description) of org scope is used as testfilterlistkeyword in account aws_cas1 is ran by SYSADMIN role in DODIEVICH_LOAD_WH warehouse
-schema                         Filter: Schema (Custom Schema Filter) of org scope is used as schema in account aws_cas1 is ran by SYSADMIN role in DSILVA_WH warehouse
-orderstatus                    Filter: OrderStatus (From tpc data) of org scope is used as orderstatus in account aws_cas1 is ran by SYSADMIN role in ADMIN_WH warehouse
-account                        Filter: Account () of org scope is used as account in account aws_cas1 is ran by ACCOUNTADMIN role in DSILVA_WH warehouse
+testfilterkeywordtesttest      Filter: Test Filter List Display Name (Test Filter Description) of org scope is used as testfilterkeywordtesttest in account account is ran by PROD_SYSADMIN role in PROD_WH warehouse
+timezone                       Filter: Time zone (A time zone) of global scope is used as timezone in account account is ran by  role in  warehouse
+testtest                       Filter: TestTest (testtest) of org scope is used as testtest in account account is ran by SYSADMIN role in  warehouse
+testqueryfilter1               Filter: testqueryfilter1 (testqueryfilter1) of org scope is used as testqueryfilter1 in account account is ran by SYSADMIN role in DODIEVICH_LOAD_WH warehouse
+testfilterlistkeyword          Filter: Test Filter List Display Name (Test Filter Description) of org scope is used as testfilterlistkeyword in account account is ran by SYSADMIN role in DODIEVICH_LOAD_WH warehouse
+schema                         Filter: Schema (Custom Schema Filter) of org scope is used as schema in account account is ran by SYSADMIN role in DSILVA_WH warehouse
+orderstatus                    Filter: OrderStatus (From tpc data) of org scope is used as orderstatus in account account is ran by SYSADMIN role in ADMIN_WH warehouse
+account                        Filter: Account () of org scope is used as account in account account is ran by ACCOUNTADMIN role in DSILVA_WH warehouse
 ```
 
 Get Filter by Keyword from `$filtersHash` hashtable:
