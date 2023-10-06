@@ -171,13 +171,13 @@ Password for user myusername: **********
 Pass username and password and skip all prompts:
 
 ```
-PS > $appContext = Connect-SFApp -Account aws_cas1 -UserName myusername -Password (ConvertTo-SecureString -String "supersecret" -AsPlainText)
+PS > $appContext = Connect-SFApp -Account <account name> -UserName myusername -Password (ConvertTo-SecureString -String "supersecret" -AsPlainText)
 ```
 
 Obviously your password is in clear text, so use carefully.
 
 ### Connect-SFApp - Use SSO
-| :exclamation:        | Please note that using SSO to authenticate will require the use of `<account-locator>.<region>.<cloud>` if your account does not reside in AWS West (Oregon). For example: [XY12345.east-us-2.azure](https://docs.snowflake.com/en/user-guide/intro-regions.html#specifying-region-information-in-your-account-hostname)|
+| :exclamation:        | Please note that using SSO to authenticate will require the use of `<account-locator>.<region>.<cloud>` if your account does not reside in AWS West (Oregon). For example: [account.east-us-2.azure](https://docs.snowflake.com/en/user-guide/intro-regions.html#specifying-region-information-in-your-account-hostname)|
 |---------------|:------------------------|
 
 You must specify same username as the one you will use to authenticate with SSO:
@@ -188,18 +188,18 @@ PS > $appContext = Connect-SFApp -Account aws_cas1 -UserName myusername -SSO
 ### Connect-SFApp - Get Authentication Token
 Authenticate with credential prompt and store resulting authentication token in `$appContext` variable:
 ```
-PS > $appContext = Connect-SFApp -Account aws_cas1
+PS > $appContext = Connect-SFApp -Account <account>
 
 cmdlet Connect-SFApp at command pipeline position 1
 Supply values for the following parameters:
 (Type !? for Help.)
 UserName: dodievich
 Password: ************
-Account 'aws_cas1' in region 'us-west-2' is accessible at 'https://aws_cas1.snowflakecomputing.com' and served by application server 'https://apps-api.c1.us-west-2.aws.app.snowflake.com'
-Authenticating user 'dodievich' in account 'aws_cas1'
-Validating master token for user 'dodievich' in account 'aws_cas1'
-Converting redirect token to authentication token for user 'dodievich in account 'aws_cas1'
-Successfully authenticated 'dodievich' (87577248877) in account 'aws_cas1' (257859291703)
+Account in region 'us-west-2' is accessible at 'https://account.snowflakecomputing.com' and served by application server 'https://apps-api.account.us-west-2.aws.app.snowflake.com'
+Authenticating user 'dodievich' in account 'account'
+Validating master token for user 'dodievich' in account 'account'
+Converting redirect token to authentication token for user 'dodievich in account 'account'
+Successfully authenticated 'dodievich' (87577248877) in account 'account' (257859291703)
 Execution took 00:00:01.9017100 (1901 ms)
 ```
 
@@ -207,7 +207,7 @@ View authentication token:
 ```
 PS > $appContext
 
-AppServerUrl       : https://apps-api.c1.us-west-2.aws.app.snowflake.com
+AppServerUrl       : https://apps-api.account.us-west-2.aws.app.snowflake.com
 AuthTokenSnowsight : user-646f646965766963683a<...>Q==; Path=/; Expires=Tue, 15 Jun 2021 21:04:58 GMT; Max-Age=2419200; HttpOnly; Secure;
                      SameSite=Lax
 AuthTokenMaster    : ETMs<...>ILw=
@@ -217,13 +217,13 @@ CSRFToken          : 3sm46ggj6Sz
 UserID             : 87577248877
 UserName           : dodievich
 ServerVersion      : 5.17.1
-FileSystemSafeName : AppUserContext.aws_cas1.dodievich.json
+FileSystemSafeName : AppUserContext.account.dodievich.json
 _CreatedWith       : Snowflake Snowsight Extensions
 _CreatedVersion    : 2021.5.18.0
 AccountName        : aws_cas1
 AccountFullName    : aws_cas1
-AccountUrl         : https://aws_cas1.snowflakecomputing.com
-OrganizationID     : 257859291703
+AccountUrl         : https://account.snowflakecomputing.com
+OrganizationID     : 
 Region             : us-west-2
 ```
 
