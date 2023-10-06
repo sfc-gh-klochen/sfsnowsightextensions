@@ -120,9 +120,9 @@ You must pass full name of the account from the URL https://`<account_name>`.sno
 
 Account URL | Account Name
 -- | --
-https://aws_cas1.snowflakecomputing.com | aws_cas1
+https://account.snowflakecomputing.com | account
 https://customer.canada-central.azure.snowflakecomputing.com | customer.canada-central.azure
-https://sfpscogs_dodievich_sso.west-us-2.azure.snowflakecomputing.com | sfpscogs_dodievich_sso.west-us-2.azure
+https://account.west-us-2.azure.snowflakecomputing.com | account.west-us-2.azure
 https://something.us-east-1.privatelink.snowflakecomputing.com | something.us-east-1.privatelink.snowflakecomputing.com
 
 PrivateLink URLs are supported ONLY if you add `.snowflakecomputing.com` at the end, but may still not work for you if you have network access policies blocking the client IP addresses.
