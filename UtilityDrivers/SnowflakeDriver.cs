@@ -53,11 +53,11 @@ namespace Snowflake.Powershell
         public static Tuple<string, string> OAuth_Start_GetSnowSightClientIDInDeployment(string mainAppURL, string appServerUrl, string accountUrl)
         {
             string csrf = "SnowflakePS";
-            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
+            string stateParam = String.Format("{{\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
             
             Tuple<string, List<string>, HttpStatusCode> result = apiGET(
                 appServerUrl,
-                String.Format("start-oauth/snowflake?accountUrl={0}&state={1}", HttpUtility.UrlEncode(accountUrl), HttpUtility.UrlEncode(stateParam)),
+                String.Format("start-oauth/snowflake?accountUrl={0}&&state={1}", HttpUtility.UrlEncode(accountUrl), HttpUtility.UrlEncode(stateParam)),
                 "text/html", 
                 String.Empty,
                 String.Empty,
@@ -67,21 +67,17 @@ namespace Snowflake.Powershell
                 String.Empty
             );
 
-            if (result.Item3 == HttpStatusCode.Redirect)
+            // If we have the S8_SESSION cookie and oauth-nonce- cookie, then it's a success.
+            // However, these could change in future (Snowflake adding/modifying cookies),
+            // so we'll just check for the presence of at least one cookie.
+            if (result.Item2.Count == 0)
             {
-                // Get the cookie
-                foreach (string cookie in result.Item2)
-                {
-                    if (cookie.StartsWith("oauth-nonce-") == true)
-                    {
-                        return new Tuple<string, string>(result.Item1, cookie);
-                        // resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
-                    }
-                }
+                throw new Exception("No cookies returned from start-oauth/snowflake");
             }
 
-            // Default return
-            return new Tuple<string, string>(String.Empty, String.Empty);
+            string cookiesString = String.Join(";", result.Item2);
+
+            return new Tuple<string, string>(result.Item1, cookiesString);
         }
 
         #endregion
@@ -134,7 +130,7 @@ namespace Snowflake.Powershell
         {
             string csrf = "SnowflakePS";
             Cookie oauthNonceCookie = getOAuthNonceCookie(oAuthNonceCookie, "doesn't matter");
-            string stateParam = String.Format("{{\"isSecondaryUser\":false,\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\", \"oauthNonce\":\"{3}\"}}", csrf, accountUrl, mainAppURL, oauthNonceCookie.Value);
+            string stateParam = String.Format("{{\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\", \"oauthNonce\":\"{3}\"}}", csrf, accountUrl, mainAppURL, oauthNonceCookie.Value);
             
             Tuple<string, List<string>, HttpStatusCode> result = apiGET(
                 appServerUrl,
@@ -862,7 +858,7 @@ namespace Snowflake.Powershell
                 HttpClientHandler httpClientHandler = new HttpClientHandler();
                 httpClientHandler.UseCookies = true;
                 httpClientHandler.CookieContainer = new CookieContainer();
-                httpClientHandler.AllowAutoRedirect = false;
+                httpClientHandler.AllowAutoRedirect = true;
                 // If customer certificates are not in trusted store, let's not fail
                 httpClientHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
@@ -908,9 +904,11 @@ namespace Snowflake.Powershell
                     HttpResponseMessage response = httpClient.GetAsync(restAPIUrl).Result;
                     
                     IEnumerable<string> cookiesList = new List<string>(); 
-                    if (response.Headers.Contains("Set-Cookie") == true)
+
+                    // extract all cookies from cookieContainer, into the list
+                    foreach (Cookie cookie in httpClientHandler.CookieContainer.GetCookies(baseUri))
                     {
-                        cookiesList = response.Headers.GetValues("Set-Cookie"); 
+                        cookiesList = cookiesList.Append(cookie.ToString());
                     }
 
                     if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Found)
@@ -919,6 +917,14 @@ namespace Snowflake.Powershell
                         if (resultString == null) resultString = String.Empty;
 
                         logger.Info("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nResponse Length {6}:\n{7}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, String.Join('\n', cookiesList), resultString.Length, resultString);
+
+                        // Workaround for the issue that the API now returns the client_id in the URL, and the apiGET
+                        // function doesn't return the URL. So we need to return the final redirected URL as the result for
+                        // `start-oauth/snowflake`.
+                        if (restAPIUrl.Contains("start-oauth/snowflake"))
+                        {
+                            resultString = response.RequestMessage.RequestUri.ToString();
+                        }
 
                         return new Tuple<string, List<string>, HttpStatusCode>(resultString, cookiesList.ToList(), response.StatusCode);
                     }
