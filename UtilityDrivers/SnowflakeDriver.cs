@@ -52,9 +52,26 @@ namespace Snowflake.Powershell
 
         public static Tuple<string, string> OAuth_Start_GetSnowSightClientIDInDeployment(string mainAppURL, string appServerUrl, string accountUrl)
         {
+            // When a user logs in via the Snowsight UI at https://app.snowflake.com, Snowflake redirects them to the `start-oauth/snowflake` endpoint:
+            //
+            // `https://apps-api.c1.us-east-999.aws.app.snowflake.com/start-oauth/snowflake?accountUrl=https%3A%2F%2Faccount12345us-east-999.snowflakecomputing.com&&state=%7B%22csrf%22%3A%22abcdefab%22%2C%22url%22%3A%22https%3A%2F%2Faccount12345.us-east-999.snowflakecomputing.com%22%2C%22windowId%22%3A%2200000000-0000-0000-0000-000000000000%22%2C%22browserUrl%22%3A%22https%3A%2F%2Fapp.snowflake.com%2F%22%7D`
+            //
+            // > Note that the `&&state` is not a typo, it is what Snowflake sends, so we send the same.
+            //
+            // This string is URL-encoded; its decoded form appears as follows:
+            //
+            // `https://apps-api.c1.us-east-999.aws.app.snowflake.com/start-oauth/snowflake?accountUrl=https://account12345us-east-999.snowflakecomputing.com&&state={"csrf":"abcdefab","url":"https://account12345.us-east-999.snowflakecomputing.com","windowId":"00000000-0000-0000-0000-000000000000","browserUrl":"https://app.snowflake.com/"}`
+            //
+            // Snowflake expects the following keys in the state object:
+            //
+            // 1. csrf - The csrf token from the earlier step
+            // 2. url - The URL of the user's Snowflake instance (https://account12345.us-east-999.snowflakecomputing.com)
+            // 3. windowId - This parameter is not needed, this parameter is the unique window ID of the user's web browser session, used to mitigate forgery risks.
+            // 4. browserUrl - https://app.snowflake.com
+
             string csrf = "SnowflakePS";
             string stateParam = String.Format("{{\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
-            
+
             Tuple<string, List<string>, HttpStatusCode> result = apiGET(
                 appServerUrl,
                 String.Format("start-oauth/snowflake?accountUrl={0}&&state={1}", HttpUtility.UrlEncode(accountUrl), HttpUtility.UrlEncode(stateParam)),
