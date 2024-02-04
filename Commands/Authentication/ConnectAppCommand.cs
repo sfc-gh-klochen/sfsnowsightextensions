@@ -146,15 +146,6 @@ namespace Snowflake.Powershell
             ParameterSetName = "BrowserSSO")]
         public SwitchParameter SSO { get; set; }
 
-        [Parameter(
-            Mandatory = true,
-            Position = 6,
-            ValueFromPipeline = true,
-            ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Outputs sanitised logging information to help diagnose login issues",
-            ParameterSetName = "Pop")]
-        public SwitchParameter Pop { get; set; }
-
         protected override void BeginProcessing()
         {
             stopWatch.Start();
@@ -163,16 +154,7 @@ namespace Snowflake.Powershell
 
             logger = LogManager.GetCurrentClassLogger();
             loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
-            // only enable loggerDiagnosticTest if DiagnosticTest is set
-            // if (this.DiagnosticTest == 1)
-            // {
             loggerDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.DiagnosticTest");
-            // }
-            // else
-            // {
-                // loggerDiagnosticTest = LogManager.CreateNullLogger();
-            // }
-            // Log these lines JUST for DiagnosticTest
 
             loggerExtensiveDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.ExtensiveDiagnosticTest");
             loggerExtensiveDiagnosticTest.Info("!! README !!: This file contains extensive logging for issue diagnosis. This file should not contain login credentials, sensitive information such as passwords, but it may contain URLs such as your Snowflake Instance, and cookie names (but not values).");
