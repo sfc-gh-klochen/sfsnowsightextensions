@@ -34,8 +34,8 @@ namespace Snowflake.Powershell
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
-        private static Logger loggerIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.IssueDiagnostic");
-        private static Logger loggerExtensiveIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.ExtensiveIssueDiagnostic");
+        private static Logger loggerDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.DiagnosticTest");
+        private static Logger loggerExtensiveDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.ExtensiveDiagnosticTest");
 
         #region Snowsight Client Metadata
 
@@ -216,7 +216,7 @@ namespace Snowflake.Powershell
     ""data"": {{
         ""ACCOUNT_NAME"": ""{0}"",
         ""LOGIN_NAME"": ""{1}"",
-        ""AUTHENTICATOR"": ""externalbrowser"",
+        ""AUTHENTICATOR"": ""EXTERNALBROWSER"",
         ""TOKEN"": ""{2}"",
         ""PROOF_KEY"": ""{3}""
     }}
@@ -242,7 +242,7 @@ namespace Snowflake.Powershell
     ""data"": {{
         ""ACCOUNT_NAME"": ""{0}"",
         ""LOGIN_NAME"": ""{1}"",
-        ""AUTHENTICATOR"": ""externalbrowser"",
+        ""AUTHENTICATOR"": ""EXTERNALBROWSER"",
         ""BROWSER_MODE_REDIRECT_PORT"": {2}
     }}
 }}";
@@ -1366,11 +1366,11 @@ namespace Snowflake.Powershell
             // a response that isn't JSON, which we'll then log.
 
             // Split the responses to make it a bit easier to read
-            loggerIssueDiagnostic.Info("--------------------");
+            loggerDiagnosticTest.Info("--------------------");
 
-            // loggerIssueDiagnostic.Info("Request URL: {0}", restApiUrl);
+            // loggerDiagnosticTest.Info("Request URL: {0}", restApiUrl);
             string finalUrl = response.RequestMessage?.RequestUri?.ToString() ?? "";
-            // loggerIssueDiagnostic.Info("Final URL: {0}", finalUrl);
+            // loggerDiagnosticTest.Info("Final URL: {0}", finalUrl);
 
             // @todo In .NET 7, they introduced better pattern matching for switch statements, which would
             // allow us to match on the what the URL begins with.
@@ -1398,8 +1398,8 @@ namespace Snowflake.Powershell
             
             if (restApiUrl.StartsWith("v0/validate-snowflake-url"))
             {
-                loggerIssueDiagnostic.Info("GET /v0/validate-snowflake-url");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("GET /v0/validate-snowflake-url");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 string account = "N/A";
                 string appServerUrl = "N/A";
                 string region = "N/A";
@@ -1432,24 +1432,24 @@ namespace Snowflake.Powershell
                 catch (Exception ex)
                 {
                     // @todo We could use ex.Message here, but it might contain sensitive information.
-                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                    loggerDiagnosticTest.Error("Failed to parse JSON response");
                 }
-                loggerIssueDiagnostic.Info("Response Body: valid: {0} | account: {1} | appServerUrl: {2} | region: {3} | url: {4}", valid, account, appServerUrl, region, url);
+                loggerDiagnosticTest.Info("Response Body: valid: {0} | account: {1} | appServerUrl: {2} | region: {3} | url: {4}", valid, account, appServerUrl, region, url);
             }
             else if (restApiUrl.StartsWith("start-oauth/snowflake"))
             {
-                loggerIssueDiagnostic.Info("GET /start-oauth/snowflake");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("GET /start-oauth/snowflake");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
 
                 // We only care if if the redirect URL contains oauth/authorize, as that is the current final URL
                 bool correctRedirectUrl = finalUrl.Contains("oauth/authorize");
 
-                loggerIssueDiagnostic.Info("Redirected to oauth/authorize: {0}", correctRedirectUrl);
+                loggerDiagnosticTest.Info("Redirected to oauth/authorize: {0}", correctRedirectUrl);
             }
             else if (restApiUrl.StartsWith("complete-oauth/snowflake"))
             {
-                loggerIssueDiagnostic.Info("GET /complete-oauth/snowflake");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("GET /complete-oauth/snowflake");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 string resultString = response.Content.ReadAsStringAsync().Result;
                 // does the page contents contain "var params"?
                 bool containsVarParams = resultString.Contains("var params");
@@ -1457,12 +1457,12 @@ namespace Snowflake.Powershell
                 // What was the response type, if not found fallback to N/A
                 string responseType = response.Content.Headers.ContentType?.MediaType ?? "N/A";                
                 // Response Body: HTML, params var: EXISTS
-                loggerIssueDiagnostic.Info("Response Body: {0}, params var: {1}", responseType, containsVarParams);
+                loggerDiagnosticTest.Info("Response Body: {0}, params var: {1}", responseType, containsVarParams);
             }
             else if (restApiUrl.StartsWith("bootstrap"))
             {
-                loggerIssueDiagnostic.Info("GET /bootstrap");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("GET /bootstrap");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 // Response Body: BuildVersion: 240125-9-f8441ccb37, user.id: EXISTS
                 string resultString = response.Content.ReadAsStringAsync().Result;
                 // BuildVersion is from the JSON
@@ -1477,16 +1477,16 @@ namespace Snowflake.Powershell
                 catch (Exception ex)
                 {
                     // @todo We could use ex.Message here, but it might contain sensitive information.
-                    loggerExtensiveIssueDiagnostic.Error("Failed to parse JSON response | error: {0}", ex.Message);
+                    loggerExtensiveDiagnosticTest.Error("Failed to parse JSON response | error: {0}", ex.Message);
                 }
-                loggerIssueDiagnostic.Info("Response Body: BuildVersion: {0} | User.id: {1}", buildVersion, userId);
+                loggerDiagnosticTest.Info("Response Body: BuildVersion: {0} | User.id: {1}", buildVersion, userId);
             }
             else
             {
                 // else we ended up somewhere we didn't expect.. We don't want to expose this in the logfile for
-                // IssueDiagnostic, as this might be a sensitive URL or contain sensitive information.
-                logger.Warn("IssueDiagnostic - GET {0} didn't match any known URL", restApiUrl);
-                loggerIssueDiagnostic.Info("Couldn't match on GET, unknown URL");
+                // DiagnosticTest, as this might be a sensitive URL or contain sensitive information.
+                logger.Warn("DiagnosticTest - GET {0} didn't match any known URL", restApiUrl);
+                loggerDiagnosticTest.Info("Couldn't match on GET, unknown URL");
             }
 
             // Convert the cookies into a string, and remove sensitive information.
@@ -1502,14 +1502,14 @@ namespace Snowflake.Powershell
             List<string> requestCookieList,
             List<string> responseCookieList)
         {
-            loggerIssueDiagnostic.Info("--------------------");
+            loggerDiagnosticTest.Info("--------------------");
 
             if (restApiUrl.StartsWith("session/v1/login-request"))
             {
                 // Response: 200 in 1000ms
                 // Response Body: success: TRUE, code: NULL, serverVersion: 8.4.1, masterToken: EXISTS, token: EXISTS, sessionId: EXISTS, displayUserName: EXISTS, schemaName: EXISTS, warehouseName: EXISTS, roleName: EXISTS, databaseName: EXISTS
-                loggerIssueDiagnostic.Info("POST /session/v1/login-request");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("POST /session/v1/login-request");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 string success = "N/A";
                 string code = "N/A";
                 string serverVersion = "N/A";
@@ -1547,14 +1547,14 @@ namespace Snowflake.Powershell
                 catch (Exception ex)
                 {
                     // @todo We could use ex.Message here, but it might contain sensitive information.
-                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                    loggerDiagnosticTest.Error("Failed to parse JSON response");
                 }
-                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | serverVersion: {2} | masterToken: {3} | token: {4} | sessionId: {5} | displayUserName: {6} | schemaName: {7} | warehouseName: {8} | roleName: {9} | databaseName: {10}", success, code, serverVersion, masterToken, token, sessionId, displayUserName, schemaName, warehouseName, roleName, databaseName);
+                loggerDiagnosticTest.Info("Response Body: success: {0} | code: {1} | serverVersion: {2} | masterToken: {3} | token: {4} | sessionId: {5} | displayUserName: {6} | schemaName: {7} | warehouseName: {8} | roleName: {9} | databaseName: {10}", success, code, serverVersion, masterToken, token, sessionId, displayUserName, schemaName, warehouseName, roleName, databaseName);
             }
             else if (restApiUrl.StartsWith("session/authenticate-request"))
             {
-                loggerIssueDiagnostic.Info("POST /session/authenticate-request");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("POST /session/authenticate-request");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 string success = "N/A";
                 string code = "N/A";
                 string masterToken = "N/A";
@@ -1569,16 +1569,16 @@ namespace Snowflake.Powershell
                 catch (Exception ex)
                 {
                     // @todo We could use ex.Message here, but it might contain sensitive information.
-                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                    loggerDiagnosticTest.Error("Failed to parse JSON response");
                 }
-                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | masterToken: {2}", success, code, masterToken);
+                loggerDiagnosticTest.Info("Response Body: success: {0} | code: {1} | masterToken: {2}", success, code, masterToken);
             }
             else if (restApiUrl.StartsWith("oauth/authorization-request"))
             {
                 // Response: 200 in 1000ms
                 // Response Body: success: FALSE, code: 390301, data.redirectUrl: EXISTS, data.nextAction: OAUTH_REDIRECT, data.inFlightCtx: EXISTS
-                loggerIssueDiagnostic.Info("POST /oauth/authorization-request");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("POST /oauth/authorization-request");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 string success = "N/A";
                 string code = "N/A";
                 string redirectUrl = "N/A";
@@ -1597,24 +1597,24 @@ namespace Snowflake.Powershell
                 catch (Exception ex)
                 {
                     // @todo We could use ex.Message here, but it might contain sensitive information.
-                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                    loggerDiagnosticTest.Error("Failed to parse JSON response");
                 }
-                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | redirectUrl: {2} | nextAction: {3} | inFlightCtx: {4}", success, code, redirectUrl, nextAction, inFlightCtx);
+                loggerDiagnosticTest.Info("Response Body: success: {0} | code: {1} | redirectUrl: {2} | nextAction: {3} | inFlightCtx: {4}", success, code, redirectUrl, nextAction, inFlightCtx);
             }
             else if (Regex.Match(restApiUrl, @"^v0/organizations/(\w+)/entities/list$").Success)
             {
-                loggerIssueDiagnostic.Info("POST /v0/organizations/XXX/entities/list");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("POST /v0/organizations/XXX/entities/list");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 string resultString = response.Content.ReadAsStringAsync().Result;
                 // does the page contents contain "defaultOrgId"?. Silly way, @todo later we should parse the JSON better
                 string containsOrganizations = resultString.Contains("defaultOrgId") == true ? "EXISTS" : "N/A";
-                loggerIssueDiagnostic.Info("Response Body: defaultOrgId: {0}", containsOrganizations);
+                loggerDiagnosticTest.Info("Response Body: defaultOrgId: {0}", containsOrganizations);
             }
             else if (restApiUrl.StartsWith("session/authenticator-request"))
             {
                 // response should have data.tokenUrl as null, data.ssoUrl, data.proofKey, code as null, message as null and success as true
-                loggerIssueDiagnostic.Info("POST /session/authenticator-request");
-                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("POST /session/authenticator-request");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
                 string success = "N/A";
                 string code = "N/A";
                 string message = "N/A";
@@ -1640,17 +1640,17 @@ namespace Snowflake.Powershell
                 catch (Exception ex)
                 {
                     // @todo We could use ex.Message here, but it might contain sensitive information.
-                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                    loggerDiagnosticTest.Error("Failed to parse JSON response");
                 }
                 
-                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | message: {2} | tokenUrl: {3} | ssoUrl: {4} | proofKey: {5}", success, code, message, tokenUrl, ssoUrl, proofKey);
+                loggerDiagnosticTest.Info("Response Body: success: {0} | code: {1} | message: {2} | tokenUrl: {3} | ssoUrl: {4} | proofKey: {5}", success, code, message, tokenUrl, ssoUrl, proofKey);
             }
             else
             {
                 // else we ended up somewhere we didn't expect.. We don't want to expose this in the logfile for
-                // IssueDiagnostic, as this might be a sensitive URL or contain sensitive information.
-                loggerExtensiveIssueDiagnostic.Warn("POST {0} didn't match any known URL", restApiUrl);
-                loggerIssueDiagnostic.Info("Couldn't match on POST, unknown URL");
+                // DiagnosticTest, as this might be a sensitive URL or contain sensitive information.
+                loggerExtensiveDiagnosticTest.Warn("POST {0} didn't match any known URL", restApiUrl);
+                loggerDiagnosticTest.Info("Couldn't match on POST, unknown URL");
             }
             // Convert the cookies into a string, and remove sensitive information.
             // Note that for redirects, these are cookies from all redirects, not just the final URL.
@@ -1700,7 +1700,7 @@ namespace Snowflake.Powershell
                     sanitisedCookiesList.Add("Unknown Cookie");
                     // As the cookie is the entire string (KEY=VALUE), split by = and take the first part
                     // We add this to the unknown list, so we can see what cookies we're not handling.
-                    // This is then exposed in the ExtensiveIssueDiagnostic log.
+                    // This is then exposed in the ExtensiveDiagnosticTest log.
                     string cookieName = cookie.Split('=')[0];
                     unknownCookiesList.Add(cookieName);
                     
@@ -1713,14 +1713,14 @@ namespace Snowflake.Powershell
             {
                 unknownCookies = "N/A";
             }
-            loggerExtensiveIssueDiagnostic.Info("{0} Unknown Cookie Values: {1}", direction, unknownCookies);
+            loggerExtensiveDiagnosticTest.Info("{0} Unknown Cookie Values: {1}", direction, unknownCookies);
 
             string sanitisedCookies = String.Join(" | ", sanitisedCookiesList);
             if (sanitisedCookies.Length == 0)
             {
                 sanitisedCookies = "N/A";
             }
-            loggerIssueDiagnostic.Info("{0} Cookies: {1}", direction, sanitisedCookies);
+            loggerDiagnosticTest.Info("{0} Cookies: {1}", direction, sanitisedCookies);
         }
     }
 }

@@ -44,8 +44,8 @@ namespace Snowflake.Powershell
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
-        private static Logger loggerIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.IssueDiagnostic");
-        private static Logger loggerExtensiveIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.ExtensiveIssueDiagnostic");
+        private static Logger loggerDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.DiagnosticTest");
+        private static Logger loggerExtensiveDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.ExtensiveDiagnosticTest");
 
         private static readonly string TOKEN_REQUEST_PREFIX = "?token=";
         private static readonly byte[] SUCCESS_RESPONSE = System.Text.Encoding.UTF8.GetBytes(
@@ -163,24 +163,38 @@ namespace Snowflake.Powershell
 
             logger = LogManager.GetCurrentClassLogger();
             loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
-            // only enable loggerIssueDiagnostic if IssueDiagnostic is set
-            // if (this.IssueDiagnostic == 1)
+            // only enable loggerDiagnosticTest if DiagnosticTest is set
+            // if (this.DiagnosticTest == 1)
             // {
-            loggerIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.IssueDiagnostic");
-            loggerExtensiveIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.ExtensiveIssueDiagnostic");
+            loggerDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.DiagnosticTest");
             // }
             // else
             // {
-                // loggerIssueDiagnostic = LogManager.CreateNullLogger();
+                // loggerDiagnosticTest = LogManager.CreateNullLogger();
             // }
-            loggerExtensiveIssueDiagnostic.Info("!! README !!: This file contains extensive logging for issue diagnosis. This file should not contain login credentials, sensitive information such as passwords, but it may contain URLs such as your Snowflake Instance, and cookie names (but not values).");
-            loggerExtensiveIssueDiagnostic.Info("!! README !!: Only share this file if asked, otherwise the IssueDiagnostic logging should be disabled.");
+            // Log these lines JUST for DiagnosticTest
+
+            loggerExtensiveDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.ExtensiveDiagnosticTest");
+            loggerExtensiveDiagnosticTest.Info("!! README !!: This file contains extensive logging for issue diagnosis. This file should not contain login credentials, sensitive information such as passwords, but it may contain URLs such as your Snowflake Instance, and cookie names (but not values).");
+            loggerExtensiveDiagnosticTest.Info("!! README !!: Only share this file if asked, otherwise the DiagnosticTest logging should be disabled.");
+
+            // @todo make this only appear in the DiagnosticTest log and not in the the ExtensiveDiagnosticTest log
+            loggerDiagnosticTest.Info(
+                "This file contains a Diagnostic Test, with sanitised information for API Endpoints accessed by SFSnowsightExtensions.");
+            loggerDiagnosticTest.Info(
+                "This should not contain any sensitive information about your account, but please double check before posting.");
             
-            loggerIssueDiagnostic.Info("sfsnowsightextensions login diagnose test - v{0} - Date: {1}", Assembly.GetExecutingAssembly().GetName().Version, DateTime.Now.ToString("yyyy-MM-dd"));
-            loggerIssueDiagnostic.Info("Environment: {0} - {1} | Dotnet Version: {2} | PowerShell Version: {3} | HTTP_PROXY set: {4} | HTTPS_PROXY set: {5}",
+            loggerDiagnosticTest.Info(
+                "Please also include the output of the following SQL command, which will output the Snowflake version and Region, as this allows us to see if you're running on a newer or older version of Snowflake, and the region.");
+            loggerDiagnosticTest.Info(
+                "This should output a string similar to `Snowflake Version: 8.4.1 | Region: AWS_US_EAST_1`.");
+            loggerDiagnosticTest.Info("select concat('Snowflake Version: ', coalesce(current_version(), '-'), ' | Region: ', coalesce(current_region(), '-'));");
+            
+            loggerDiagnosticTest.Info("SFSnowsightExtensions Diagnostic Test - v{0} - Date: {1}", Assembly.GetExecutingAssembly().GetName().Version, DateTime.Now.ToString("yyyy-MM-dd"));
+            loggerDiagnosticTest.Info("Environment: {0} - {1} | Dotnet Version: {2} | PowerShell Version: {3} | HTTP_PROXY set: {4} | HTTPS_PROXY set: {5}",
                 RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture, RuntimeInformation.FrameworkDescription, this.Host.Version, Environment.GetEnvironmentVariable("HTTP_PROXY") != null, Environment.GetEnvironmentVariable("HTTPS_PROXY") != null);
-            loggerIssueDiagnostic.Info("Passed Parameters: Account: {0} | UserName: {1} | Password: {2} | Credential: {3} | SSO: {4} | MainAppURL: {5}",
-                this.Account, this.UserName, this.Password != null, this.Credential != null, this.SSO.IsPresent, this.MainAppURL != "https://app.snowflake.com" ? "custom" : "default (https://app.snowflake.com)");
+            loggerDiagnosticTest.Info("Passed Parameters: Account: {0} | UserName: {1} | Password: {2} | Credential: {3} | SSO: {4} | MainAppURL: {5}",
+                this.Account.Length != null, this.UserName != null, this.Password != null, this.Credential != null, this.SSO.IsPresent, this.MainAppURL != "https://app.snowflake.com" ? "custom" : "default (https://app.snowflake.com)");
 
             logger.Trace("BEGIN {0}", this.GetType().Name);
             WriteVerbose(String.Format("BEGIN {0}", this.GetType().Name));
@@ -412,6 +426,12 @@ namespace Snowflake.Powershell
                     using (var httpListener = GetHttpListener(localPort))
                     {
                         httpListener.Start();
+                        // give it a second to start, then double check it's listening
+                        System.Threading.Thread.Sleep(1000);
+                        if (!httpListener.IsListening)
+                        {
+                            throw new InvalidOperationException("Unable to start listener for SSO");
+                        }
 
                         logger.Info("Opening SSO URL={0}", idpUrl);
                         StartBrowser(idpUrl);
