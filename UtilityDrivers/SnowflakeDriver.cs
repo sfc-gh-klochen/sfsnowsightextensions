@@ -927,13 +927,14 @@ namespace Snowflake.Powershell
                         .ToList();
 
                     HttpResponseMessage response = httpClient.GetAsync(restAPIUrl).Result;
-                    
+                    stopWatch.Stop();
+
                     // extract all cookies from cookieContainer, into the list
                     var cookiesList = httpClientHandler.CookieContainer.GetCookies(baseUri)
                         .Select(cookie => cookie.ToString())
                         .ToList();
                     
-                    ApiGetLogDiagnostic(response, restAPIUrl, requestCookieList, cookiesList);
+                    ApiGetLogDiagnostic(response, restAPIUrl, requestCookieList, cookiesList, stopWatch.ElapsedMilliseconds);
 
                     if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Found)
                     {
@@ -1058,6 +1059,7 @@ namespace Snowflake.Powershell
                         .ToList();
 
                     HttpResponseMessage response = httpClient.PostAsync(restAPIUrl, content).Result;
+                    stopWatch.Stop();
 
                     List<string> cookiesList = new List<string>(); 
                     if (response.Headers.Contains("Set-Cookie") == true)
@@ -1065,7 +1067,7 @@ namespace Snowflake.Powershell
                         cookiesList = response.Headers.GetValues("Set-Cookie").ToList();
                     }
 
-                    ApiPostLogDiagnostic(response, restAPIUrl, requestBody, requestCookieList, cookiesList);
+                    ApiPostLogDiagnostic(response, restAPIUrl, requestCookieList, cookiesList, stopWatch.ElapsedMilliseconds);
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -1352,7 +1354,8 @@ namespace Snowflake.Powershell
 
         #endregion
         
-        private static void ApiGetLogDiagnostic(HttpResponseMessage response, string restApiUrl, List<string> requestCookieList, List<string> responseCookiesList)
+        private static void ApiGetLogDiagnostic(HttpResponseMessage response, string restApiUrl,
+            List<string> requestCookieList, List<string> responseCookiesList, long stopWatchElapsedMilliseconds)
         {
             // Right now this function is pretty basic, to allow us to diagnose login issues in the short-term.
             // This will be improved upon in future, such using HTTP Handlers to log the request/response, which
@@ -1399,7 +1402,7 @@ namespace Snowflake.Powershell
             if (restApiUrl.StartsWith("v0/validate-snowflake-url"))
             {
                 loggerDiagnosticTest.Info("GET /v0/validate-snowflake-url");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 string account = "N/A";
                 string appServerUrl = "N/A";
                 string region = "N/A";
@@ -1439,7 +1442,7 @@ namespace Snowflake.Powershell
             else if (restApiUrl.StartsWith("start-oauth/snowflake"))
             {
                 loggerDiagnosticTest.Info("GET /start-oauth/snowflake");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
 
                 // We only care if if the redirect URL contains oauth/authorize, as that is the current final URL
                 bool correctRedirectUrl = finalUrl.Contains("oauth/authorize");
@@ -1449,7 +1452,7 @@ namespace Snowflake.Powershell
             else if (restApiUrl.StartsWith("complete-oauth/snowflake"))
             {
                 loggerDiagnosticTest.Info("GET /complete-oauth/snowflake");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 string resultString = response.Content.ReadAsStringAsync().Result;
                 // does the page contents contain "var params"?
                 bool containsVarParams = resultString.Contains("var params");
@@ -1462,7 +1465,7 @@ namespace Snowflake.Powershell
             else if (restApiUrl.StartsWith("bootstrap"))
             {
                 loggerDiagnosticTest.Info("GET /bootstrap");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 // Response Body: BuildVersion: 240125-9-f8441ccb37, user.id: EXISTS
                 string resultString = response.Content.ReadAsStringAsync().Result;
                 // BuildVersion is from the JSON
@@ -1498,9 +1501,7 @@ namespace Snowflake.Powershell
             LogSanitiseCookies("Response", responseCookiesList);
         }
 
-        private static void ApiPostLogDiagnostic(HttpResponseMessage response, string restApiUrl, string requestBody,
-            List<string> requestCookieList,
-            List<string> responseCookieList)
+        private static void ApiPostLogDiagnostic(HttpResponseMessage response, string restApiUrl, List<string> requestCookieList, List<string> responseCookieList, long stopWatchElapsedMilliseconds)
         {
             loggerDiagnosticTest.Info("--------------------");
 
@@ -1509,7 +1510,7 @@ namespace Snowflake.Powershell
                 // Response: 200 in 1000ms
                 // Response Body: success: TRUE, code: NULL, serverVersion: 8.4.1, masterToken: EXISTS, token: EXISTS, sessionId: EXISTS, displayUserName: EXISTS, schemaName: EXISTS, warehouseName: EXISTS, roleName: EXISTS, databaseName: EXISTS
                 loggerDiagnosticTest.Info("POST /session/v1/login-request");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 string success = "N/A";
                 string code = "N/A";
                 string serverVersion = "N/A";
@@ -1554,7 +1555,7 @@ namespace Snowflake.Powershell
             else if (restApiUrl.StartsWith("session/authenticate-request"))
             {
                 loggerDiagnosticTest.Info("POST /session/authenticate-request");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 string success = "N/A";
                 string code = "N/A";
                 string masterToken = "N/A";
@@ -1578,7 +1579,7 @@ namespace Snowflake.Powershell
                 // Response: 200 in 1000ms
                 // Response Body: success: FALSE, code: 390301, data.redirectUrl: EXISTS, data.nextAction: OAUTH_REDIRECT, data.inFlightCtx: EXISTS
                 loggerDiagnosticTest.Info("POST /oauth/authorization-request");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 string success = "N/A";
                 string code = "N/A";
                 string redirectUrl = "N/A";
@@ -1604,7 +1605,7 @@ namespace Snowflake.Powershell
             else if (Regex.Match(restApiUrl, @"^v0/organizations/(\w+)/entities/list$").Success)
             {
                 loggerDiagnosticTest.Info("POST /v0/organizations/XXX/entities/list");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 string resultString = response.Content.ReadAsStringAsync().Result;
                 // does the page contents contain "defaultOrgId"?. Silly way, @todo later we should parse the JSON better
                 string containsOrganizations = resultString.Contains("defaultOrgId") == true ? "EXISTS" : "N/A";
@@ -1614,7 +1615,7 @@ namespace Snowflake.Powershell
             {
                 // response should have data.tokenUrl as null, data.ssoUrl, data.proofKey, code as null, message as null and success as true
                 loggerDiagnosticTest.Info("POST /session/authenticator-request");
-                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                loggerDiagnosticTest.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, stopWatchElapsedMilliseconds);
                 string success = "N/A";
                 string code = "N/A";
                 string message = "N/A";
