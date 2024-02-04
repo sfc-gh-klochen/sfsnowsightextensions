@@ -187,9 +187,9 @@ namespace Snowflake.Powershell
             loggerDiagnosticTest.Info(
                 "Please also include the output of the following SQL command, which will output the Snowflake version and Region, as this allows us to see if you're running on a newer or older version of Snowflake, and the region.");
             loggerDiagnosticTest.Info(
-                "This should output a string similar to `Snowflake Version: 8.4.1 | Region: AWS_US_EAST_1`.");
-            loggerDiagnosticTest.Info("select concat('Snowflake Version: ', coalesce(current_version(), '-'), ' | Region: ', coalesce(current_region(), '-'));");
-            
+                "This should output a string similar to `Snowflake Version: 8.4.1 | Region: AWS_US_EAST_1`.\n");
+            loggerDiagnosticTest.Info("select concat('Snowflake Version: ', coalesce(current_version(), '-'), ' | Region: ', coalesce(current_region(), '-'));\n");
+ 
             loggerDiagnosticTest.Info("SFSnowsightExtensions Diagnostic Test - v{0} - Date: {1}", Assembly.GetExecutingAssembly().GetName().Version, DateTime.Now.ToString("yyyy-MM-dd"));
             loggerDiagnosticTest.Info("Environment: {0} - {1} | Dotnet Version: {2} | PowerShell Version: {3} | HTTP_PROXY set: {4} | HTTPS_PROXY set: {5}",
                 RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture, RuntimeInformation.FrameworkDescription, this.Host.Version, Environment.GetEnvironmentVariable("HTTP_PROXY") != null, Environment.GetEnvironmentVariable("HTTPS_PROXY") != null);
