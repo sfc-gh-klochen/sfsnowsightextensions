@@ -29,6 +29,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using Debugger = System.Diagnostics.Debugger;
 
 namespace Snowflake.Powershell
 {
@@ -43,6 +44,8 @@ namespace Snowflake.Powershell
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
+        private static Logger loggerIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.IssueDiagnostic");
+        private static Logger loggerExtensiveIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.ExtensiveIssueDiagnostic");
 
         private static readonly string TOKEN_REQUEST_PREFIX = "?token=";
         private static readonly byte[] SUCCESS_RESPONSE = System.Text.Encoding.UTF8.GetBytes(
@@ -143,6 +146,15 @@ namespace Snowflake.Powershell
             ParameterSetName = "BrowserSSO")]
         public SwitchParameter SSO { get; set; }
 
+        [Parameter(
+            Mandatory = true,
+            Position = 6,
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true,
+            HelpMessage = "Outputs sanitised logging information to help diagnose login issues",
+            ParameterSetName = "Pop")]
+        public SwitchParameter Pop { get; set; }
+
         protected override void BeginProcessing()
         {
             stopWatch.Start();
@@ -151,6 +163,24 @@ namespace Snowflake.Powershell
 
             logger = LogManager.GetCurrentClassLogger();
             loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
+            // only enable loggerIssueDiagnostic if IssueDiagnostic is set
+            // if (this.IssueDiagnostic == 1)
+            // {
+            loggerIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.IssueDiagnostic");
+            loggerExtensiveIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.ExtensiveIssueDiagnostic");
+            // }
+            // else
+            // {
+                // loggerIssueDiagnostic = LogManager.CreateNullLogger();
+            // }
+            loggerExtensiveIssueDiagnostic.Info("!! README !!: This file contains extensive logging for issue diagnosis. This file should not contain login credentials, sensitive information such as passwords, but it may contain URLs such as your Snowflake Instance, and cookie names (but not values).");
+            loggerExtensiveIssueDiagnostic.Info("!! README !!: Only share this file if asked, otherwise the IssueDiagnostic logging should be disabled.");
+            
+            loggerIssueDiagnostic.Info("sfsnowsightextensions login diagnose test - v{0} - Date: {1}", Assembly.GetExecutingAssembly().GetName().Version, DateTime.Now.ToString("yyyy-MM-dd"));
+            loggerIssueDiagnostic.Info("Environment: {0} - {1} | Dotnet Version: {2} | PowerShell Version: {3} | HTTP_PROXY set: {4} | HTTPS_PROXY set: {5}",
+                RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture, RuntimeInformation.FrameworkDescription, this.Host.Version, Environment.GetEnvironmentVariable("HTTP_PROXY") != null, Environment.GetEnvironmentVariable("HTTPS_PROXY") != null);
+            loggerIssueDiagnostic.Info("Passed Parameters: Account: {0} | UserName: {1} | Password: {2} | Credential: {3} | SSO: {4} | MainAppURL: {5}",
+                this.Account, this.UserName, this.Password != null, this.Credential != null, this.SSO.IsPresent, this.MainAppURL != "https://app.snowflake.com" ? "custom" : "default (https://app.snowflake.com)");
 
             logger.Trace("BEGIN {0}", this.GetType().Name);
             WriteVerbose(String.Format("BEGIN {0}", this.GetType().Name));

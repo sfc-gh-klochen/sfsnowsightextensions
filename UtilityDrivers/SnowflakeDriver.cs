@@ -25,6 +25,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using Newtonsoft.Json.Linq;
+using NLog.Fluent;
 
 namespace Snowflake.Powershell
 {
@@ -32,6 +34,8 @@ namespace Snowflake.Powershell
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
+        private static Logger loggerIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.IssueDiagnostic");
+        private static Logger loggerExtensiveIssueDiagnostic = LogManager.GetLogger("Snowflake.Powershell.ExtensiveIssueDiagnostic");
 
         #region Snowsight Client Metadata
 
@@ -871,7 +875,7 @@ namespace Snowflake.Powershell
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
             try
-            {
+            {   
                 HttpClientHandler httpClientHandler = new HttpClientHandler();
                 httpClientHandler.UseCookies = true;
                 httpClientHandler.CookieContainer = new CookieContainer();
@@ -917,16 +921,19 @@ namespace Snowflake.Powershell
                     {
                         httpClient.DefaultRequestHeaders.Accept.Add(accept);
                     }
+                    // Cookies we ended up sending in the request.
+                    List<string> requestCookieList = httpClientHandler.CookieContainer.GetAllCookies()
+                        .Select(cookie => cookie.ToString())
+                        .ToList();
 
                     HttpResponseMessage response = httpClient.GetAsync(restAPIUrl).Result;
                     
-                    IEnumerable<string> cookiesList = new List<string>(); 
-
                     // extract all cookies from cookieContainer, into the list
-                    foreach (Cookie cookie in httpClientHandler.CookieContainer.GetCookies(baseUri))
-                    {
-                        cookiesList = cookiesList.Append(cookie.ToString());
-                    }
+                    var cookiesList = httpClientHandler.CookieContainer.GetCookies(baseUri)
+                        .Select(cookie => cookie.ToString())
+                        .ToList();
+                    
+                    ApiGetLogDiagnostic(response, restAPIUrl, requestCookieList, cookiesList);
 
                     if (response.IsSuccessStatusCode || response.StatusCode == HttpStatusCode.Found)
                     {
@@ -1045,13 +1052,20 @@ namespace Snowflake.Powershell
                         requestBody = Regex.Replace(requestBody, pattern, "\"PASSWORD\":\"****\"", RegexOptions.IgnoreCase); 
                     }
 
+                    // Cookies we ended up sending in the request.
+                    List<string> requestCookieList = httpClientHandler.CookieContainer.GetAllCookies()
+                        .Select(cookie => cookie.ToString())
+                        .ToList();
+
                     HttpResponseMessage response = httpClient.PostAsync(restAPIUrl, content).Result;
 
-                    IEnumerable<string> cookiesList = new List<string>(); 
+                    List<string> cookiesList = new List<string>(); 
                     if (response.Headers.Contains("Set-Cookie") == true)
                     {
-                        cookiesList = response.Headers.GetValues("Set-Cookie"); 
+                        cookiesList = response.Headers.GetValues("Set-Cookie").ToList();
                     }
+
+                    ApiPostLogDiagnostic(response, restAPIUrl, requestBody, requestCookieList, cookiesList);
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -1337,5 +1351,376 @@ namespace Snowflake.Powershell
         }
 
         #endregion
-   }
+        
+        private static void ApiGetLogDiagnostic(HttpResponseMessage response, string restApiUrl, List<string> requestCookieList, List<string> responseCookiesList)
+        {
+            // Right now this function is pretty basic, to allow us to diagnose login issues in the short-term.
+            // This will be improved upon in future, such using HTTP Handlers to log the request/response, which
+            // means we're not reliant on the HttpClient to log the request/response.
+            //
+            // This function is designed to sanitise the output on a per-endpoint basis,
+            // and falling back we warn that the endpoint is not handled, with the full URL
+            // logged to the main logger instead.
+            //
+            // In each block we try and parse JSON (if the response *should* be JSON), use try/catch, as we receive
+            // a response that isn't JSON, which we'll then log.
+
+            // Split the responses to make it a bit easier to read
+            loggerIssueDiagnostic.Info("--------------------");
+
+            // loggerIssueDiagnostic.Info("Request URL: {0}", restApiUrl);
+            string finalUrl = response.RequestMessage?.RequestUri?.ToString() ?? "";
+            // loggerIssueDiagnostic.Info("Final URL: {0}", finalUrl);
+
+            // @todo In .NET 7, they introduced better pattern matching for switch statements, which would
+            // allow us to match on the what the URL begins with.
+            // As this project currently targets 6.0, we work around this for now by using if statements.
+            // GET URLs currently targeted (beginning with) are:
+            // 1. /v0/validate-snowflake-url - (200) Validates the Snowflake URL as a first step in the login process
+            // 2. /start-oauth/snowflake - (302) Begins the login process, which should be a 302 to
+            // https://apps-api.c1.REGION.aws.app.snowflake.com/sessionmanager/login/oauth2login/oauth2
+            // has the S8_SESSION cookie.
+            // 3. /sessionmanager/login/oauth2/authorization - (302) Redirected from #2, which then redirects to
+            // https://ACCOUNT.REGION.snowflakecomputing.com/oauth/authorize , which is the users Snowflake
+            // instance, instead of the apps-api.c1.REGION.aws.app.snowflake.com endpoint. Has the `oauth-nonce`
+            // cookie. Note: We generally won't hit this endpoint, as the HTTP Client in .NET will follow the redirect
+            // automatically, and doesn't keep track of the URLs. Having this endpoint show in a log will usually be a
+            // good indicator that something went wrong during the login process. 
+            // 4. /oauth/authorize - (200) Final step i nt he start-oauth flow for the user (2 -> 3 -> 4),
+            // we don't need anything here.
+            // 5. /complete-oauth/snowflake - (200) - The URL returned from oauth/authorization-request, which
+            // returns the user-xxx cookie, which is needed for authenticated requests. Page is a HTML response,
+            // which also has a JSON blob in `var params` with params which are found in bootstrap. As bootstrap
+            // is needed to be hit anyway, we don't need to parse this.
+            // 6. /bootstrap - (200) - Returns a JSON blob with information about the User, Org, etc. Can be either
+            // unauthenticated or authenticated, with authenticated returning more information. Returns the csrf-xxx
+            // cookie which is used for additional requests.
+            
+            if (restApiUrl.StartsWith("v0/validate-snowflake-url"))
+            {
+                loggerIssueDiagnostic.Info("GET /v0/validate-snowflake-url");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                string account = "N/A";
+                string appServerUrl = "N/A";
+                string region = "N/A";
+                string url = "N/A";
+                string valid = "N/A";
+                try
+                {
+                    // Example valid response:
+                    // {
+                    //     "account": "ez40571",
+                    //     "appServerUrl": "https://apps-api.c1.REGION.aws.app.snowflake.com",
+                    //     "region": "REGION",
+                    //     "regionGroup": "PUBLIC",
+                    //     "snowflakeRegion": "AWS_REGION",
+                    //     "url": "https://REGION.snowflakecomputing.com",
+                    //     "valid": true
+                    // }
+                    // Example invalid response (eg account/region is incorrect):
+                    // {"valid":false}
+                    string resultString = response.Content.ReadAsStringAsync().Result;
+                    JObject jsonResponse = JObject.Parse(resultString);
+                    valid = JSONHelper.getBoolValueFromJToken(jsonResponse, "valid") == false ? "INVALID" : "VALID";
+                    // return as "EXISTS" if it exists, otherwise "N/A"
+                    // getStringValueFromJToken returns String.Empty if the value doesn't exist/invalid
+                    account = JSONHelper.getStringValueFromJToken(jsonResponse, "account") == String.Empty ? "N/A" : "EXISTS";
+                    appServerUrl = JSONHelper.getStringValueFromJToken(jsonResponse, "appServerUrl") == String.Empty ? "N/A" : "EXISTS";
+                    region = JSONHelper.getStringValueFromJToken(jsonResponse, "region") == String.Empty ? "N/A" : "EXISTS";
+                    url = JSONHelper.getStringValueFromJToken(jsonResponse, "url") == String.Empty ? "N/A" : "EXISTS";
+                }
+                catch (Exception ex)
+                {
+                    // @todo We could use ex.Message here, but it might contain sensitive information.
+                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                }
+                loggerIssueDiagnostic.Info("Response Body: valid: {0} | account: {1} | appServerUrl: {2} | region: {3} | url: {4}", valid, account, appServerUrl, region, url);
+            }
+            else if (restApiUrl.StartsWith("start-oauth/snowflake"))
+            {
+                loggerIssueDiagnostic.Info("GET /start-oauth/snowflake");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+
+                // We only care if if the redirect URL contains oauth/authorize, as that is the current final URL
+                bool correctRedirectUrl = finalUrl.Contains("oauth/authorize");
+
+                loggerIssueDiagnostic.Info("Redirected to oauth/authorize: {0}", correctRedirectUrl);
+            }
+            else if (restApiUrl.StartsWith("complete-oauth/snowflake"))
+            {
+                loggerIssueDiagnostic.Info("GET /complete-oauth/snowflake");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                string resultString = response.Content.ReadAsStringAsync().Result;
+                // does the page contents contain "var params"?
+                bool containsVarParams = resultString.Contains("var params");
+
+                // What was the response type, if not found fallback to N/A
+                string responseType = response.Content.Headers.ContentType?.MediaType ?? "N/A";                
+                // Response Body: HTML, params var: EXISTS
+                loggerIssueDiagnostic.Info("Response Body: {0}, params var: {1}", responseType, containsVarParams);
+            }
+            else if (restApiUrl.StartsWith("bootstrap"))
+            {
+                loggerIssueDiagnostic.Info("GET /bootstrap");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                // Response Body: BuildVersion: 240125-9-f8441ccb37, user.id: EXISTS
+                string resultString = response.Content.ReadAsStringAsync().Result;
+                // BuildVersion is from the JSON
+                string buildVersion = "N/A";
+                string userId = "N/A";
+                try
+                {
+                    JObject jsonResponse = JObject.Parse(resultString);
+                    buildVersion = JSONHelper.getStringValueFromJToken(jsonResponse, "BuildVersion") == String.Empty ? "N/A" : "EXISTS";
+                    userId = JSONHelper.getStringValueFromJToken(jsonResponse["User"], "id") == String.Empty ? "N/A" : "EXISTS";
+                }
+                catch (Exception ex)
+                {
+                    // @todo We could use ex.Message here, but it might contain sensitive information.
+                    loggerExtensiveIssueDiagnostic.Error("Failed to parse JSON response | error: {0}", ex.Message);
+                }
+                loggerIssueDiagnostic.Info("Response Body: BuildVersion: {0} | User.id: {1}", buildVersion, userId);
+            }
+            else
+            {
+                // else we ended up somewhere we didn't expect.. We don't want to expose this in the logfile for
+                // IssueDiagnostic, as this might be a sensitive URL or contain sensitive information.
+                logger.Warn("IssueDiagnostic - GET {0} didn't match any known URL", restApiUrl);
+                loggerIssueDiagnostic.Info("Couldn't match on GET, unknown URL");
+            }
+
+            // Convert the cookies into a string, and remove sensitive information.
+            // Note that for redirects, these are cookies from all redirects, not just the final URL.
+            // This is because the HttpClient in .NET will follow the redirects automatically, and doesn't
+            // keep track of the URLs/cookies per URL. This is fine for our purposes, as we're just trying to
+            // diagnose login issues.
+            LogSanitiseCookies("Request", requestCookieList);
+            LogSanitiseCookies("Response", responseCookiesList);
+        }
+
+        private static void ApiPostLogDiagnostic(HttpResponseMessage response, string restApiUrl, string requestBody,
+            List<string> requestCookieList,
+            List<string> responseCookieList)
+        {
+            loggerIssueDiagnostic.Info("--------------------");
+
+            if (restApiUrl.StartsWith("session/v1/login-request"))
+            {
+                // Response: 200 in 1000ms
+                // Response Body: success: TRUE, code: NULL, serverVersion: 8.4.1, masterToken: EXISTS, token: EXISTS, sessionId: EXISTS, displayUserName: EXISTS, schemaName: EXISTS, warehouseName: EXISTS, roleName: EXISTS, databaseName: EXISTS
+                loggerIssueDiagnostic.Info("POST /session/v1/login-request");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                string success = "N/A";
+                string code = "N/A";
+                string serverVersion = "N/A";
+                string masterToken = "N/A";
+                string token = "N/A";
+                string sessionId = "N/A";
+                string displayUserName = "N/A";
+                string schemaName = "N/A";
+                string warehouseName = "N/A";
+                string roleName = "N/A";
+                string databaseName = "N/A";
+                try
+                {
+                    string resultString = response.Content.ReadAsStringAsync().Result;
+                    JObject jsonResponse = JObject.Parse(resultString);
+                    success = JSONHelper.getBoolValueFromJToken(jsonResponse, "success") == false ? "FALSE" : "TRUE";
+                    code = JSONHelper.getStringValueFromJToken(jsonResponse, "code") == String.Empty ? "N/A" : "EXISTS";
+                    
+                    // The data object is only returned on successful login.
+                    if (jsonResponse.TryGetValue("data", out JToken data))
+                    {
+                        serverVersion = JSONHelper.getStringValueFromJToken(data, "serverVersion") == String.Empty ? "N/A" : "EXISTS";
+                        masterToken = JSONHelper.getStringValueFromJToken(data, "masterToken") == String.Empty ? "N/A" : "EXISTS";
+                        token = JSONHelper.getStringValueFromJToken(data, "token") == String.Empty ? "N/A" : "EXISTS";
+                        sessionId = JSONHelper.getStringValueFromJToken(data, "sessionId") == String.Empty ? "N/A" : "EXISTS";
+                        displayUserName = JSONHelper.getStringValueFromJToken(data, "displayUserName") == String.Empty ? "N/A" : "EXISTS";
+
+                        // These values are inside sessionInfo, which should exist if data exists
+                        schemaName = JSONHelper.getStringValueFromJToken(data["sessionInfo"], "schemaName") == String.Empty ? "N/A" : "EXISTS";
+                        warehouseName = JSONHelper.getStringValueFromJToken(data["sessionInfo"], "warehouseName") == String.Empty ? "N/A" : "EXISTS";
+                        roleName = JSONHelper.getStringValueFromJToken(data["sessionInfo"], "roleName") == String.Empty ? "N/A" : "EXISTS";
+                        databaseName = JSONHelper.getStringValueFromJToken(data["sessionInfo"], "databaseName") == String.Empty ? "N/A" : "EXISTS";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // @todo We could use ex.Message here, but it might contain sensitive information.
+                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                }
+                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | serverVersion: {2} | masterToken: {3} | token: {4} | sessionId: {5} | displayUserName: {6} | schemaName: {7} | warehouseName: {8} | roleName: {9} | databaseName: {10}", success, code, serverVersion, masterToken, token, sessionId, displayUserName, schemaName, warehouseName, roleName, databaseName);
+            }
+            else if (restApiUrl.StartsWith("session/authenticate-request"))
+            {
+                loggerIssueDiagnostic.Info("POST /session/authenticate-request");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                string success = "N/A";
+                string code = "N/A";
+                string masterToken = "N/A";
+                try
+                {
+                    string resultString = response.Content.ReadAsStringAsync().Result;
+                    JObject jsonResponse = JObject.Parse(resultString);
+                    success = JSONHelper.getBoolValueFromJToken(jsonResponse, "success") == false ? "FALSE" : "TRUE";
+                    code = JSONHelper.getStringValueFromJToken(jsonResponse, "code") == String.Empty ? "N/A" : "EXISTS";
+                    masterToken = JSONHelper.getStringValueFromJToken(jsonResponse["data"], "masterToken") == String.Empty ? "N/A" : "EXISTS";
+                }
+                catch (Exception ex)
+                {
+                    // @todo We could use ex.Message here, but it might contain sensitive information.
+                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                }
+                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | masterToken: {2}", success, code, masterToken);
+            }
+            else if (restApiUrl.StartsWith("oauth/authorization-request"))
+            {
+                // Response: 200 in 1000ms
+                // Response Body: success: FALSE, code: 390301, data.redirectUrl: EXISTS, data.nextAction: OAUTH_REDIRECT, data.inFlightCtx: EXISTS
+                loggerIssueDiagnostic.Info("POST /oauth/authorization-request");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                string success = "N/A";
+                string code = "N/A";
+                string redirectUrl = "N/A";
+                string nextAction = "N/A";
+                string inFlightCtx = "N/A";
+                try
+                {
+                    string resultString = response.Content.ReadAsStringAsync().Result;
+                    JObject jsonResponse = JObject.Parse(resultString);
+                    success = JSONHelper.getBoolValueFromJToken(jsonResponse, "success") == false ? "FALSE" : "TRUE";
+                    code = JSONHelper.getStringValueFromJToken(jsonResponse, "code") == String.Empty ? "N/A" : "EXISTS";
+                    redirectUrl = JSONHelper.getStringValueFromJToken(jsonResponse["data"], "redirectUrl") == String.Empty ? "N/A" : "EXISTS";
+                    nextAction = JSONHelper.getStringValueFromJToken(jsonResponse["data"], "nextAction") == String.Empty ? "N/A" : "EXISTS";
+                    inFlightCtx = JSONHelper.getStringValueFromJToken(jsonResponse["data"], "inFlightCtx") == String.Empty ? "N/A" : "EXISTS";
+                }
+                catch (Exception ex)
+                {
+                    // @todo We could use ex.Message here, but it might contain sensitive information.
+                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                }
+                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | redirectUrl: {2} | nextAction: {3} | inFlightCtx: {4}", success, code, redirectUrl, nextAction, inFlightCtx);
+            }
+            else if (Regex.Match(restApiUrl, @"^v0/organizations/(\w+)/entities/list$").Success)
+            {
+                loggerIssueDiagnostic.Info("POST /v0/organizations/XXX/entities/list");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                string resultString = response.Content.ReadAsStringAsync().Result;
+                // does the page contents contain "defaultOrgId"?. Silly way, @todo later we should parse the JSON better
+                string containsOrganizations = resultString.Contains("defaultOrgId") == true ? "EXISTS" : "N/A";
+                loggerIssueDiagnostic.Info("Response Body: defaultOrgId: {0}", containsOrganizations);
+            }
+            else if (restApiUrl.StartsWith("session/authenticator-request"))
+            {
+                // response should have data.tokenUrl as null, data.ssoUrl, data.proofKey, code as null, message as null and success as true
+                loggerIssueDiagnostic.Info("POST /session/authenticator-request");
+                loggerIssueDiagnostic.Info("Response: {0} ({1}) in {2}ms", (int)response.StatusCode, response.ReasonPhrase, "N/A");
+                string success = "N/A";
+                string code = "N/A";
+                string message = "N/A";
+                string tokenUrl = "N/A";
+                string ssoUrl = "N/A";
+                string proofKey = "N/A";
+                try
+                {
+                    string resultString = response.Content.ReadAsStringAsync().Result;
+                    JObject jsonResponse = JObject.Parse(resultString);
+                    success = JSONHelper.getBoolValueFromJToken(jsonResponse, "success") == false ? "FALSE" : "TRUE";
+                    code = JSONHelper.getStringValueFromJToken(jsonResponse, "code") == String.Empty ? "N/A" : "EXISTS";
+                    message = JSONHelper.getStringValueFromJToken(jsonResponse, "message") == String.Empty ? "N/A" : "EXISTS";
+                    
+                    // data object is only returned on successful login.
+                    if (jsonResponse.TryGetValue("data", out JToken data))
+                    {
+                        tokenUrl = JSONHelper.getStringValueFromJToken(data, "tokenUrl") == String.Empty ? "N/A" : "EXISTS";
+                        ssoUrl = JSONHelper.getStringValueFromJToken(data, "ssoUrl") == String.Empty ? "N/A" : "EXISTS";
+                        proofKey = JSONHelper.getStringValueFromJToken(data, "proofKey") == String.Empty ? "N/A" : "EXISTS";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // @todo We could use ex.Message here, but it might contain sensitive information.
+                    loggerIssueDiagnostic.Error("Failed to parse JSON response");
+                }
+                
+                loggerIssueDiagnostic.Info("Response Body: success: {0} | code: {1} | message: {2} | tokenUrl: {3} | ssoUrl: {4} | proofKey: {5}", success, code, message, tokenUrl, ssoUrl, proofKey);
+            }
+            else
+            {
+                // else we ended up somewhere we didn't expect.. We don't want to expose this in the logfile for
+                // IssueDiagnostic, as this might be a sensitive URL or contain sensitive information.
+                loggerExtensiveIssueDiagnostic.Warn("POST {0} didn't match any known URL", restApiUrl);
+                loggerIssueDiagnostic.Info("Couldn't match on POST, unknown URL");
+            }
+            // Convert the cookies into a string, and remove sensitive information.
+            // Note that for redirects, these are cookies from all redirects, not just the final URL.
+            // This is because the HttpClient in .NET will follow the redirects automatically, and doesn't
+            // keep track of the URLs/cookies per URL. This is fine for our purposes, as we're just trying to
+            // diagnose login issues.
+            LogSanitiseCookies("Request", requestCookieList);
+            LogSanitiseCookies("Response", responseCookieList);
+        }
+
+        private static void LogSanitiseCookies(string direction, IEnumerable<string> cookiesList)
+        {
+            // We want to extract the cookies from the request OR response (direction), and sanitise them.
+            // To do this safely (as in not returning sensitive information), we'll match on the start of the cookie.
+            // Cookies we currently check for:
+            // oauth-nonce- (sessionmanager/login/oauth2/authorization, complete-oauth/snowflake)
+            // S8_SESSION (start-oauth/snowflake)
+            // csrf- (bootstrap)
+            // If not matched, return "Unknown"
+            // @todo use a list instead, then join later
+            var sanitisedCookiesList = new List<string>();
+            var unknownCookiesList = new List<string>();
+            foreach (string cookie in cookiesList)
+            {
+                if (cookie.StartsWith("oauth-nonce-"))
+                {
+                    sanitisedCookiesList.Add("oauth-nonce-XXX: EXISTS");
+                }
+                else if (cookie.StartsWith("S8_SESSION"))
+                {
+                    sanitisedCookiesList.Add("S8_SESSION: EXISTS");
+                }
+                else if (cookie.StartsWith("csrf-"))
+                {
+                    sanitisedCookiesList.Add("csrf-XXX: EXISTS");
+                }
+                else if (cookie.StartsWith("snowflake_deployment"))
+                {
+                    sanitisedCookiesList.Add("snowflake_deployment: EXISTS");
+                }
+                else if (cookie.StartsWith("user-"))
+                {
+                    sanitisedCookiesList.Add("user-XXX: EXISTS");
+                }
+                else
+                {
+                    sanitisedCookiesList.Add("Unknown Cookie");
+                    // As the cookie is the entire string (KEY=VALUE), split by = and take the first part
+                    // We add this to the unknown list, so we can see what cookies we're not handling.
+                    // This is then exposed in the ExtensiveIssueDiagnostic log.
+                    string cookieName = cookie.Split('=')[0];
+                    unknownCookiesList.Add(cookieName);
+                    
+                }
+            }
+            // @todo we should instead pass this back, instead of logging here.
+            string unknownCookies = String.Join(" | ", unknownCookiesList);
+            // If unknownCookies is empty, return "N/A"
+            if (unknownCookies.Length == 0)
+            {
+                unknownCookies = "N/A";
+            }
+            loggerExtensiveIssueDiagnostic.Info("{0} Unknown Cookie Values: {1}", direction, unknownCookies);
+
+            string sanitisedCookies = String.Join(" | ", sanitisedCookiesList);
+            if (sanitisedCookies.Length == 0)
+            {
+                sanitisedCookies = "N/A";
+            }
+            loggerIssueDiagnostic.Info("{0} Cookies: {1}", direction, sanitisedCookies);
+        }
+    }
 }
