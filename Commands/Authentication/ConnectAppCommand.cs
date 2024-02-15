@@ -264,34 +264,21 @@ namespace Snowflake.Powershell
 
                 // Get the client ID of Snowsight for this region
                 Tuple<string, string> deploymentSnowSightClientIDRedirectResult = SnowflakeDriver.OAuth_Start_GetSnowSightClientIDInDeployment(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl);
+
                 if (deploymentSnowSightClientIDRedirectResult.Item1.Length == 0 || deploymentSnowSightClientIDRedirectResult.Item2.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to get account client ID for account {0}", appUserContext.AccountName));
                 }
 
-                string redirectWithClientIdUrl = String.Empty;
-                Regex regexVersion = new Regex(@"<a href=""(.*)"">Found<\/a>", RegexOptions.IgnoreCase);
-                Match match = regexVersion.Match(deploymentSnowSightClientIDRedirectResult.Item1);
-                if (match != null)
-                {
-                    if (match.Groups.Count > 1)
-                    {
-                        redirectWithClientIdUrl = match.Groups[1].Value;
-                    }
-                }
-
-                if (redirectWithClientIdUrl.Length == 0)
+                var startOAuthUri = new Uri(deploymentSnowSightClientIDRedirectResult.Item1);
+                var startOAuthQueryParams = HttpUtility.ParseQueryString(startOAuthUri.Query);
+                var clientId = startOAuthQueryParams.Get("client_id");
+                if (clientId == null)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to parse URL with client ID for account {0}", appUserContext.AccountName));
                 }
 
-                Uri redirectWithClientIdUri = new Uri(redirectWithClientIdUrl);
-                NameValueCollection redirectWithClientIdParams = HttpUtility.ParseQueryString(redirectWithClientIdUri.Query);
-                appUserContext.ClientID = redirectWithClientIdParams["client_id"];
-                if (appUserContext.ClientID == null)
-                {
-                    throw new ItemNotFoundException(String.Format("Unable to parse client ID from URL with client ID for account {0}", appUserContext.AccountName));
-                }
+                appUserContext.ClientID = clientId;
                 
                 // OAuth Client ID of the SnowSight is different for each deployment
                 // PROD1    ClientID=R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg== 
@@ -590,7 +577,7 @@ namespace Snowflake.Powershell
                 // 	if (window.opener && params.isPopupAuth) {
                 string paramsCarryingPageResult = authenticationTokenWebPageResult.Item1;
                 Regex regexParameters = new Regex(@"(?i)var params = ({.*})", RegexOptions.IgnoreCase);
-                match = regexParameters.Match(paramsCarryingPageResult);
+                Match match = regexParameters.Match(paramsCarryingPageResult);
                 if (match != null)
                 {
                     if (match.Groups.Count > 1)
