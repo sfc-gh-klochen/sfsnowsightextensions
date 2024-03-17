@@ -14,6 +14,7 @@
 // under the License.
 
 using System;
+using System.Net;
 
 namespace Snowflake.Powershell
 {
@@ -29,6 +30,10 @@ namespace Snowflake.Powershell
         public string DefaultRole { get; set; }
         public string DefaultWarehouse { get; set; }
         public string UserID { get; set; }
+        public string AuthCodeChallenge { get; set; }
+        public string AuthRedirectUri { get; set; }
+        public string AuthOriginator { get; set; }
+        public string AuthOAuthNonce { get; set; }
         public string UserName { get; set; }
         public string ServerVersion { get; set; }
         public string ContextUrl { get; set; }
@@ -52,6 +57,13 @@ namespace Snowflake.Powershell
             set 
             {}
         }
+
+        // Cookies to be shared between requests, however note these are per-domain.
+        // Cookies for app.snowflake.com, apps-api.c1.REGION.aws.app.snowflake.com, ACCOUNT_NAME.REGION.snowflakecomputing.com
+        // CookieContainer automatically manages cookies based on their domain and path
+        // So we can just pass it around and it will automatically manage the cookies per domain
+        // When we are finished authenticating, we currently do reset the cookies
+        public CookieContainer Cookies { get; set; } = new();
 
         public override string FileSystemSafeName
         {
