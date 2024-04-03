@@ -5,6 +5,9 @@ Created and developed by Daniel Odievich, Senior Solution Architect at Snowflake
 This repo is maintained by group of internal Snowflake associates. Please log issues in this repository.
 General questions can be directed to (michael.ybarra@snowflake.com)
 
+<img src="https://github.com/Snowflake-Labs/sfsnowsightextensions/assets/2223194/985a8c43-ea48-47e8-8fef-94d160b4ce05" width="500">
+
+
 | :exclamation:        | This project is not an officially supported product of Snowflake. Use at your own risk.     |
 |---------------|:------------------------|
 
