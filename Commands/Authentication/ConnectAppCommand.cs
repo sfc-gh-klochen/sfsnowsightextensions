@@ -248,7 +248,7 @@ namespace Snowflake.Powershell
                 appUserContext.AccountUrl = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "url");
                 appUserContext.Region = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "region");
                 // sfpscogs_dodievich_sso.west-us-2.azure -> sfpscogs_dodievich_sso
-                appUserContext.AccountFullName = this.Account;
+                appUserContext.AccountFullName = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "account");;
                 appUserContext.AccountName = appUserContext.AccountFullName.Split('.')[0];
                 logger.Info("AccountFullName={0}", appUserContext.AccountFullName);
                 logger.Info("AccountName={0}", appUserContext.AccountName);
@@ -492,14 +492,10 @@ namespace Snowflake.Powershell
                         throw new InvalidCredentialException(String.Format("Unable to authenticate user {0}@{1} because of {2} ({3})", appUserContext.UserName, appUserContext.AccountName, JSONHelper.getStringValueFromJToken(masterTokenFromCredentialsObject, "message"), JSONHelper.getStringValueFromJToken(masterTokenFromCredentialsObject, "code")));
                     }
 
-                    // If we got here, we have good credentials and first step is good
-                    appUserContext.AuthTokenMaster = JSONHelper.getStringValueFromJToken(masterTokenFromCredentialsObject["data"], "masterToken");
-                    if (appUserContext.AuthTokenMaster.Length == 0)
-                    {
-                        throw new InvalidCredentialException(String.Format("No master token on authenticate user request {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
-                    }
 
-                    logger.Info("AuthTokenMaster={0}", appUserContext.AuthTokenMaster);
+                    // If we got here, we have good credentials and first step is good
+                   appUserContext.RedirectURI = JSONHelper.getStringValueFromJToken(masterTokenFromCredentialsObject["data"], "redirectURI");
+
                 }
                 else
                 {
@@ -508,35 +504,7 @@ namespace Snowflake.Powershell
                     // Previous Classic UI authentication would have filled in masterToken, so nothing to do
                 }
 
-                loggerConsole.Info("Validating master token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
-
-                // Authenticate Step 2, Validating OAuth Token into OAuth Client Redirect
-                string oAuthTokenFromMasterTokenResult = SnowflakeDriver.OAuth_Authorize_GetOAuthRedirectFromOAuthToken(appUserContext.AccountUrl, appUserContext.ClientID, appUserContext.AuthTokenMaster);
-                if (oAuthTokenFromMasterTokenResult.Length == 0)
-                {
-                    throw new InvalidCredentialException(String.Format("Invalid response on validating master OAuth token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
-                }
-
-                // Were the credentials good?
-                JObject oAuthTokenFromMasterTokenObject = JObject.Parse(oAuthTokenFromMasterTokenResult);
-                if (String.Compare(JSONHelper.getStringValueFromJToken(oAuthTokenFromMasterTokenObject, "code"), "390302", true) == 0 || 
-                    String.Compare(JSONHelper.getStringValueFromJToken(oAuthTokenFromMasterTokenObject, "message"), "Invalid consent request.", true) == 0)
-                {                    
-                    // {
-                    //     "data": {
-                    //         "nextAction": "OAUTH_INVALID",
-                    //         "inFlightCtx": null
-                    //     },
-                    //     "code": "390302",
-                    //     "message": "Invalid consent request.",
-                    //     "success": false,
-                    //     "headers": null
-                    // }
-                    throw new InvalidCredentialException(String.Format("Unable to validate user master OAuth token {0}@{1}, {2} ({3})", appUserContext.UserName, appUserContext.AccountName, JSONHelper.getStringValueFromJToken(oAuthTokenFromMasterTokenObject, "message"), JSONHelper.getStringValueFromJToken(oAuthTokenFromMasterTokenObject, "code")));
-                }
-
-                // if we got here, we have good credentials and the second step is good
-                string redirectWithOAuthCodeUrl = JSONHelper.getStringValueFromJToken(oAuthTokenFromMasterTokenObject["data"], "redirectUrl");
+                string redirectWithOAuthCodeUrl = appUserContext.RedirectURI;
                 if (redirectWithOAuthCodeUrl.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to parse URL with OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -576,14 +544,14 @@ namespace Snowflake.Powershell
                 // 	var params = {"account":"sfpscogs_dodievich_sso","appServerUrl":"https://apps-api.c1.westus2.azure.app.snowflake.com",.... "username":"DODIEVICH_ALT"}}
                 // 	if (window.opener && params.isPopupAuth) {
                 string paramsCarryingPageResult = authenticationTokenWebPageResult.Item1;
-                Regex regexParameters = new Regex(@"(?i)var params = ({.*})", RegexOptions.IgnoreCase);
+                Regex regexParameters = new Regex(@"(?i)var paramsJSONString = \""({.*})\""", RegexOptions.IgnoreCase);
                 Match match = regexParameters.Match(paramsCarryingPageResult);
                 if (match != null)
                 {
                     if (match.Groups.Count > 1)
                     {
                         string userAccountParams = match.Groups[1].Value;
-
+                        userAccountParams = userAccountParams.Replace("\\\"", "\"").Replace("\\\\","\\").Replace("\\/","/");
                         JObject userAndAccountParamsObject = JObject.Parse(userAccountParams);
                         if (userAndAccountParamsObject != null)
                         {

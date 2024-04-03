@@ -32,6 +32,7 @@ namespace Snowflake.Powershell
         public string UserName { get; set; }
         public string ServerVersion { get; set; }
         public string ContextUrl { get; set; }
+        public string RedirectURI { get; set; }
         public string ContextUserNameUrl 
         { 
             get 

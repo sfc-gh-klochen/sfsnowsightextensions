@@ -70,7 +70,7 @@ namespace Snowflake.Powershell
             // 4. browserUrl - https://app.snowflake.com
 
             string csrf = "SnowflakePS";
-            string stateParam = String.Format("{{\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppURL);
+            string stateParam = String.Format("{{\"url\":\"{0}\"}}", accountUrl);
 
             Tuple<string, List<string>, HttpStatusCode> result = apiGET(
                 appServerUrl,
@@ -108,7 +108,9 @@ namespace Snowflake.Powershell
     ""data"": {{
         ""ACCOUNT_NAME"": ""{0}"",
         ""LOGIN_NAME"": ""{1}"",
-        ""PASSWORD"": ""{2}""
+        ""PASSWORD"": ""{2}"",
+        ""CLIENT_APP_ID"": ""Snowflake UI"",
+        ""CLIENT_APP_VERSION"": ""20240325072658""
     }}
 }}";
             string requestBody = String.Format(requestJSONTemplate,
@@ -118,7 +120,7 @@ namespace Snowflake.Powershell
 
             return apiPOST(
                 accountUrl,
-                "session/authenticate-request",
+                "/session/v1/login-request",
                 "application/json",
                 requestBody,
                 "application/json");
@@ -145,10 +147,13 @@ namespace Snowflake.Powershell
 
         public static Tuple<string, string> OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(string appServerUrl, string accountUrl, string oAuthRedirectCode, string oAuthNonceCookie, string mainAppURL)
         {
+            /*
             string csrf = "SnowflakePS";
             Cookie oauthNonceCookie = getOAuthNonceCookie(oAuthNonceCookie, "doesn't matter");
             string stateParam = String.Format("{{\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\", \"oauthNonce\":\"{3}\"}}", csrf, accountUrl, mainAppURL, oauthNonceCookie.Value);
-            
+            */
+            string stateParam = String.Format("{{\"url\":\"{0}\"}}", accountUrl);
+
             Tuple<string, List<string>, HttpStatusCode> result = apiGET(
                 appServerUrl,
                 String.Format("complete-oauth/snowflake?code={0}&state={1}", oAuthRedirectCode, HttpUtility.UrlEncode(stateParam)),
@@ -158,7 +163,7 @@ namespace Snowflake.Powershell
                 String.Empty,
                 String.Empty,
                 String.Empty,
-                oAuthNonceCookie
+                String.Empty
             );
 
             if (result.Item3 == HttpStatusCode.OK)
@@ -166,7 +171,7 @@ namespace Snowflake.Powershell
                 // Get the cookie
                 foreach (string cookie in result.Item2)
                 {
-                    if (cookie.StartsWith("user-") == true)
+                    if (cookie.Contains("user-") == true)
                     {
                         return new Tuple<string, string>(result.Item1, cookie);
                         // resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
@@ -211,18 +216,14 @@ namespace Snowflake.Powershell
 @"{{
     ""data"": {{
         ""ACCOUNT_NAME"": ""{0}"",
-        ""LOGIN_NAME"": ""{1}"",
-        ""AUTHENTICATOR"": ""externalbrowser"",
-        ""TOKEN"": ""{2}"",
-        ""PROOF_KEY"": ""{3}""
+        ""SAML_RESPONSE"": ""{1}"",
+        ""CLIENT_APP_ID"": ""Snowflake UI"",
+        ""CLIENT_APP_VERSION"": ""20240325072658""
     }}
 }}";
             string requestBody = String.Format(requestJSONTemplate,
                 accountName,
-                userName,
-                token,
-                proofKey);
-
+                token);
             return apiPOST(
                 accountUrl,
                 "session/v1/login-request",
