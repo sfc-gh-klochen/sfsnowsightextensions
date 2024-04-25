@@ -18,7 +18,7 @@ steps:
     command: 'build'
     projects: 'SnowflakePS.csproj'
     workingDirectory: '$(Build.SourcesDirectory)'
-    arguments: '/t:Configuration=$(BuildConfiguration)'
+    arguments: '/p:Configuration=$(BuildConfiguration)'
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: '$(Build.SourcesDirectory)/bin/$(BuildConfiguration)'
