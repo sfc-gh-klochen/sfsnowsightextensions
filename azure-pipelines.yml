@@ -18,4 +18,25 @@ steps:
     command: 'build'
     projects: 'SnowflakePS.csproj'
     workingDirectory: '$(Build.SourcesDirectory)'
+    arguments: '/t:Configuration=$(BuildConfiguration)'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/$(BuildConfiguration)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: GitHubRelease@1
+  inputs:
+    gitHubConnection: 'sfc-gh-jbarrantes'
+    repositoryName: 'sfc-gh-jbarrantes/sfsnowsightextensions'
+    action: 'create'
+    target: '$(Build.SourceVersion)'
+    tagSource: 'gitTag'
+    tagPattern: '$(gitversion.majorminorpatch)'
+    title: '$(gitversion.majorminorpatch)'
+    isDraft: true
+    changeLogCompareToRelease: 'lastFullRelease'
+    changeLogType: 'commitBased'
+    assets: '$(Build.ArtifactStagingDirectory)/*.zip'
 
