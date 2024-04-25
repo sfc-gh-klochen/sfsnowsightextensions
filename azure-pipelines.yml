@@ -1,0 +1,20 @@
+trigger:
+- main
+
+pool:
+  vmImage: windows-latest
+
+steps:
+- task: gitversion/setup@1
+  inputs:
+    versionSpec: '5.x'
+- task: gitversion/execute@1
+  inputs:
+    targetPath: '$(Build.SourcesDirectory)'
+    useConfigFile: true
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '*.sln'
+    workingDirectory: '$(Build.SourcesDirectory)'
+
