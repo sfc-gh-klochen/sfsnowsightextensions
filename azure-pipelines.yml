@@ -12,6 +12,7 @@ steps:
   inputs:
     targetPath: '$(Build.SourcesDirectory)'
     useConfigFile: true
+    configFilePath: 'gitversion.yml'
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
