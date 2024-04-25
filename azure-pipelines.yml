@@ -16,6 +16,6 @@ steps:
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    projects: '*.sln'
+    projects: 'SnowflakePS.csproj'
     workingDirectory: '$(Build.SourcesDirectory)'
 
