@@ -247,7 +247,7 @@ namespace Snowflake.Powershell
 
                 // Get authentication endpoint for the account 
                 var accountEndpointResult = SnowflakeDriver.GetAccountAppEndpoints(appUserContext.MainAppUrl, this.Account, appUserContext.Cookies);
-                appUserContext.Cookies = accountEndpointResult.Item2;
+                appUserContext.Cookies = new CookieContainer();
 
                 if (accountEndpointResult.Item1.Length == 0)
                 {
@@ -287,7 +287,7 @@ namespace Snowflake.Powershell
                 appUserContext.AccountUrl = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "url");
                 appUserContext.Region = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "region");
                 // sfpscogs_dodievich_sso.west-us-2.azure -> sfpscogs_dodievich_sso
-                appUserContext.AccountFullName = this.Account;
+                appUserContext.AccountFullName = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "account");
                 appUserContext.AccountName = appUserContext.AccountFullName.Split('.')[0];
                 logger.Info("AccountFullName={0}", appUserContext.AccountFullName);
                 logger.Info("AccountName={0}", appUserContext.AccountName);
@@ -300,7 +300,7 @@ namespace Snowflake.Powershell
                 var bootstrapResponse = SnowflakeDriver.GetBootstrapCookie(appUserContext.AppServerUrl, appUserContext.Cookies);
                 appUserContext.Cookies = bootstrapResponse.Item2;
                 // grab out the csrf cookie from the instanceCookies (begins with csrf-)
-                string unauthenticatedCsrf = appUserContext.Cookies.GetAllCookies().FirstOrDefault(c => c.Value.StartsWith("csrf-"))?.Value;
+                string unauthenticatedCsrf = appUserContext.Cookies.GetAllCookies().FirstOrDefault(c => c.Name.StartsWith("csrf-"))?.Value;
 
                 #endregion
 
@@ -348,7 +348,7 @@ namespace Snowflake.Powershell
                 logger.Info("ClientID={0}", appUserContext.ClientID);
 
                 logger.Info("Cookies={0}", deploymentSnowSightClientIDRedirectResult.Item2);
-                appUserContext.Cookies = accountEndpointResult.Item2;
+                //appUserContext.Cookies = accountEndpointResult.Item2;
 
                 #endregion
 
@@ -364,7 +364,7 @@ namespace Snowflake.Powershell
                     {
                         throw new InvalidCredentialException(String.Format("Invalid response on authenticate user request {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
                     }
-                    appUserContext.Cookies = accountEndpointResult.Item2;
+                    //appUserContext.Cookies = accountEndpointResult.Item2;
 
                     // Were the credentials good?
                     JObject masterTokenAndSessionTokenFromCredentialsObject = JObject.Parse(masterTokenAndSessionTokenFromCredentialsResult);
@@ -613,20 +613,20 @@ namespace Snowflake.Powershell
                 }
 
                 Uri redirectWithOAuthCodeUri = new Uri(redirectWithOAuthCodeUrl);
-                NameValueCollection redirectWithOAuthCodeParams = HttpUtility.ParseQueryString(redirectWithOAuthCodeUri.Query);
-                string oAuthRedirectCode = redirectWithOAuthCodeParams["code"];
-                if (oAuthRedirectCode == null)
-                {
-                    throw new ItemNotFoundException(String.Format("Unable to parse OAuth Token from URL with OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
-                }
+                // NameValueCollection redirectWithOAuthCodeParams = HttpUtility.ParseQueryString(redirectWithOAuthCodeUri.Query);
+                // string oAuthRedirectCode = redirectWithOAuthCodeParams["code"];
+                // if (oAuthRedirectCode == null)
+                // {
+                //     throw new ItemNotFoundException(String.Format("Unable to parse OAuth Token from URL with OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
+                // }
 
-                logger.Info("OAuth Redirect Code={0}", oAuthRedirectCode);
+                // logger.Info("OAuth Redirect Code={0}", oAuthRedirectCode);
 
-                loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
+                // loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 3, Converting OAuth redirect into authentication cookie
                     
-                var authenticationTokenWebPageResult = SnowflakeDriver.OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(appUserContext, redirectWithOAuthCodeUrl);
+                var authenticationTokenWebPageResult = SnowflakeDriver.OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(appUserContext, redirectWithOAuthCodeUri.PathAndQuery);
                 if (authenticationTokenWebPageResult.Item1.Length == 0 || authenticationTokenWebPageResult.Item2.Count == 0)
                 {
                     throw new InvalidCredentialException(String.Format("Invalid response from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -644,7 +644,7 @@ namespace Snowflake.Powershell
                 // 	<script>
                 // 	var params = {"account":"sfpscogs_dodievich_sso","appServerUrl":"https://apps-api.c1.westus2.azure.app.snowflake.com",.... "username":"DODIEVICH_ALT"}}
                 // 	if (window.opener && params.isPopupAuth) {
-                string paramsCarryingPageResult = authenticationTokenWebPageResult.Item1;
+                /* string paramsCarryingPageResult = authenticationTokenWebPageResult.Item1;
                 Regex regexParameters = new Regex(@"(?i)var params = ({.*})", RegexOptions.IgnoreCase);
                 Match match = regexParameters.Match(paramsCarryingPageResult);
                 if (match != null)
@@ -668,7 +668,7 @@ namespace Snowflake.Powershell
                             logger.Info("ContextUrl={0}", appUserContext.ContextUrl);
                         }
                     }
-                }
+                }*/
 
                 if (appUserContext.ContextUrl.Length == 0)
                 {

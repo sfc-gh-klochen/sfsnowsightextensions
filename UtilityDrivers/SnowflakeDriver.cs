@@ -109,13 +109,14 @@ namespace Snowflake.Powershell
         #region Snowsight Authentication
 
         public static string OAuth_Authenticate_GetMasterTokenFromCredentials(AppUserContext appUserContext, string password)
-        {            
-            string requestBody = 
+        {
+            string state = string.Format("\"{{\\\"csrf\\\":\\\"{0}\\\",\\\"url\\\":\\\"{1}\\\",\\\"browserUrl\\\":\\\"https://app.snowflake.com/\\\",\\\"originator\\\":\\\"{2}\\\",\\\"oauthNonce\\\":\\\"{3}\\\"}}", appUserContext.CSRFToken, appUserContext.AccountUrl, appUserContext.AuthOriginator, appUserContext.AuthOAuthNonce);
+            string requestBody =
 $@"{{
   ""data"": {{
     ""ACCOUNT_NAME"": ""{appUserContext.AccountName.ToUpper()}"",
     ""LOGIN_NAME"": ""{appUserContext.UserName}"",
-    ""clientId"": ""KEaAv5tJAYc1+BqySu5DRtAL1DQ/rw=="",
+    ""clientId"": ""R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg=="",
     ""redirectUri"": ""{appUserContext.AuthRedirectUri}"",
     ""responseType"": ""code"",
     ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
@@ -123,7 +124,7 @@ $@"{{
     ""codeChallenge"": ""{appUserContext.AuthCodeChallenge}"",
     ""codeChallengeMethod"": ""S256"",
     ""CLIENT_APP_ID"": ""Snowflake UI"",
-    ""CLIENT_APP_VERSION"": 20240116005545,
+    ""CLIENT_APP_VERSION"": 20240404084918,
     ""PASSWORD"": ""{password}""
   }}
 }}";
@@ -133,14 +134,14 @@ $@"{{
                 "application/json",
                 requestBody,
                 "application/json",
-                cookies: appUserContext.Cookies, snowflakeContext: String.Empty, referer: String.Empty, classicUIAuthToken: String.Empty);
+                cookies: appUserContext.Cookies, csrfTokenValue: null, snowflakeContext: String.Empty, referer: String.Empty, classicUIAuthToken: String.Empty);
         }
 
         public static string OAuth_Authorize_GetOAuthRedirectFromOAuthToken(AppUserContext appUserContext)
-        {            
+        {
             string requestBody = $@"{{
               ""masterToken"": ""{appUserContext.AuthTokenMaster}"",
-              ""clientId"": ""KEaAv5tJAYc1+BqySu5DRtAL1DQ/rw=="",
+              ""clientId"": ""R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg=="",
               ""redirectUri"": ""{appUserContext.AuthRedirectUri}"",
               ""responseType"": ""code"",
               ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
@@ -155,7 +156,8 @@ $@"{{
                 "application/json",
                 requestBody,
                 "application/json",
-                cookies: appUserContext.Cookies, snowflakeContext: String.Empty, referer: String.Empty, classicUIAuthToken: String.Empty);
+                cookies: appUserContext.Cookies, csrfTokenValue: appUserContext.CSRFToken, snowflakeContext: String.Empty, referer: String.Empty, classicUIAuthToken: String.Empty
+                );
         }
 
         public static Tuple<string, CookieContainer, HttpStatusCode> OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(AppUserContext appUserContext, string redirectUrl)
@@ -163,17 +165,20 @@ $@"{{
             return apiGET(
                 appUserContext.AppServerUrl,
                 redirectUrl,
-                cookies: appUserContext.Cookies
+                cookies: appUserContext.Cookies,
+                referer: "https://mobilize.snowflakecomputing.com/"
+                //host: "apps-api.c1.us-west-2.aws.app.snowflake.com"
             );
         }
+
 
         #endregion
 
         #region Classic UI Authentication
 
         public static string GetMasterTokenAndSessionTokenFromCredentials(string accountUrl, string accountName, string userName, string password, CookieContainer cookies)
-        {            
-            string requestJSONTemplate = 
+        {
+            string requestJSONTemplate =
 @"{{
     ""data"": {{
         ""ACCOUNT_NAME"": ""{0}"",
@@ -192,13 +197,13 @@ $@"{{
                 "application/json",
                 requestBody,
                 "application/json",
-                cookies: cookies    
+                cookies: cookies
             );
         }
 
         public static string GetMasterTokenAndSessionTokenFromSSOToken(string accountUrl, string accountName, string userName, string token, string proofKey, CookieContainer cookies)
         {
-            string requestJSONTemplate = 
+            string requestJSONTemplate =
 @"{{
     ""data"": {{
         ""ACCOUNT_NAME"": ""{0}"",
@@ -225,7 +230,7 @@ $@"{{
 
         public static string GetSSOLoginLinkForAccountAndUser(string accountUrl, string accountName, string userName, int returnRedirectPortNumber)
         {
-            string requestJSONTemplate = 
+            string requestJSONTemplate =
 @"{{
     ""data"": {{
         ""ACCOUNT_NAME"": ""{0}"",
@@ -281,7 +286,7 @@ $@"{{
         }
 
         public static string GetWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string worksheetID)
         {
             return apiGET(
@@ -294,7 +299,7 @@ $@"{{
         }
 
         public static string CreateWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string worksheetName)
         {
             string requestBody = String.Format("action=create&orgId={0}&name={1}", authContext.OrganizationID, HttpUtility.UrlEncode(worksheetName));
@@ -308,7 +313,7 @@ $@"{{
         }
 
         public static string CreateWorksheetForFilter(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string worksheetName, string role, string warehouse, string database, string schema)
         {
             string contextParam = String.Format("{{\"role\":\"{0}\",\"warehouse\":\"{1}\",\"database\":\"{2}\",\"schema\":\"{3}\"}}", role, warehouse, database, schema);
@@ -324,7 +329,7 @@ $@"{{
         }
 
         public static string CreateWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string worksheetName, string folderID)
         {
             string requestBody = String.Format("action=create&orgId={0}&name={1}&folderId={2}", authContext.OrganizationID, HttpUtility.UrlEncode(worksheetName), folderID);
@@ -338,7 +343,7 @@ $@"{{
         }
 
         public static string UpdateWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string worksheetID, string queryText, string role, string warehouse, string database, string schema)
         {
             string executionContextParam = String.Format("{{\"role\":\"{0}\",\"warehouse\":\"{1}\",\"database\":\"{2}\",\"schema\":\"{3}\"}}", role, warehouse, database, schema);
@@ -354,13 +359,13 @@ $@"{{
         }
 
         public static string DeleteWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string worksheetID)
         {
             return apiDELETE(
                 authContext.AppServerUrl,
-                String.Format("v0/queries/{0}", worksheetID), 
-                "application/json", 
+                String.Format("v0/queries/{0}", worksheetID),
+                "application/json",
                 authContext.ContextUserNameUrl,
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 String.Empty,
@@ -369,7 +374,7 @@ $@"{{
         }
 
         public static string ExecuteWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string worksheetID, string queryText, string paramRefs, string role, string warehouse, string database, string schema)
         {
             string executionContextParam = String.Format("{{\"role\":\"{0}\",\"warehouse\":\"{1}\",\"database\":\"{2}\",\"schema\":\"{3}\"}}", role, warehouse, database, schema);
@@ -381,7 +386,7 @@ $@"{{
                 "v0/queries",
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", 
+                "application/x-www-form-urlencoded",
                 authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
         }
 
@@ -406,7 +411,7 @@ $@"{{
         }
 
         public static string GetDashboard(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string dashboardID)
         {
             return apiGET(
@@ -419,7 +424,7 @@ $@"{{
         }
 
         public static string CreateDashboard(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string dashboardName, string roleName, string warehouseName)
         {
             string requestBody = String.Format("orgId={0}&name={1}&role={2}&warehouse={3}&type=dashboard&visibility=organization", authContext.OrganizationID, HttpUtility.UrlEncode(dashboardName), roleName, warehouseName);
@@ -429,12 +434,12 @@ $@"{{
                 "v0/folders",
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", 
+                "application/x-www-form-urlencoded",
                 authContext.Cookies, snowflakeContext: authContext.ContextUserNameUrl, referer: String.Format("{0}/", authContext.MainAppUrl), classicUIAuthToken: String.Empty);
         }
 
         public static string UpdateDashboardNewRowWithWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string dashboardID, string worksheetID, string displayMode, int rowIndex, int rowHeight)
         {
             // Table
@@ -499,7 +504,7 @@ $@"{{
         }
 
         public static string UpdateDashboardInsertNewCellWithWorksheet(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string dashboardID, string worksheetID, string displayMode, int rowIndex, int rowHeight, int cellIndex)
         {
             // Table:
@@ -566,13 +571,13 @@ $@"{{
         }
 
         public static string DeleteDashboard(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string dashboardID)
         {
             return apiDELETE(
                 authContext.AppServerUrl,
-                String.Format("v0/folders/{0}", dashboardID), 
-                "application/json", 
+                String.Format("v0/folders/{0}", dashboardID),
+                "application/json",
                 authContext.ContextUserNameUrl,
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 String.Empty,
@@ -581,7 +586,7 @@ $@"{{
         }
 
         public static string ExecuteDashboard(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string dashboardID)
         {
             string requestBody = "action=refresh&drafts={}";
@@ -651,7 +656,7 @@ $@"{{
                 requestBody,
                 "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
         }
-        
+
         #endregion
 
         #region Snowsight Folders
@@ -676,7 +681,7 @@ $@"{{
         #region Snowsight Queries
 
         public static string GetQueryDetails(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string queryID, string roleToUse)
         {
             return apiGET(
@@ -685,13 +690,13 @@ $@"{{
                 "application/json",
                 snowflakeContext: authContext.ContextUserNameUrl,
                 referer: $"{authContext.MainAppUrl}/",
-                roleToUse: roleToUse, 
+                roleToUse: roleToUse,
                 cookies: authContext.Cookies
                 ).Item1;
         }
 
         public static string GetQueryProfile(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string queryID, string roleToUse)
         {
             return apiGET(
@@ -700,12 +705,12 @@ $@"{{
                 "application/json",
                 authContext.ContextUserNameUrl,
                 String.Format("{0}/", authContext.MainAppUrl),
-                String.Empty, 
+                String.Empty,
                 roleToUse, cookies: authContext.Cookies).Item1;
         }
 
         public static string GetQueryProfile(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string queryID, string roleToUse, int retryNumber)
         {
             return apiGET(
@@ -714,7 +719,7 @@ $@"{{
                 "application/json",
                 authContext.ContextUserNameUrl,
                 String.Format("{0}/", authContext.MainAppUrl),
-                String.Empty, 
+                String.Empty,
                 roleToUse, cookies: authContext.Cookies
             ).Item1;
         }
@@ -724,27 +729,27 @@ $@"{{
         #region Snowsight Filters
 
         public static string CreateOrUpdateFilter(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string filterKeyword, string filterConfiguration)
         {
-            string requestBody = String.Format("paramConfig={0}",HttpUtility.UrlEncode(filterConfiguration));
+            string requestBody = String.Format("paramConfig={0}", HttpUtility.UrlEncode(filterConfiguration));
 
             return apiPOST(
                 authContext.AppServerUrl,
-                String.Format("v0/organizations/{0}/param/{1}", authContext.OrganizationID, filterKeyword), 
+                String.Format("v0/organizations/{0}/param/{1}", authContext.OrganizationID, filterKeyword),
                 "application/json",
                 requestBody,
                 "application/x-www-form-urlencoded", cookies: authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
         }
 
         public static string DeleteFilter(
-            AppUserContext authContext, 
+            AppUserContext authContext,
             string filterKeyword)
         {
             return apiDELETE(
                 authContext.AppServerUrl,
-                String.Format("v0/organizations/{0}/param/{1}", authContext.OrganizationID, filterKeyword), 
-                "application/json", 
+                String.Format("v0/organizations/{0}/param/{1}", authContext.OrganizationID, filterKeyword),
+                "application/json",
                 authContext.ContextUserNameUrl,
                 String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 String.Empty,
@@ -762,7 +767,7 @@ $@"{{
         ///                                     ^^^^^^^^^^^^^^^     HTTP Result Code
         private static Tuple<string, CookieContainer, HttpStatusCode> apiGET(string baseUrl, string restAPIUrl,
             string acceptHeader = "*/*", string snowflakeContext = null, string referer = null,
-            string classicUIAuthToken = null, string roleToUse = null, CookieContainer cookies = null)
+            string classicUIAuthToken = null, string roleToUse = null, CookieContainer cookies = null, string host = null)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -783,9 +788,13 @@ $@"{{
 
                     httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
-                    if (referer?.Length > 0) 
+                    if (referer?.Length > 0)
                     {
                         httpClient.DefaultRequestHeaders.Referrer = new Uri(referer);
+                    }
+                    if (host?.Length > 0)
+                    {
+                        httpClient.DefaultRequestHeaders.Add("Host", host);
                     }
                     if (snowflakeContext?.Length > 0)
                     {
@@ -825,6 +834,7 @@ $@"{{
                             resultString = response.RequestMessage.RequestUri.ToString();
                         }
 
+
                         return new Tuple<string, CookieContainer, HttpStatusCode>(resultString, httpClientHandler.CookieContainer, response.StatusCode);
                     }
                     else
@@ -839,7 +849,7 @@ $@"{{
                             logger.Error("GET {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, httpClientHandler.CookieContainer.GetCookies(baseUri));
                         }
 
-                        if (response.StatusCode == HttpStatusCode.Unauthorized || 
+                        if (response.StatusCode == HttpStatusCode.Unauthorized ||
                             response.StatusCode == HttpStatusCode.Forbidden)
                         {
                             loggerConsole.Error("GET {0}/{1} returned {2} ({3})", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase);
@@ -865,7 +875,7 @@ $@"{{
         }
 
         private static string apiPOST(string baseUrl, string restAPIUrl, string acceptHeader, string requestBody,
-            string requestTypeHeader, CookieContainer cookies, string snowflakeContext = null, string referer = null,
+            string requestTypeHeader, CookieContainer cookies, string csrfTokenValue = null, string snowflakeContext = null, string referer = null,
             string classicUIAuthToken = null)
         {
             Stopwatch stopWatch = new Stopwatch();
@@ -887,7 +897,7 @@ $@"{{
 
                     httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
-                    if (referer?.Length > 0) 
+                    if (referer?.Length > 0)
                     {
                         httpClient.DefaultRequestHeaders.Referrer = new Uri(referer);
                     }
@@ -901,11 +911,18 @@ $@"{{
                     }
                     // Hacky workaround to add `X-CSRF-Token` for authenticated requests, we need to check for the
                     // user- cookie.
-                    var userCookie = cookies.GetCookies(baseUri).Cast<Cookie>().FirstOrDefault(c => c.Name.StartsWith("user"));
-                    var csrfCookie = cookies.GetCookies(baseUri).Cast<Cookie>().FirstOrDefault(c => c.Name.StartsWith("csrf"));
-                    if (userCookie != null && csrfCookie != null)
+                    //var userCookie = cookies.GetCookies(baseUri).Cast<Cookie>().FirstOrDefault(c => c.Name.StartsWith("user"));
+                    if (csrfTokenValue != null)
                     {
-                        httpClient.DefaultRequestHeaders.Add("X-CSRF-Token", csrfCookie.Value);
+                        httpClient.DefaultRequestHeaders.Add("X-CSRF-Token", csrfTokenValue);
+                    }
+                    else
+                    {
+                        var csrfCookie = cookies.GetCookies(baseUri).Cast<Cookie>().FirstOrDefault(c => c.Name.StartsWith("csrf"));
+                        if (csrfCookie != null)
+                        {
+                            httpClient.DefaultRequestHeaders.Add("X-CSRF-Token", csrfCookie.Value);
+                        }
                     }
 
                     MediaTypeWithQualityHeaderValue accept = new MediaTypeWithQualityHeaderValue(acceptHeader);
@@ -919,11 +936,11 @@ $@"{{
 
                     // As exception for the login
                     // Remove sensitive data
-                    if (restAPIUrl.StartsWith("session/authenticate-request") || 
+                    if (restAPIUrl.StartsWith("session/authenticate-request") ||
                         restAPIUrl.StartsWith("session/v1/login-request"))
                     {
                         var pattern = "\"PASSWORD\": \"(.*)\"";
-                        requestBody = Regex.Replace(requestBody, pattern, "\"PASSWORD\":\"****\"", RegexOptions.IgnoreCase); 
+                        requestBody = Regex.Replace(requestBody, pattern, "\"PASSWORD\":\"****\"", RegexOptions.IgnoreCase);
                     }
 
                     HttpResponseMessage response = httpClient.PostAsync(restAPIUrl, content).Result;
@@ -953,7 +970,7 @@ $@"{{
                             logger.Error("POST {0}/{1} returned {2} ({3})\nRequest Headers:\n{4}Cookies:\n{5}\nRequest:\n{6}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, httpClient.DefaultRequestHeaders, httpClientHandler.CookieContainer, requestBody);
                         }
 
-                        if (response.StatusCode == HttpStatusCode.Unauthorized || 
+                        if (response.StatusCode == HttpStatusCode.Unauthorized ||
                             response.StatusCode == HttpStatusCode.Forbidden)
                         {
                             loggerConsole.Warn("POST {0}/{1} returned {2} ({3}), Request:\n{4}", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase, requestBody);
@@ -978,7 +995,7 @@ $@"{{
             }
         }
 
-        private static string apiDELETE(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext = null, string referer = null, string classicUIAuthToken = null,  CookieContainer cookies = null)
+        private static string apiDELETE(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext = null, string referer = null, string classicUIAuthToken = null, CookieContainer cookies = null)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -997,7 +1014,7 @@ $@"{{
 
                     httpClient.DefaultRequestHeaders.Add("User-Agent", String.Format("Snowflake Snowsight Extensions {0}", Assembly.GetExecutingAssembly().GetName().Version));
 
-                    if (referer?.Length > 0) 
+                    if (referer?.Length > 0)
                     {
                         httpClient.DefaultRequestHeaders.Referrer = new Uri(referer);
                     }
@@ -1018,10 +1035,10 @@ $@"{{
 
                     HttpResponseMessage response = httpClient.DeleteAsync(restAPIUrl).Result;
 
-                    IEnumerable<string> cookiesList = new List<string>(); 
+                    IEnumerable<string> cookiesList = new List<string>();
                     if (response.Headers.Contains("Set-Cookie") == true)
                     {
-                        cookiesList = response.Headers.GetValues("Set-Cookie"); 
+                        cookiesList = response.Headers.GetValues("Set-Cookie");
                     }
 
                     if (response.IsSuccessStatusCode)
@@ -1046,7 +1063,7 @@ $@"{{
                             logger.Error("DELETE {0}/{1} returned {2} ({3})", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase);
                         }
 
-                        if (response.StatusCode == HttpStatusCode.Unauthorized || 
+                        if (response.StatusCode == HttpStatusCode.Unauthorized ||
                             response.StatusCode == HttpStatusCode.Forbidden)
                         {
                             loggerConsole.Warn("DELETE {0}/{1} returned {2} ({3})", baseUrl, restAPIUrl, (int)response.StatusCode, response.ReasonPhrase);
@@ -1275,7 +1292,7 @@ $@"{{
                     JObject jsonResponse = JObject.Parse(resultString);
                     success = JSONHelper.getBoolValueFromJToken(jsonResponse, "success") == false ? "FALSE" : "TRUE";
                     code = JSONHelper.getStringValueFromJToken(jsonResponse, "code") == String.Empty ? "N/A" : "EXISTS";
-                    
+
                     // The data object is only returned on successful login.
                     if (jsonResponse.TryGetValue("data", out JToken data))
                     {
@@ -1295,7 +1312,7 @@ $@"{{
                 catch (Exception ex)
                 {
                     // @todo We could use ex.Message here, but it might contain sensitive information.
-                    loggerDiagnosticTest.Error("Failed to parse JSON response"); 
+                    loggerDiagnosticTest.Error("Failed to parse JSON response");
                     logger.Error(ex);
                 }
                 loggerDiagnosticTest.Info("Response Body: success: {0} | code: {1} | serverVersion: {2} | masterToken: {3} | token: {4} | sessionId: {5} | displayUserName: {6} | schemaName: {7} | warehouseName: {8} | roleName: {9} | databaseName: {10}", success, code, serverVersion, masterToken, token, sessionId, displayUserName, schemaName, warehouseName, roleName, databaseName);
@@ -1379,7 +1396,7 @@ $@"{{
                     success = JSONHelper.getBoolValueFromJToken(jsonResponse, "success") == false ? "FALSE" : "TRUE";
                     code = JSONHelper.getStringValueFromJToken(jsonResponse, "code") == String.Empty ? "N/A" : "EXISTS";
                     message = JSONHelper.getStringValueFromJToken(jsonResponse, "message") == String.Empty ? "N/A" : "EXISTS";
-                    
+
                     // data object is only returned on successful login.
                     if (jsonResponse.TryGetValue("data", out JToken data))
                     {
@@ -1394,7 +1411,7 @@ $@"{{
                     loggerDiagnosticTest.Error("Failed to parse JSON response");
                     logger.Error(ex);
                 }
-                
+
                 loggerDiagnosticTest.Info("Response Body: success: {0} | code: {1} | message: {2} | tokenUrl: {3} | ssoUrl: {4} | proofKey: {5}", success, code, message, tokenUrl, ssoUrl, proofKey);
             }
             else
@@ -1413,7 +1430,7 @@ $@"{{
             // base domain of restApiUrl
             string finalUrl = response.RequestMessage?.RequestUri?.ToString() ?? "";
             Uri restApiUri = new Uri(finalUrl);
-            
+
             // get all cookies that have the base domain
             CookieCollection responseCookiesFiltered = responseCookies.GetCookies(restApiUri);
             CookieCollection requestCookiesFiltered = requestCookies.GetCookies(restApiUri);
@@ -1469,7 +1486,7 @@ $@"{{
                     // This is then exposed in the ExtensiveDiagnosticTest log.
                     string cookieName = cookie.Name.Split('=')[0];
                     unknownCookiesList.Add(cookieName);
-                    
+
                 }
             }
             // @todo we should instead pass this back, instead of logging here.
@@ -1488,7 +1505,7 @@ $@"{{
             }
             loggerDiagnosticTest.Info("{0} Cookies: {1}", direction, sanitisedCookies);
         }
-        
+
         #endregion
     }
 }
