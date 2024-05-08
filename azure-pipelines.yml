@@ -57,14 +57,51 @@ steps:
     filePath: '$(Build.SourcesDirectory)/PublishAll.ps1'
 - task: ArchiveFiles@2
   inputs:
-    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/$(BuildConfiguration)'
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/win'
     includeRootFolder: false
     archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.$(Build.BuildId).zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.win.$(Build.BuildId).zip'
     replaceExistingArchive: true
 - task: PublishBuildArtifacts@1
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.$(Build.BuildId).zip'
-    ArtifactName: 'drop'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.win.$(Build.BuildId).zip'
+    ArtifactName: 'drop_win'
+    publishLocation: 'Container'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/linux'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.linux.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.linux.$(Build.BuildId).zip'
+    ArtifactName: 'drop_linux'
+    publishLocation: 'Container'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/osx'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx.$(Build.BuildId).zip'
+    ArtifactName: 'drop_osx'
+    publishLocation: 'Container'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/osx-arm'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx-arm.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx-arm.$(Build.BuildId).zip'
+    ArtifactName: 'drop_osx-arm'
     publishLocation: 'Container'
 
