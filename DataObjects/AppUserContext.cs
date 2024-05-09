@@ -36,6 +36,7 @@ namespace Snowflake.Powershell
         public string AuthOAuthNonce { get; set; }
         public string UserName { get; set; }
         public string ServerVersion { get; set; }
+        public string WindowId { get; set; }
         public string ContextUrl { get; set; }
         public string ContextUserNameUrl 
         { 

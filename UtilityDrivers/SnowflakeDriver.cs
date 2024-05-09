@@ -37,11 +37,11 @@ namespace Snowflake.Powershell
 
         #region Snowsight Client Metadata
 
-        public static Tuple<string, CookieContainer, HttpStatusCode> GetBootstrapCookie(string appServerUrl,
+        public static Tuple<string, CookieContainer, HttpStatusCode> GetBootstrapCookie(string AppUrl,
             CookieContainer cookies)
         {
             return apiGET(
-                appServerUrl, // "https://app.snowflake.com"
+                AppUrl,
                 "bootstrap",
                 cookies: cookies
             );
@@ -95,7 +95,7 @@ namespace Snowflake.Powershell
                 mainAppUrl = mainAppUrl + "/";
             }
 
-            string stateParam = String.Format("{{\"csrf\":\"{0}\",\"url\":\"{1}\",\"browserUrl\":\"{2}\"}}", csrf, accountUrl, mainAppUrl);
+            string stateParam = String.Format("{{\"csrf\":\"{0}\",\"url\":\"{1}\",\"windowId\":\"{2}\",\"browserUrl\":\"{3}\"}}", csrf, accountUrl, Guid.NewGuid(), mainAppUrl);
 
             return apiGET(
                 appServerUrl,
@@ -119,7 +119,7 @@ $@"{{
     ""clientId"": ""R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg=="",
     ""redirectUri"": ""{appUserContext.AuthRedirectUri}"",
     ""responseType"": ""code"",
-    ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
+    ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""windowId\"":\""{appUserContext.WindowId}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
     ""scope"": ""refresh_token"",
     ""codeChallenge"": ""{appUserContext.AuthCodeChallenge}"",
     ""codeChallengeMethod"": ""S256"",
@@ -144,7 +144,7 @@ $@"{{
               ""clientId"": ""R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg=="",
               ""redirectUri"": ""{appUserContext.AuthRedirectUri}"",
               ""responseType"": ""code"",
-              ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
+              ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""windowId\"":\""{appUserContext.WindowId}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
               ""scope"": ""refresh_token"",
               ""codeChallenge"": ""{appUserContext.AuthCodeChallenge}"",
               ""codeChallengeMethod"": ""S256""
@@ -282,7 +282,12 @@ $@"{{
                 String.Format("v0/organizations/{0}/entities/list", authContext.OrganizationID),
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded", 
+                cookies: authContext.Cookies,
+                csrfTokenValue: authContext.CSRFToken, 
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string GetWorksheet(
