@@ -314,7 +314,12 @@ $@"{{
                 "v0/queries",
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded", 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string CreateWorksheetForFilter(
@@ -360,7 +365,12 @@ $@"{{
                 "v0/queries",
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded", 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string DeleteWorksheet(
