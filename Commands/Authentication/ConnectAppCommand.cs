@@ -182,6 +182,7 @@ namespace Snowflake.Powershell
 
             logger.Trace("BEGIN {0}", this.GetType().Name);
             WriteVerbose(String.Format("BEGIN {0}", this.GetType().Name));
+            /*
             Console.WriteLine("Waiting for debugger to attach");
             int processId = Process.GetCurrentProcess().Id;
             loggerConsole.Info("pid {0}", processId);
@@ -191,6 +192,7 @@ namespace Snowflake.Powershell
                 System.Threading.Thread.Sleep(100);
             }
             loggerConsole.Info("attached to {0}", processId);
+            */
         }
 
         protected override void EndProcessing()

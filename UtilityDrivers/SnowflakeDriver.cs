@@ -116,7 +116,7 @@ $@"{{
   ""data"": {{
     ""ACCOUNT_NAME"": ""{appUserContext.AccountName.ToUpper()}"",
     ""LOGIN_NAME"": ""{appUserContext.UserName}"",
-    ""clientId"": ""R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg=="",
+    ""clientId"": ""{appUserContext.ClientID}"",
     ""redirectUri"": ""{appUserContext.AuthRedirectUri}"",
     ""responseType"": ""code"",
     ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""windowId\"":\""{appUserContext.WindowId}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
@@ -141,7 +141,7 @@ $@"{{
         {
             string requestBody = $@"{{
               ""masterToken"": ""{appUserContext.AuthTokenMaster}"",
-              ""clientId"": ""R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg=="",
+              ""clientId"": ""{appUserContext.ClientID}"",
               ""redirectUri"": ""{appUserContext.AuthRedirectUri}"",
               ""responseType"": ""code"",
               ""state"": ""{{\""csrf\"":\""{appUserContext.CSRFToken}\"",\""url\"":\""{appUserContext.AccountUrl}\"",\""windowId\"":\""{appUserContext.WindowId}\"",\""browserUrl\"":\""https://app.snowflake.com/\"",\""originator\"":\""{appUserContext.AuthOriginator}\"",\""oauthNonce\"":\""{appUserContext.AuthOAuthNonce}\""}}"",
