@@ -298,7 +298,7 @@ $@"{{
                 authContext.AppServerUrl,
                 String.Format("v0/queries/{0}", worksheetID),
                 "application/json",
-                authContext.ContextUserNameUrl,
+                snowflakeContext: authContext.ContextUserNameUrl,
                 referer: String.Format("{0}/", authContext.MainAppUrl),
                 cookies: authContext.Cookies).Item1;
         }
@@ -317,7 +317,7 @@ $@"{{
                 "application/x-www-form-urlencoded", 
                 cookies: authContext.Cookies, 
                 csrfTokenValue: authContext.CSRFToken,
-                snowflakeContext: authContext.ContextUserNameUrl,
+                snowflakeContext: authContext.ContextUserNameUrl, 
                 referer: String.Format("{0}/", authContext.MainAppUrl), 
                 String.Empty);
         }
@@ -335,7 +335,12 @@ $@"{{
                 "v0/queries",
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded", 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string CreateWorksheet(
@@ -349,7 +354,12 @@ $@"{{
                 "v0/queries",
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded", 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string UpdateWorksheet(
@@ -402,7 +412,11 @@ $@"{{
                 "application/json",
                 requestBody,
                 "application/x-www-form-urlencoded",
-                authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         #endregion
@@ -422,7 +436,11 @@ $@"{{
                 "application/json",
                 requestBody,
                 "application/x-www-form-urlencoded",
-                authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string GetDashboard(
@@ -433,8 +451,8 @@ $@"{{
                 authContext.AppServerUrl,
                 String.Format("v0/folders/{0}", dashboardID),
                 "application/json",
-                authContext.ContextUserNameUrl,
-                String.Format("{0}/", authContext.MainAppUrl),
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl),
                 cookies: authContext.Cookies).Item1;
         }
 
@@ -450,7 +468,11 @@ $@"{{
                 "application/json",
                 requestBody,
                 "application/x-www-form-urlencoded",
-                authContext.Cookies, snowflakeContext: authContext.ContextUserNameUrl, referer: String.Format("{0}/", authContext.MainAppUrl), classicUIAuthToken: String.Empty);
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string UpdateDashboardNewRowWithWorksheet(
@@ -515,7 +537,11 @@ $@"{{
                 "application/json",
                 requestBody,
                 requestTypeHeader: "application/x-www-form-urlencoded",
-                cookies: authContext.Cookies, snowflakeContext: authContext.ContextUserNameUrl, referer: String.Format("{0}/", authContext.MainAppUrl));
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string UpdateDashboardInsertNewCellWithWorksheet(
@@ -582,7 +608,11 @@ $@"{{
                 "application/json",
                 requestBody,
                 "application/x-www-form-urlencoded",
-                cookies: authContext.Cookies, snowflakeContext: authContext.ContextUserNameUrl, referer: String.Format("{0}/", authContext.MainAppUrl));
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string DeleteDashboard(
@@ -611,7 +641,12 @@ $@"{{
                 String.Format("v0/folders/{0}", dashboardID),
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded",                 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
 
@@ -628,7 +663,7 @@ $@"{{
                 $"v0/queries/{worksheetID}/charts/{chartID}",
                 "application/json",
                 snowflakeContext: authContext.ContextUserNameUrl,
-                referer: $"{authContext.MainAppUrl}/",
+                referer: String.Format("{0}/", authContext.MainAppUrl),
                 cookies: authContext.Cookies).Item1;
         }
 
@@ -669,7 +704,12 @@ $@"{{
                 String.Format("v0/queries/{0}/charts", worksheetID),
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded", 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         #endregion
@@ -688,7 +728,12 @@ $@"{{
                 String.Format("v0/organizations/{0}/entities/list", authContext.OrganizationID),
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded",                 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         #endregion
@@ -704,10 +749,9 @@ $@"{{
                 String.Format("v0/session/request/monitoring/queries/{0}?max=1001", queryID),
                 "application/json",
                 snowflakeContext: authContext.ContextUserNameUrl,
-                referer: $"{authContext.MainAppUrl}/",
+                referer: String.Format("{0}/", authContext.MainAppUrl),
                 roleToUse: roleToUse,
-                cookies: authContext.Cookies
-                ).Item1;
+                cookies: authContext.Cookies).Item1;
         }
 
         public static string GetQueryProfile(
@@ -718,10 +762,10 @@ $@"{{
                 authContext.AppServerUrl,
                 String.Format("v0/session/request/monitoring/query-plan-data/{0}", queryID),
                 "application/json",
-                authContext.ContextUserNameUrl,
-                String.Format("{0}/", authContext.MainAppUrl),
-                String.Empty,
-                roleToUse, cookies: authContext.Cookies).Item1;
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl),
+                roleToUse: roleToUse,
+                cookies: authContext.Cookies).Item1;
         }
 
         public static string GetQueryProfile(
@@ -732,11 +776,10 @@ $@"{{
                 authContext.AppServerUrl,
                 String.Format("v0/session/request/monitoring/query-plan-data/{0}?jobRetryAttemptRank={1}", queryID, retryNumber),
                 "application/json",
-                authContext.ContextUserNameUrl,
-                String.Format("{0}/", authContext.MainAppUrl),
-                String.Empty,
-                roleToUse, cookies: authContext.Cookies
-            ).Item1;
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl),
+                roleToUse: roleToUse,
+                cookies: authContext.Cookies).Item1;
         }
 
         #endregion
@@ -754,7 +797,12 @@ $@"{{
                 String.Format("v0/organizations/{0}/param/{1}", authContext.OrganizationID, filterKeyword),
                 "application/json",
                 requestBody,
-                "application/x-www-form-urlencoded", cookies: authContext.Cookies, authContext.ContextUserNameUrl, String.Format("{0}/", authContext.MainAppUrl), String.Empty);
+                "application/x-www-form-urlencoded", 
+                cookies: authContext.Cookies, 
+                csrfTokenValue: authContext.CSRFToken,
+                snowflakeContext: authContext.ContextUserNameUrl, 
+                referer: String.Format("{0}/", authContext.MainAppUrl), 
+                String.Empty);
         }
 
         public static string DeleteFilter(
