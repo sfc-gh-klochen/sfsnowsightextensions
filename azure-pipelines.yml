@@ -12,9 +12,96 @@ steps:
   inputs:
     targetPath: '$(Build.SourcesDirectory)'
     useConfigFile: true
+    configFilePath: 'gitversion.yml'
+- task: PowerShell@2
+  inputs:
+    targetType: 'inLine'
+    script: |
+      Write-Host "Versioning started"
+      "Sources directory " + $Env:BUILD_SOURCESDIRECTORY
+      "Build number " + $Env:BUILD_BUILDNUMBER
+      $csprojfilename = $Env:BUILD_SOURCESDIRECTORY+"\SnowflakePS.csproj"
+      "Project file to update " + $csprojfilename
+      [xml]$csprojcontents = Get-Content -Path $csprojfilename;
+      "Current version number is" + $csprojcontents.Project.PropertyGroup.Version
+      $oldversionNumber = $csprojcontents.Project.PropertyGroup.Version
+      $csprojcontents.Project.PropertyGroup.Version = $Env:BUILD_BUILDNUMBER
+      $csprojcontents.Save($csprojfilename)
+      "Version number has been udated from " + $oldversionNumber + " to " + $Env:BUILD_BUILDNUMBER
+      Write-Host "Finished"
+- task: PowerShell@2
+  inputs:
+    targetType: 'inLine'
+    script: |
+      Write-Host "Versioning started"
+      "Sources directory " + $Env:BUILD_SOURCESDIRECTORY
+      "Build number " + $Env:BUILD_BUILDNUMBER
+      $modulefile = $Env:BUILD_SOURCESDIRECTORY+"\SnowflakePS.psd1"
+      "Module file to update " + $modulefile
+      $moduleContents = Get-Content -Path $modulefile;
+      $moduleContents = $moduleContents -replace "ModuleVersion = '.*'", ("ModuleVersion = {0}" -f $Env:BUILD_BUILDNUMBER)
+      $moduleContents | Set-Content -Path $modulefile
+
+      Write-Host "Updated file:"
+      Write-Host $moduleContents
+      Write-Host "Finished"
+
 - task: DotNetCoreCLI@2
   inputs:
     command: 'build'
-    projects: '*.sln'
+    projects: 'SnowflakePS.csproj'
     workingDirectory: '$(Build.SourcesDirectory)'
+    arguments: '/p:Configuration=$(BuildConfiguration)'
+- task: PowerShell@2
+  inputs:
+    filePath: '$(Build.SourcesDirectory)/PublishAll.ps1'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/win'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.win.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.win.$(Build.BuildId).zip'
+    ArtifactName: 'drop_win'
+    publishLocation: 'Container'
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/linux'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.linux.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.linux.$(Build.BuildId).zip'
+    ArtifactName: 'drop_linux'
+    publishLocation: 'Container'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/osx'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx.$(Build.BuildId).zip'
+    ArtifactName: 'drop_osx'
+    publishLocation: 'Container'
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)/bin/Publish/osx-arm'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx-arm.$(Build.BuildId).zip'
+    replaceExistingArchive: true
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/sfsnowsight-extensions.osx-arm.$(Build.BuildId).zip'
+    ArtifactName: 'drop_osx-arm'
+    publishLocation: 'Container'
 

@@ -139,7 +139,7 @@ namespace Snowflake.Powershell
                 Filter targetFilterToReplace = null;
 
                 // Get list of current Filters in case the Filter we're creating already exists
-                string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(this.AuthContext);
+                string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(this.AuthContext).Item1;
                 if (organizationAndUserContextResult.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Invalid response from getting organization context for user {0}@{1}", this.AuthContext.UserName, this.AuthContext.AccountName));

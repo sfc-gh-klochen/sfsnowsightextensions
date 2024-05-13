@@ -16,9 +16,11 @@
 using NLog;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Management.Automation;
 using System.Net;
 using System.Net.Sockets;
@@ -29,6 +31,7 @@ using System.Security.Authentication;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
+using Debugger = System.Diagnostics.Debugger;
 
 namespace Snowflake.Powershell
 {
@@ -43,6 +46,8 @@ namespace Snowflake.Powershell
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static Logger loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
+        private static Logger loggerDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.DiagnosticTest");
+        private static Logger loggerExtensiveDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.ExtensiveDiagnosticTest");
 
         private static readonly string TOKEN_REQUEST_PREFIX = "?token=";
         private static readonly byte[] SUCCESS_RESPONSE = System.Text.Encoding.UTF8.GetBytes(
@@ -151,9 +156,43 @@ namespace Snowflake.Powershell
 
             logger = LogManager.GetCurrentClassLogger();
             loggerConsole = LogManager.GetLogger("Snowflake.Powershell.Console");
+            loggerDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.DiagnosticTest");
+
+            loggerExtensiveDiagnosticTest = LogManager.GetLogger("Snowflake.Powershell.ExtensiveDiagnosticTest");
+            loggerExtensiveDiagnosticTest.Info("!! README !!: This file contains extensive logging for issue diagnosis. This file should not contain login credentials, sensitive information such as passwords, but it may contain URLs such as your Snowflake Instance, and cookie names (but not values).");
+            loggerExtensiveDiagnosticTest.Info("!! README !!: Only share this file if asked, otherwise the DiagnosticTest logging should be disabled.");
+
+            // @todo make this only appear in the DiagnosticTest log and not in the the ExtensiveDiagnosticTest log
+            loggerDiagnosticTest.Info(
+                "This file contains a Diagnostic Test, with sanitised information for API Endpoints accessed by SFSnowsightExtensions.");
+            loggerDiagnosticTest.Info(
+                "This should not contain any sensitive information about your account, but please double check before posting.");
+            
+            loggerDiagnosticTest.Info(
+                "Please also include the output of the following SQL command, which will output the Snowflake version and Region, as this allows us to see if you're running on a newer or older version of Snowflake, and the region.");
+            loggerDiagnosticTest.Info(
+                "This should output a string similar to `Snowflake Version: 8.4.1 | Region: AWS_US_EAST_1`.\n");
+            loggerDiagnosticTest.Info("select concat('Snowflake Version: ', coalesce(current_version(), '-'), ' | Region: ', coalesce(current_region(), '-'));\n");
+ 
+            loggerDiagnosticTest.Info("SFSnowsightExtensions Diagnostic Test - v{0} - Date: {1}", Assembly.GetExecutingAssembly().GetName().Version, DateTime.Now.ToString("yyyy-MM-dd"));
+            loggerDiagnosticTest.Info("Environment: {0} - {1} | Dotnet Version: {2} | PowerShell Version: {3} | HTTP_PROXY set: {4} | HTTPS_PROXY set: {5}",
+                RuntimeInformation.OSDescription, RuntimeInformation.OSArchitecture, RuntimeInformation.FrameworkDescription, this.Host.Version, Environment.GetEnvironmentVariable("HTTP_PROXY") != null, Environment.GetEnvironmentVariable("HTTPS_PROXY") != null);
+            loggerDiagnosticTest.Info("Passed Parameters: Account: {0} | UserName: {1} | Password: {2} | Credential: {3} | SSO: {4} | MainAppURL: {5}",
+                this.Account.Length != null, this.UserName != null, this.Password != null, this.Credential != null, this.SSO.IsPresent, this.MainAppURL != "https://app.snowflake.com" ? "custom" : "default (https://app.snowflake.com)");
 
             logger.Trace("BEGIN {0}", this.GetType().Name);
             WriteVerbose(String.Format("BEGIN {0}", this.GetType().Name));
+            /*
+            Console.WriteLine("Waiting for debugger to attach");
+            int processId = Process.GetCurrentProcess().Id;
+            loggerConsole.Info("pid {0}", processId);
+            while (!Debugger.IsAttached)
+            {
+                loggerConsole.Info("waiting for debugger");
+                System.Threading.Thread.Sleep(100);
+            }
+            loggerConsole.Info("attached to {0}", processId);
+            */
         }
 
         protected override void EndProcessing()
@@ -209,14 +248,16 @@ namespace Snowflake.Powershell
                 #region Account and region validation
 
                 // Get authentication endpoint for the account 
-                string accountEndpointResult = SnowflakeDriver.GetAccountAppEndpoints(appUserContext.MainAppUrl, this.Account);
-                if (accountEndpointResult.Length == 0)
+                var accountEndpointResult = SnowflakeDriver.GetAccountAppEndpoints(appUserContext.MainAppUrl, this.Account, appUserContext.Cookies);
+                appUserContext.Cookies = new CookieContainer();
+
+                if (accountEndpointResult.Item1.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to get account endpoint for account {0} in {1}", this.Account, appUserContext.MainAppUrl));
                 }
 
                 // Is the account valid?
-                JObject accountAuthenticationEndpointObject = JObject.Parse(accountEndpointResult);
+                JObject accountAuthenticationEndpointObject = JObject.Parse(accountEndpointResult.Item1);
                 if (JSONHelper.getBoolValueFromJToken(accountAuthenticationEndpointObject, "valid") == false)
                 {                    
                     // {"valid":false}
@@ -248,7 +289,7 @@ namespace Snowflake.Powershell
                 appUserContext.AccountUrl = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "url");
                 appUserContext.Region = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "region");
                 // sfpscogs_dodievich_sso.west-us-2.azure -> sfpscogs_dodievich_sso
-                appUserContext.AccountFullName = this.Account;
+                appUserContext.AccountFullName = JSONHelper.getStringValueFromJToken(accountAuthenticationEndpointObject, "account");
                 appUserContext.AccountName = appUserContext.AccountFullName.Split('.')[0];
                 logger.Info("AccountFullName={0}", appUserContext.AccountFullName);
                 logger.Info("AccountName={0}", appUserContext.AccountName);
@@ -257,35 +298,60 @@ namespace Snowflake.Powershell
                 logger.Info("Region={0}", appUserContext.Region);
 
                 loggerConsole.Trace("Account '{0}' in region '{1}' is accessible at '{2}' and served by application server '{3}' in main application '{4}'", appUserContext.AccountName, appUserContext.Region, appUserContext.AccountUrl, appUserContext.AppServerUrl, appUserContext.MainAppUrl);
+                
+                var bootstrapResponse = SnowflakeDriver.GetBootstrapCookie(appUserContext.MainAppUrl, appUserContext.Cookies);
+                appUserContext.Cookies = bootstrapResponse.Item2;
+                // grab out the csrf cookie from the instanceCookies (begins with csrf-)
+                string unauthenticatedCsrf = appUserContext.Cookies.GetAllCookies().FirstOrDefault(c => c.Name.StartsWith("csrf-"))?.Value;
 
                 #endregion
 
                 #region Snowsight Client ID 
 
                 // Get the client ID of Snowsight for this region
-                Tuple<string, string> deploymentSnowSightClientIDRedirectResult = SnowflakeDriver.OAuth_Start_GetSnowSightClientIDInDeployment(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl);
+                var deploymentSnowSightClientIDRedirectResult = SnowflakeDriver.OAuth_Start_GetSnowSightClientIDInDeployment(appUserContext.MainAppUrl, appUserContext.AppServerUrl, appUserContext.AccountUrl, unauthenticatedCsrf, appUserContext.Cookies);
 
-                if (deploymentSnowSightClientIDRedirectResult.Item1.Length == 0 || deploymentSnowSightClientIDRedirectResult.Item2.Length == 0)
+                if (deploymentSnowSightClientIDRedirectResult.Item1.Length == 0 || deploymentSnowSightClientIDRedirectResult.Item2.Count == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to get account client ID for account {0}", appUserContext.AccountName));
                 }
+                appUserContext.Cookies = deploymentSnowSightClientIDRedirectResult.Item2;
 
                 var startOAuthUri = new Uri(deploymentSnowSightClientIDRedirectResult.Item1);
                 var startOAuthQueryParams = HttpUtility.ParseQueryString(startOAuthUri.Query);
                 var clientId = startOAuthQueryParams.Get("client_id");
-                if (clientId == null)
+
+                // later, we'll need response_type, scope, state, redirect_uri, code_challenge, code_challenge_method.
+                // but for now, just ensure that the startOAuthUri them all, then we can pass it to the user to authenticate.
+                if (startOAuthQueryParams.Get("client_id") == null || startOAuthQueryParams.Get("response_type") == null || startOAuthQueryParams.Get("scope") == null || startOAuthQueryParams.Get("state") == null || startOAuthQueryParams.Get("redirect_uri") == null || startOAuthQueryParams.Get("code_challenge") == null || startOAuthQueryParams.Get("code_challenge_method") == null)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to parse URL with client ID for account {0}", appUserContext.AccountName));
                 }
+                // state is a json object, decode it
+                // {
+                //   "csrf": "xxx",
+                //   "url": "https://ACCOUNT.REGION.snowflakecomputing.com",
+                //   "browserUrl": "https://app.snowflake.com",
+                //   "originator": "started-by-cb100-2024-03-16T22:29:16.2222",
+                //   "oauthNonce": "aaaa"
+                // }
+                var state = JObject.Parse(startOAuthQueryParams.Get("state"));
+                appUserContext.AuthOriginator = JSONHelper.getStringValueFromJToken(state, "originator");
+                appUserContext.AuthOAuthNonce = JSONHelper.getStringValueFromJToken(state, "oauthNonce");
+                appUserContext.WindowId = JSONHelper.getStringValueFromJToken(state, "windowId");
+                appUserContext.AuthCodeChallenge = startOAuthQueryParams.Get("code_challenge");
+                appUserContext.AuthRedirectUri = startOAuthQueryParams.Get("redirect_uri");
+                appUserContext.CSRFToken = unauthenticatedCsrf;
 
                 appUserContext.ClientID = clientId;
-                
+
                 // OAuth Client ID of the SnowSight is different for each deployment
                 // PROD1    ClientID=R/ykyhaxXg8WlftPZd6Ih0Y4auOsVg== 
                 // AZWEST2  ClientID=uGWIv9zROgdvkWNlFHo4zi+F1M2joA==
                 logger.Info("ClientID={0}", appUserContext.ClientID);
 
-                logger.Info("OAuthNonce={0}", deploymentSnowSightClientIDRedirectResult.Item2);
+                logger.Info("Cookies={0}", deploymentSnowSightClientIDRedirectResult.Item2);
+                //appUserContext.Cookies = accountEndpointResult.Item2;
 
                 #endregion
 
@@ -296,11 +362,12 @@ namespace Snowflake.Powershell
                 if (this.SSO.IsPresent == false)
                 {
                     // Authenticate with username/password
-                    string masterTokenAndSessionTokenFromCredentialsResult = SnowflakeDriver.GetMasterTokenAndSessionTokenFromCredentials(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, new System.Net.NetworkCredential(string.Empty, this.Password).Password);
+                    string masterTokenAndSessionTokenFromCredentialsResult = SnowflakeDriver.GetMasterTokenAndSessionTokenFromCredentials(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, new System.Net.NetworkCredential(String.Empty, this.Password).Password, appUserContext.Cookies);
                     if (masterTokenAndSessionTokenFromCredentialsResult.Length == 0)
                     {
                         throw new InvalidCredentialException(String.Format("Invalid response on authenticate user request {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
                     }
+                    //appUserContext.Cookies = accountEndpointResult.Item2;
 
                     // Were the credentials good?
                     JObject masterTokenAndSessionTokenFromCredentialsObject = JObject.Parse(masterTokenAndSessionTokenFromCredentialsResult);
@@ -382,6 +449,12 @@ namespace Snowflake.Powershell
                     using (var httpListener = GetHttpListener(localPort))
                     {
                         httpListener.Start();
+                        // give it a second to start, then double check it's listening
+                        System.Threading.Thread.Sleep(1000);
+                        if (!httpListener.IsListening)
+                        {
+                            throw new InvalidOperationException("Unable to start listener for SSO");
+                        }
 
                         logger.Info("Opening SSO URL={0}", idpUrl);
                         StartBrowser(idpUrl);
@@ -417,7 +490,7 @@ namespace Snowflake.Powershell
                     }
 
                     // Complete SSO from IdP Token into the session
-                    string masterTokenAndSessionTokenFromSSOTokenResult = SnowflakeDriver.GetMasterTokenAndSessionTokenFromSSOToken(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, samlResponseToken, proofKey);
+                    string masterTokenAndSessionTokenFromSSOTokenResult = SnowflakeDriver.GetMasterTokenAndSessionTokenFromSSOToken(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, samlResponseToken, proofKey, appUserContext.Cookies);
                     if (masterTokenAndSessionTokenFromSSOTokenResult.Length == 0)
                     {
                         throw new InvalidCredentialException(String.Format("Invalid response on authenticate user request {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -462,7 +535,7 @@ namespace Snowflake.Powershell
                     // Authenticate with username/password
 
                     // Authenticate Step 1, Getting OAuth Token
-                    string masterTokenFromCredentialsResult = SnowflakeDriver.OAuth_Authenticate_GetMasterTokenFromCredentials(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, new System.Net.NetworkCredential(string.Empty, this.Password).Password);
+                    string masterTokenFromCredentialsResult = SnowflakeDriver.OAuth_Authenticate_GetMasterTokenFromCredentials(appUserContext, new System.Net.NetworkCredential(String.Empty, this.Password).Password);
                     if (masterTokenFromCredentialsResult.Length == 0)
                     {
                         throw new InvalidCredentialException(String.Format("Invalid response on authenticate user request {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -511,7 +584,7 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Validating master token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 2, Validating OAuth Token into OAuth Client Redirect
-                string oAuthTokenFromMasterTokenResult = SnowflakeDriver.OAuth_Authorize_GetOAuthRedirectFromOAuthToken(appUserContext.AccountUrl, appUserContext.ClientID, appUserContext.AuthTokenMaster);
+                string oAuthTokenFromMasterTokenResult = SnowflakeDriver.OAuth_Authorize_GetOAuthRedirectFromOAuthToken(appUserContext);
                 if (oAuthTokenFromMasterTokenResult.Length == 0)
                 {
                     throw new InvalidCredentialException(String.Format("Invalid response on validating master OAuth token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -543,47 +616,50 @@ namespace Snowflake.Powershell
                 }
 
                 Uri redirectWithOAuthCodeUri = new Uri(redirectWithOAuthCodeUrl);
-                NameValueCollection redirectWithOAuthCodeParams = HttpUtility.ParseQueryString(redirectWithOAuthCodeUri.Query);
-                string oAuthRedirectCode = redirectWithOAuthCodeParams["code"];
-                if (oAuthRedirectCode == null)
-                {
-                    throw new ItemNotFoundException(String.Format("Unable to parse OAuth Token from URL with OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
-                }
+                // NameValueCollection redirectWithOAuthCodeParams = HttpUtility.ParseQueryString(redirectWithOAuthCodeUri.Query);
+                // string oAuthRedirectCode = redirectWithOAuthCodeParams["code"];
+                // if (oAuthRedirectCode == null)
+                // {
+                //     throw new ItemNotFoundException(String.Format("Unable to parse OAuth Token from URL with OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
+                // }
 
-                logger.Info("OAuth Redirect Code={0}", oAuthRedirectCode);
+                // logger.Info("OAuth Redirect Code={0}", oAuthRedirectCode);
 
-                loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
+                // loggerConsole.Info("Converting redirect token to authentication token for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Authenticate Step 3, Converting OAuth redirect into authentication cookie
-                Tuple<string, string> authenticationTokenWebPageResult = SnowflakeDriver.OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(appUserContext.AppServerUrl, appUserContext.AccountUrl, oAuthRedirectCode, deploymentSnowSightClientIDRedirectResult.Item2, appUserContext.MainAppUrl);
-                if (authenticationTokenWebPageResult.Item1.Length == 0 || authenticationTokenWebPageResult.Item2.Length == 0)
+                    
+                var authenticationTokenWebPageResult = SnowflakeDriver.OAuth_Complete_GetAuthenticationTokenFromOAuthRedirectToken(appUserContext, redirectWithOAuthCodeUri.PathAndQuery);
+                if (authenticationTokenWebPageResult.Item1.Length == 0 || authenticationTokenWebPageResult.Item2.Count == 0)
                 {
                     throw new InvalidCredentialException(String.Format("Invalid response from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
                 }
+                // log the cookies we received
+                logger.Info("Cookies={0}", authenticationTokenWebPageResult.Item2);
 
-                // JObject authenticationTokenWebPageObject = JObject.Parse(authenticationTokenWebPageResult);
-                // if (authenticationTokenWebPageObject == null)
-                // {
-                //     throw new InvalidCredentialException(String.Format("Invalid result from completing redirect OAuth Token for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
-                // }
-                appUserContext.AuthTokenSnowsight = authenticationTokenWebPageResult.Item2;
+                appUserContext.Cookies = authenticationTokenWebPageResult.Item2;
+
+                foreach (var cookie in appUserContext.Cookies.GetAllCookies())
+                {
+                    string cookieString = cookie.ToString();
+                    if (cookieString.Contains("user-") == true)
+                    {
+                        appUserContext.AuthTokenSnowsight = cookieString;
+                        // resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
+                    }
+                }
+                
                 logger.Info("SnowsightAuthToken={0}", appUserContext.AuthTokenSnowsight);
 
-                // For users where their USERNAME is not the same as LOGIN_NAME, the future authentication needs USERNAME property. It is specified in var params = {...} block in HTML returned from the call
-                // <html>
-                // <head>
-                // 	<script>
-                // 	var params = {"account":"sfpscogs_dodievich_sso","appServerUrl":"https://apps-api.c1.westus2.azure.app.snowflake.com",.... "username":"DODIEVICH_ALT"}}
-                // 	if (window.opener && params.isPopupAuth) {
                 string paramsCarryingPageResult = authenticationTokenWebPageResult.Item1;
-                Regex regexParameters = new Regex(@"(?i)var params = ({.*})", RegexOptions.IgnoreCase);
+                Regex regexParameters = new Regex(@"(?i)var paramsJSONString = \""({.*})\""", RegexOptions.IgnoreCase);
                 Match match = regexParameters.Match(paramsCarryingPageResult);
                 if (match != null)
                 {
                     if (match.Groups.Count > 1)
                     {
                         string userAccountParams = match.Groups[1].Value;
-
+                        userAccountParams = userAccountParams.Replace("\\\"", "\"").Replace("\\\\","\\").Replace("\\/","/");
                         JObject userAndAccountParamsObject = JObject.Parse(userAccountParams);
                         if (userAndAccountParamsObject != null)
                         {
@@ -625,13 +701,15 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Getting Organization and User context for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Get Org ID and User ID for future use
-                string organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext);
-                if (organizationAndUserContextResult.Length == 0)
+                var organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext);
+                appUserContext.Cookies = organizationAndUserContextResult.Item2;
+
+                if (organizationAndUserContextResult.Item1.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Invalid response from getting organization context for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
                 }
 
-                JObject organizationAndUserContextObject = JObject.Parse(organizationAndUserContextResult);
+                JObject organizationAndUserContextObject = JObject.Parse(organizationAndUserContextResult.Item1);
                 appUserContext.UserID = JSONHelper.getLongValueFromJToken(organizationAndUserContextObject["User"], "id").ToString();
                 appUserContext.OrganizationID = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["Org"], "id");
                 if (appUserContext.OrganizationID.Length == 0)

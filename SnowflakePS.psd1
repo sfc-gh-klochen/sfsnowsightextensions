@@ -27,7 +27,7 @@
 RootModule = 'SnowflakePS.dll'
 
 # Version number of this module.
-ModuleVersion = '2022.2.14.0'
+ModuleVersion = '2024.5.13.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -42,7 +42,7 @@ Author = 'Daniel Odievich (daniel.odievich@snowflake.com)'
 CompanyName = 'Snowflake Computing'
 
 # Copyright statement for this module
-Copyright = 'Copyright © 2021-2023'
+Copyright = 'Copyright © 2021-2024'
 
 # Description of the functionality provided by this module
 Description = 'Snowflake Snowsight Extensions provide access to Snowflake features via console'
