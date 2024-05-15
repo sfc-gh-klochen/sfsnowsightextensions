@@ -2,7 +2,7 @@ name: Release artifacts
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "main" ]
 
 jobs:
   Release:
