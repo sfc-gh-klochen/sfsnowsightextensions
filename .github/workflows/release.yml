@@ -53,4 +53,3 @@ jobs:
         gh release create ${{ steps.gitversion_step.outputs.AssemblySemVer }} ./Releases/*.zip
       env:
         GITHUB_TOKEN: ${{ github.TOKEN }}
-    
