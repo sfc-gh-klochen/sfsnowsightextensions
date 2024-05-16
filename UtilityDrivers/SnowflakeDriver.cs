@@ -166,8 +166,7 @@ $@"{{
                 appUserContext.AppServerUrl,
                 redirectUrl,
                 cookies: appUserContext.Cookies,
-                referer: "https://mobilize.snowflakecomputing.com/"
-                //host: "apps-api.c1.us-west-2.aws.app.snowflake.com"
+                referer: String.Format("{0}/", appUserContext.MainAppUrl)
             );
         }
 
