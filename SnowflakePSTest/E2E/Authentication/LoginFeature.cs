@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Snowflake.Powershell.tests.E2E
