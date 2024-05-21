@@ -7,7 +7,7 @@ namespace Snowflake.Powershell.tests.E2E
     [TestClass]
     public class LoginFeature
     {
-        protected string TestBasePath { get; set; }
+        private string TestBasePath { get; set; }
         private const int Timeout = 180000;
         private const string TestScriptFileName = "connect_sfapp.ps1";
 
