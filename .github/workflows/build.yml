@@ -2,7 +2,7 @@ name: Build Phase
 
 on:
   push:
-    branches: [ "main","feature/lcuello/SCT_11827_unit_test" ]
+    branches: [ "*" ]
 
 jobs:
   build:
@@ -29,11 +29,13 @@ jobs:
       run: dotnet restore
     - name: Update csproj version
       shell: pwsh
+      working-directory: SnowflakePS
       env:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
       run: Scripts/SetProjectVersion.ps1
     - name: Update pwsh module version
       shell: pwsh
+      working-directory: SnowflakePS
       env:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
       run: Scripts/SetModuleVersion.ps1
@@ -46,5 +48,6 @@ jobs:
         files: |
           TestResults/**/*.trx
     - name: Dotnet Publish All
-      run: ./PublishAll.ps1
       shell: pwsh
+      working-directory: SnowflakePS
+      run: Scripts/PublishAll.ps1
