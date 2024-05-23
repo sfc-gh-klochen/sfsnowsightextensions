@@ -1,19 +1,21 @@
-namespace SnowflakePSTest.E2E.Authentication
+namespace SnowflakePSTest.E2E.Migration
 {
-    using SnowflakePSTest.E2E.Utils;
     using System.Diagnostics;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
+    using SnowflakePSTest.E2E.Utils;
     
     [TestClass]
-    public class LoginFeature
+    public class WorksheetFeature
     {
         protected string TestBasePath { get; set; } = "/Users/lcuelloayala/Documents/Repositories/SNOWSIGHT_EXTENSION/OfficialSnowsightExtension/sfsnowsightextensions/SnowflakePSTest";
         protected const int Timeout = 180000;
-
+        
         [TestMethod]
-        [DataRow(CommandCreator.Account.Account1)]
-        [DataRow(CommandCreator.Account.Account2)]
-        public void Login_WithUserNameAndPassword_Succeed(CommandCreator.Account account)
+        [DataRow(CommandCreator.ActionIfExists.CreateNew, "Creating new Worksheet")]
+        [DataRow(CommandCreator.ActionIfExists.CreateNewWithNewName, "will be ignored and new Worksheet will be created because ActionIfExists is CreateNew")]
+        [DataRow(CommandCreator.ActionIfExists.Overwrite, "will be overwritten because ActionIfExists is Overwrite")]
+        [DataRow(CommandCreator.ActionIfExists.Skip, "will be ignored and nothing will be done because ActionIfExists is Skip")]
+        public void Migrate_Worksheet_Succeed(CommandCreator.ActionIfExists actionIfExists, string expectedResult)
         {
             var environmentSetupScriptFullPath = string.Join(Path.DirectorySeparatorChar,
                 new string[] { 
@@ -22,7 +24,7 @@ namespace SnowflakePSTest.E2E.Authentication
                     CommandCreator.SetParameterScriptFileName 
                 });
             
-            var args = $"{CommandCreator.GetCommandToExecuteScriptFunction(environmentSetupScriptFullPath, CommandCreator.GetConnectionCommand(account))}";
+            var args = $"{CommandCreator.GetCommandToExecuteScriptFunction(environmentSetupScriptFullPath, CommandCreator.GetMigrationCommand(actionIfExists))}";
             
             var standardOutput = string.Empty;
             
@@ -46,7 +48,7 @@ namespace SnowflakePSTest.E2E.Authentication
                 }
 
                 Assert.IsNotNull(standardOutput);
-                Assert.IsTrue(standardOutput.Contains("Successfully authenticated"));
+                Assert.IsTrue(standardOutput.Contains(expectedResult));
             }
         }
     }    

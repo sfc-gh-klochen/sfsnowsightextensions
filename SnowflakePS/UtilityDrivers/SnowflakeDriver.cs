@@ -390,10 +390,11 @@ $@"{{
                 authContext.AppServerUrl,
                 String.Format("v0/queries/{0}", worksheetID),
                 "application/json",
-                authContext.ContextUserNameUrl,
-                String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 String.Empty,
-                authContext.Cookies
+                cookies: authContext.Cookies,
+                csrfTokenValue: authContext.CSRFToken
             );
         }
 
@@ -1057,7 +1058,7 @@ $@"{{
             }
         }
 
-        private static string apiDELETE(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext = null, string referer = null, string classicUIAuthToken = null, CookieContainer cookies = null)
+        private static string apiDELETE(string baseUrl, string restAPIUrl, string acceptHeader, string snowflakeContext = null, string referer = null, string classicUIAuthToken = null, CookieContainer cookies = null, string csrfTokenValue = null)
         {
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
@@ -1070,6 +1071,7 @@ $@"{{
 
                 using (HttpClient httpClient = new HttpClient(httpClientHandler))
                 {
+                    httpClient.DefaultRequestHeaders.Add("X-CSRF-Token", csrfTokenValue);
                     httpClient.Timeout = new TimeSpan(0, 1, 0);
                     Uri baseUri = new Uri(baseUrl);
                     httpClient.BaseAddress = baseUri;
