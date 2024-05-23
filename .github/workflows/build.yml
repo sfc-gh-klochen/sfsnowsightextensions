@@ -2,7 +2,8 @@ name: Build Phase
 
 on:
   push:
-    branches: [ "*" ]
+    branches:    
+      - '*' 
 
 jobs:
   build:
