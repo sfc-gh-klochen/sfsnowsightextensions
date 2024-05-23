@@ -1,11 +1,11 @@
 echo "-- Starting Environment Setup --"
-$extension_path = "/Users/lcuelloayala/Documents/Repositories/SNOWSIGHT_EXTENSION/OfficialSnowsightExtension/sfsnowsightextensions/SnowflakePS/bin/Debug/net6.0"
-$account_1 = "IJB24494"
-$account_2 = "IJB24494"
-$user_name_1 = "QA_USER_1"
-$user_name_2 = "QA_USER_2"
-$password_1 = "Password2024"
-$password_2 = "Password2024"
+$extension_path = "{EXTENSION_PATH}"
+$account_1 = "{ACCOUNT_1}"
+$account_2 = "{ACCOUNT_2}"
+$user_name_1 = "{USER_1}"
+$user_name_2 = "{USER_2}"
+$password_1 = "{PASSWORD_1}"
+$password_2 = "{PASSWORD_2}"
 
 cd $extension_path
 import-Module ./SnowflakePS.psd1
