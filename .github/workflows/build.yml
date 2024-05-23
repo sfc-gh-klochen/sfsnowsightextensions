@@ -43,13 +43,14 @@ jobs:
     - name: dotnet test
       run: |
         dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults"
-        
-    - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action/macos@v2
-      if: always()
+      
+    - name: Test report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()    # run this step even if previous step failed
       with:
-        files: |
-          **/*.trx
+        name: sfsnowsightextensions tests            # Name of the check run which will be created
+        path: TestResults/*.trx    # Path to test results
+        reporter: dotnet-trx 
     - name: Dotnet Publish All
       shell: pwsh
       working-directory: SnowflakePS
