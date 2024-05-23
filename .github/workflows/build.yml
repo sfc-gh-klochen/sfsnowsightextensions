@@ -1,8 +1,8 @@
 name: Build Phase
 
 on:
-  pull_request:
-    branches: [ "main" ]
+  push:
+    branches: [ "main","feature/lcuello/SCT_11827_unit_test" ]
 
 jobs:
   build:
@@ -37,6 +37,14 @@ jobs:
       env:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
       run: Scripts/SetModuleVersion.ps1
+    - name: dotnet test
+      run: dotnet test sfsnowsightextensions.sln --results-directory "./TestResults"
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action/macos@v2
+      if: always()
+      with:
+        files: |
+          TestResults/**/*.trx
     - name: Dotnet Publish All
       run: ./PublishAll.ps1
       shell: pwsh
