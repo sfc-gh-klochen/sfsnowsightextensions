@@ -42,7 +42,7 @@ jobs:
       run: ../Scripts/SetModuleVersion.ps1
     - name: dotnet test
       run: |
-        dotnet test sfsnowsightextensions.sln --results-directory "TestResults"
+        dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults"
         
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action/macos@v2
