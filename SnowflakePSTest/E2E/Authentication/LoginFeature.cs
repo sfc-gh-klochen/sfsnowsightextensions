@@ -7,8 +7,8 @@ namespace SnowflakePSTest.E2E.Authentication
     [TestClass]
     public class LoginFeature
     {
-        protected string TestBasePath { get; set; } = "/Users/lcuelloayala/Documents/Repositories/SNOWSIGHT_EXTENSION/OfficialSnowsightExtension/sfsnowsightextensions/SnowflakePSTest";
-        protected const int Timeout = 180000;
+        protected string TestBasePath { get; set; }
+        protected int Timeout { get; set; }
 
         [TestMethod]
         [DataRow(CommandCreator.Account.Account1)]
