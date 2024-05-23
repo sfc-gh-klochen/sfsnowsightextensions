@@ -3,7 +3,7 @@ name: Build Phase
 on:
   push:
     branches:    
-      - '*' 
+      - '**' 
 
 jobs:
   build:
