@@ -5,11 +5,8 @@ namespace SnowflakePSTest.E2E.Migration
     using SnowflakePSTest.E2E.Utils;
     
     [TestClass]
-    public class WorksheetFeature
+    public class WorksheetFeature: TestBase
     {
-        protected string TestBasePath { get; set; } = "/Users/lcuelloayala/Documents/Repositories/SNOWSIGHT_EXTENSION/OfficialSnowsightExtension/sfsnowsightextensions/SnowflakePSTest";
-        protected const int Timeout = 180000;
-        
         [TestMethod]
         [DataRow(CommandCreator.ActionIfExists.CreateNew, "Creating new Worksheet")]
         [DataRow(CommandCreator.ActionIfExists.CreateNewWithNewName, "will be ignored and new Worksheet will be created because ActionIfExists is CreateNew")]

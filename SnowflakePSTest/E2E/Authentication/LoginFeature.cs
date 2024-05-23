@@ -5,11 +5,8 @@ namespace SnowflakePSTest.E2E.Authentication
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     
     [TestClass]
-    public class LoginFeature
+    public class LoginFeature : TestBase
     {
-        protected string TestBasePath { get; set; }
-        protected int Timeout { get; set; }
-
         [TestMethod]
         [DataRow(CommandCreator.Account.Account1)]
         [DataRow(CommandCreator.Account.Account2)]
