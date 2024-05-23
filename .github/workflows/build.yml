@@ -33,13 +33,13 @@ jobs:
       working-directory: SnowflakePS
       env:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
-      run: Scripts/SetProjectVersion.ps1
+      run: ../Scripts/SetProjectVersion.ps1
     - name: Update pwsh module version
       shell: pwsh
       working-directory: SnowflakePS
       env:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
-      run: Scripts/SetModuleVersion.ps1
+      run: ../Scripts/SetModuleVersion.ps1
     - name: dotnet test
       run: dotnet test sfsnowsightextensions.sln --results-directory "./TestResults"
     - name: Publish Test Results
@@ -51,4 +51,4 @@ jobs:
     - name: Dotnet Publish All
       shell: pwsh
       working-directory: SnowflakePS
-      run: Scripts/PublishAll.ps1
+      run: ../Scripts/PublishAll.ps1
