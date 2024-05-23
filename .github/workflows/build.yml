@@ -41,13 +41,15 @@ jobs:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
       run: ../Scripts/SetModuleVersion.ps1
     - name: dotnet test
-      run: dotnet test sfsnowsightextensions.sln --results-directory "./TestResults"
+      run: |
+        dotnet test sfsnowsightextensions.sln --results-directory "TestResults"
+        
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action/macos@v2
       if: always()
       with:
         files: |
-          TestResults/**/*.trx
+          **/*.trx
     - name: Dotnet Publish All
       shell: pwsh
       working-directory: SnowflakePS
