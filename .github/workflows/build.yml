@@ -42,8 +42,7 @@ jobs:
       run: ../Scripts/SetModuleVersion.ps1
     - name: dotnet test
       run: |
-        dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults"
-      
+        dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults" --settings ../SnowflakePSTest/E2E/testSetup.runsettings   
     - name: Test report
       uses: dorny/test-reporter@v1
       if: success() || failure()    # run this step even if previous step failed
