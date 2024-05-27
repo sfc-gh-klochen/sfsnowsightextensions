@@ -14,6 +14,10 @@ $user_name_2 = $Env:USER_2
 $password_1 = $Env:PASSWORD_1
 $password_2 = $Env:PASSWORD_2
 
+Write-Host $extension_path
+Write-Host account_1
+Write-Host $user_name_1
+
 
 # Update Runsettings placeholders
 $RunSettingsContent = Get-Content -Path $RunSettingsPath
