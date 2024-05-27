@@ -77,13 +77,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+    - name: get date
+      id: date
+      run: echo "##[set-output name=timestamp;]$(date)"
     - name: Create Success Badge
       if: needs.build.outputs.failed_tests == 0
       uses: RubbaBoy/BYOB@v1.3.0
       with:
         NAME: test_status
         LABEL: 'Test Status'
-        STATUS: ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
+        STATUS: ${{ steps.date.outputs.data }} | ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
         COLOR: green
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Failure Badge
@@ -92,7 +95,7 @@ jobs:
       with:
         NAME: test_status
         LABEL: 'Test Status'
-        STATUS: ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
+        STATUS: ${{ steps.date.outputs.data }} | ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
         COLOR: red
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
