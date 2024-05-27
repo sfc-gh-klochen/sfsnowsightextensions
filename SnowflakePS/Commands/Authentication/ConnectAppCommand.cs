@@ -416,7 +416,7 @@ namespace Snowflake.Powershell
                     // Authenticate with SSO
                     int localPort = GetRandomUnusedPort();
 
-                    string ssoLoginLinkResult = SnowflakeDriver.GetSSOLoginLinkForAccountAndUser(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, localPort);
+                    string ssoLoginLinkResult = SnowflakeDriver.GetSSOLoginLinkForAccountAndUser(appUserContext.AccountUrl, appUserContext.AccountName, appUserContext.UserName, localPort, appUserContext.Cookies);
                     if (ssoLoginLinkResult.Length == 0)
                     {
                         throw new InvalidCredentialException(String.Format("Invalid response on getting SSO for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
