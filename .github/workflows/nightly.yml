@@ -73,6 +73,7 @@ jobs:
         reporter: dotnet-trx 
 
   report:
+    if: success('build')|| failure('build') 
     runs-on: ubuntu-latest
     needs: build
     steps:
