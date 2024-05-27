@@ -1,0 +1,77 @@
+name: Nightly Build
+
+on:
+  schedule:
+      - cron: "0 0 * * *"
+      
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v1.1.1
+      with:
+        versionSpec: '5.x'
+    - name: Determine Version
+      uses: gittools/actions/gitversion/execute@v1.1.1
+      id: gitversion_step
+      with:
+        useConfigFile: true
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Update csproj version
+      shell: pwsh
+      working-directory: SnowflakePS
+      env:
+        gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
+      run: ../Scripts/SetProjectVersion.ps1
+    - name: Update pwsh module version
+      shell: pwsh
+      working-directory: SnowflakePS
+      env:
+        gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
+      run: ../Scripts/SetModuleVersion.ps1
+    - name: dotnet build
+      run: dotnet build
+    - name: Update runsettings
+      shell: pwsh
+      run: Scripts/UpdatePlaceholders.ps1
+      env:
+        Test_base_path: ${{ github.workspace }}/SnowflakePSTest
+        Test_timeout: 1800000
+        Runsettings_path: ${{ github.workspace }}/SnowflakePSTest/E2E/testSetup.runsettings
+        PSScript_path: ${{ github.workspace }}/SnowflakePSTest/E2E/Utils/env_setup.ps1
+        EXTENSION_PATH: ${{ github.workspace }}/SnowflakePS/bin/Debug/net6.0
+        ACCOUNT_1: ${{ vars.ACCOUNT_1 }}
+        ACCOUNT_2: ${{ vars.ACCOUNT_2 }}
+        USER_1: ${{ vars.QA_USER_1 }}
+        USER_2: ${{ vars.QA_USER_2 }}
+        PASSWORD_1: ${{ secrets.QA_USER_1_PWD }}
+        PASSWORD_2: ${{ secrets.QA_USER_2_PWD }}
+    - name: dotnet test
+      run: |
+        dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults" --settings SnowflakePSTest/E2E/testSetup.runsettings   
+    - name: Test report
+      id: test_report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()    # run this step even if previous step failed
+      with:
+        name: sfsnowsightextensions tests            # Name of the check run which will be created
+        path: TestResults/*.trx    # Path to test results
+        reporter: dotnet-trx 
+    - name: Create time
+      uses: RubbaBoy/BYOB@v1.3.0
+      with:
+        NAME: test_status
+        LABEL: 'Test Status'
+        STATUS: ${{ steps.test_report.outputs.passed }} Passed | ${{ steps.test_report.outputs.failed }} Failed
+        COLOR: blue
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
