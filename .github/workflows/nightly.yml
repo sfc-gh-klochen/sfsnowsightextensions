@@ -68,11 +68,20 @@ jobs:
         name: sfsnowsightextensions tests            # Name of the check run which will be created
         path: TestResults/*.trx    # Path to test results
         reporter: dotnet-trx 
-    - name: Create time
+    - name: Create Failure badge
+      uses: RubbaBoy/BYOB@v1.3.0
+      if: failure()
+      with:
+        NAME: test_status
+        LABEL: 'Test Status'
+        STATUS: ${{ steps.test_report.outputs.passed }} Passed | ${{ steps.test_report.outputs.failed }} Failed
+        COLOR: red
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Success Badge
       uses: RubbaBoy/BYOB@v1.3.0
       with:
         NAME: test_status
         LABEL: 'Test Status'
         STATUS: ${{ steps.test_report.outputs.passed }} Passed | ${{ steps.test_report.outputs.failed }} Failed
-        COLOR: blue
+        COLOR: green
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
