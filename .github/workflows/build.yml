@@ -44,10 +44,10 @@ jobs:
       shell: pwsh
       run: Scripts/UpdatePlaceholders.ps1
       env:
-        Test_base_path: ${{ github.repository }}/SnowflakePSTest
+        Test_base_path: ${{ github.workspace }}/SnowflakePSTest
         Test_timeout: 1800000
-        Runsettings_path: ${{ github.repository }}/SnowflakePSTest/E2E/testSetup.runsettings
-        PSScript_path: ${{ github.repository }}/SnowflakePSTest/E2E/Utils/env_setup.ps1
+        Runsettings_path: ${{ github.workspace }}/SnowflakePSTest/E2E/testSetup.runsettings
+        PSScript_path: ${{ github.workspace }}/SnowflakePSTest/E2E/Utils/env_setup.ps1
     - name: dotnet test
       run: |
         dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults" --settings SnowflakePSTest/E2E/testSetup.runsettings   
