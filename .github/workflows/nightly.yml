@@ -9,8 +9,8 @@ jobs:
   build:
     runs-on: macos-latest
     outputs:
-      failed_tests: ${{ steps.test_report.outputs.passed }}
-      passed_tests: ${{ steps.test_report.outputs.failed }}
+      failed_tests: ${{ steps.test_report.outputs.failed }}
+      passed_tests: ${{ steps.test_report.outputs.passed }}
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
