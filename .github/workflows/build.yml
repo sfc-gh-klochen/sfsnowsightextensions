@@ -40,6 +40,14 @@ jobs:
       env:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
       run: ../Scripts/SetModuleVersion.ps1
+    - name: Update runsettings
+      shell: pwsh
+      run: Scripts/UpdatePlaceholders.ps1
+      env:
+        Test_base_path: ${{ GITHUB_WORKSPACE }}/SnowflakePSTest
+        Test_timeout: 1800000
+        Runsettings_path: ${{ GITHUB_WORKSPACE }}/SnowflakePSTest/E2E/testSetup.runsettings
+        PSScript_path: ${{ GITHUB_WORKSPACE }}/SnowflakePSTest/E2E/Utils/env_setup.ps1
     - name: dotnet test
       run: |
         dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults" --settings SnowflakePSTest/E2E/testSetup.runsettings   
