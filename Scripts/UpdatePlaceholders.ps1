@@ -17,6 +17,7 @@ $password_2 = $Env:PASSWORD_2
 Write-Host $extension_path
 Write-Host account_1
 Write-Host $user_name_1
+Write-Host $password_1
 
 
 # Update Runsettings placeholders
