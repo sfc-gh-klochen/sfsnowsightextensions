@@ -14,12 +14,11 @@ $user_name_2 = $Env:USER_2
 $password_1 = $Env:PASSWORD_1
 $password_2 = $Env:PASSWORD_2
 
-Write-Host $extension_path
-Write-Host account_1
-Write-Host $user_name_1
-Write-Host $password_1
 
+Write-Host "Extensions path content: "
+Get-ChildItem $extension_path
 
+ "--------------Runsettings Content-----------------"
 # Update Runsettings placeholders
 $RunSettingsContent = Get-Content -Path $RunSettingsPath
 
@@ -27,6 +26,8 @@ $RunSettingsContent = $RunSettingsContent -replace 'name="TestBasePath" value="{
 $RunSettingsContent = $RunSettingsContent -replace 'name="Timeout" value="{TEST_TIMEOUT}"', ('name="Timeout" value="{0}"' -f $TestTimeout)
 $RunSettingsContent | Set-Content -Path $RunSettingsPath
 Get-Content -Path $RunSettingsPath
+
+Write-host "---------------PS Script Content------------------"
 
 #Update ps1 placeholders
 $PSScriptContent = Get-Content -Path $PowerShellScriptPath
