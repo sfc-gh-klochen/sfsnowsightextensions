@@ -85,8 +85,8 @@ jobs:
       uses: RubbaBoy/BYOB@v1.3.0
       with:
         NAME: test_status
-        LABEL: 'Test Status'
-        STATUS: ${{ steps.date.outputs.data }} | ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
+        LABEL: 'Nightly Status'
+        STATUS: ${{ steps.date.outputs.timestamp }} | ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
         COLOR: green
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Failure Badge
@@ -94,8 +94,8 @@ jobs:
       uses: RubbaBoy/BYOB@v1.3.0
       with:
         NAME: test_status
-        LABEL: 'Test Status'
-        STATUS: ${{ steps.date.outputs.data }} | ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
+        LABEL: 'Nightly Status'
+        STATUS: ${{ steps.date.outputs.timestamp }} | ${{ needs.build.outputs.passed_tests }} Passed | ${{ needs.build.outputs.failed_tests  }} Failed
         COLOR: red
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
