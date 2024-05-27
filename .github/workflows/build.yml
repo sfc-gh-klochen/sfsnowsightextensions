@@ -48,6 +48,13 @@ jobs:
         Test_timeout: 1800000
         Runsettings_path: ${{ github.workspace }}/SnowflakePSTest/E2E/testSetup.runsettings
         PSScript_path: ${{ github.workspace }}/SnowflakePSTest/E2E/Utils/env_setup.ps1
+        EXTENSION_PATH: ${{ github.workspace }}/SnowflakePSTest/bin/Debug/net6.0
+        ACCOUNT_1: ${{ vars.ACCOUNT_1 }}
+        ACCOUNT_2: ${{ vars.ACCOUNT_2 }}
+        USER_1: ${{ vars.QA_USER_1 }}
+        USER_2: ${{ vars.QA_USER_2 }}
+        PASSWORD_1: ${{ secrets.QA_USER_1_PWD }}
+        PASSWORD_2: ${{ secrets.QA_USER_2_PWD }}
     - name: dotnet test
       run: |
         dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults" --settings SnowflakePSTest/E2E/testSetup.runsettings   
