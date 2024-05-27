@@ -8,8 +8,8 @@ $PowerShellScriptPath =  $Env:PSScript_path
 $RunSettingsContent = Get-Content -Path $RunSettingsPath
 
 
-$RunSettingsContent = $RunSettingsContent -replace 'name="TestBasePath" value="{TEST_BASE_PATH}"', 'name="TestBasePath" value="$TestBasePath"'
-$RunSettingsContent = $RunSettingsContent -replace 'name="Timeout" value="{TEST_TIMEOUT}"', 'name="Timeout" value="$TestTimeout"'
+$RunSettingsContent = $RunSettingsContent -replace 'name="TestBasePath" value="{TEST_BASE_PATH}"', ('name="TestBasePath" value="{0}"' -f  $TestBasePath)
+$RunSettingsContent = $RunSettingsContent -replace 'name="Timeout" value="{TEST_TIMEOUT}"', ('name="Timeout" value="$TestTimeout"' -f $TestTimeout)
 $RunSettingsContent | Set-Content -Path $RunSettingsPath
 
 Get-Content -Path $RunSettingsPath
