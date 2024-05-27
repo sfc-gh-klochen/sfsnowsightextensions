@@ -40,6 +40,8 @@ jobs:
       env:
         gitVersion_assemblyVersion: ${{ steps.gitversion_step.outputs.AssemblySemVer }}
       run: ../Scripts/SetModuleVersion.ps1
+    - name: dotnet build
+      run: dotnet build
     - name: Update runsettings
       shell: pwsh
       run: Scripts/UpdatePlaceholders.ps1
@@ -55,8 +57,6 @@ jobs:
         USER_2: ${{ vars.QA_USER_2 }}
         PASSWORD_1: ${{ secrets.QA_USER_1_PWD }}
         PASSWORD_2: ${{ secrets.QA_USER_2_PWD }}
-    - name: dotnet build
-      run: dotnet build
     - name: dotnet test
       run: |
         dotnet test sfsnowsightextensions.sln --logger trx --results-directory "TestResults" --settings SnowflakePSTest/E2E/testSetup.runsettings   
