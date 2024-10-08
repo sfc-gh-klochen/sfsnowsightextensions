@@ -229,7 +229,7 @@ $@"{{
                 cookies: cookies, snowflakeContext: String.Empty, referer: String.Empty, classicUIAuthToken: String.Empty);
         }
 
-        public static string GetSSOLoginLinkForAccountAndUser(string accountUrl, string accountName, string userName, int returnRedirectPortNumber)
+        public static string GetSSOLoginLinkForAccountAndUser(string accountUrl, string accountName, string userName, int returnRedirectPortNumber, CookieContainer cookies)
         {
             string requestJSONTemplate =
 @"{{
@@ -250,7 +250,8 @@ $@"{{
                 "session/authenticator-request",
                 "application/json",
                 requestBody,
-                "application/json", null);
+                "application/json",
+                cookies:  cookies);
         }
 
         #endregion
@@ -634,10 +635,11 @@ $@"{{
                 authContext.AppServerUrl,
                 String.Format("v0/folders/{0}", dashboardID),
                 "application/json",
-                authContext.ContextUserNameUrl,
-                String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 String.Empty,
-                authContext.Cookies
+                cookies: authContext.Cookies,
+                csrfTokenValue: authContext.CSRFToken
             );
         }
 
@@ -824,10 +826,11 @@ $@"{{
                 authContext.AppServerUrl,
                 String.Format("v0/organizations/{0}/param/{1}", authContext.OrganizationID, filterKeyword),
                 "application/json",
-                authContext.ContextUserNameUrl,
-                String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl), // "https://app.snowflake.com/",
                 String.Empty,
-                authContext.Cookies
+                cookies: authContext.Cookies,
+                csrfTokenValue: authContext.CSRFToken
             );
         }
 
