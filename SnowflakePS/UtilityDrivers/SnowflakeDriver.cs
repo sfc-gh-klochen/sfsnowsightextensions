@@ -17,11 +17,13 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text.RegularExpressions;
 using System.Web;
 using Newtonsoft.Json.Linq;
@@ -124,7 +126,7 @@ $@"{{
     ""codeChallenge"": ""{appUserContext.AuthCodeChallenge}"",
     ""codeChallengeMethod"": ""S256"",
     ""CLIENT_APP_ID"": ""Snowflake UI"",
-    ""CLIENT_APP_VERSION"": 20240404084918,
+    ""CLIENT_APP_VERSION"": 20241007103851,
     ""PASSWORD"": ""{password}""
   }}
 }}";
@@ -257,13 +259,22 @@ $@"{{
 
         public static Tuple<string, CookieContainer, HttpStatusCode> GetOrganizationAndUserContext(AppUserContext authContext)
         {
-            return apiGET(
-                authContext.AppServerUrl,
-                "bootstrap",
-                snowflakeContext: authContext.ContextUserNameUrl,
-                referer: String.Format("{0}/", authContext.MainAppUrl),
-                cookies: authContext.Cookies
-            );
+
+            using(MemoryStream stream = new MemoryStream())
+            {
+                BinaryFormatter formatter = new BinaryFormatter();
+                formatter.Serialize(stream, authContext.Cookies);
+                stream.Seek(0, SeekOrigin.Begin);
+                CookieContainer cookies = (CookieContainer)formatter.Deserialize(stream);
+                
+                return apiGET(
+                    authContext.AppServerUrl,
+                    "bootstrap",
+                    snowflakeContext: authContext.ContextUserNameUrl,
+                    referer: String.Format("{0}/", authContext.MainAppUrl),
+                    cookies: cookies
+                );
+            } 
         }
 
         #endregion

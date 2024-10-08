@@ -38,6 +38,7 @@ namespace Snowflake.Powershell
         public string ServerVersion { get; set; }
         public string WindowId { get; set; }
         public string ContextUrl { get; set; }
+        public string SessionCookie {get; set; } 
         public string ContextUserNameUrl 
         { 
             get 

@@ -636,10 +636,10 @@ namespace Snowflake.Powershell
                 }
                 // log the cookies we received
                 logger.Info("Cookies={0}", authenticationTokenWebPageResult.Item2);
-
+    
                 appUserContext.Cookies = authenticationTokenWebPageResult.Item2;
 
-                foreach (var cookie in appUserContext.Cookies.GetAllCookies())
+                foreach (Cookie cookie in appUserContext.Cookies.GetAllCookies())
                 {
                     string cookieString = cookie.ToString();
                     if (cookieString.Contains("user-") == true)
@@ -647,8 +647,13 @@ namespace Snowflake.Powershell
                         appUserContext.AuthTokenSnowsight = cookieString;
                         // resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
                     }
+                    if (cookieString.Contains("S8_SESSION_") == true)
+                    {
+                        appUserContext.SessionCookie = cookie.Value;
+                        // resultString = String.Format("{{\"authenticationCookie\": \"{0}\", \"resultPage\": \"{1}\"}}", cookie, Convert.ToBase64String(Encoding.UTF8.GetBytes(resultString)));
+                    }
                 }
-                
+                appUserContext.Cookies.GetAllCookies().FirstOrDefault(x => x.Name == "S8_SESSION").Value = appUserContext.SessionCookie;
                 logger.Info("SnowsightAuthToken={0}", appUserContext.AuthTokenSnowsight);
 
                 string paramsCarryingPageResult = authenticationTokenWebPageResult.Item1;
@@ -701,8 +706,9 @@ namespace Snowflake.Powershell
                 loggerConsole.Info("Getting Organization and User context for user {0} in account {1}", appUserContext.UserName, appUserContext.AccountName);
 
                 // Get Org ID and User ID for future use
+
                 var organizationAndUserContextResult = SnowflakeDriver.GetOrganizationAndUserContext(appUserContext);
-                appUserContext.Cookies = organizationAndUserContextResult.Item2;
+                //appUserContext.Cookies = organizationAndUserContextResult.Item2;
 
                 if (organizationAndUserContextResult.Item1.Length == 0)
                 {

@@ -15,6 +15,10 @@ cd "../osx-arm"
 cd "../linux"
 & 7z a "../../../Releases/SnowflakePS.linux.$version.zip" '@../../../ReleaseIncludes/listfile.linux.txt'
 
+cd "../linux-arm"
+& 7z a "../../../Releases/SnowflakePS.linux-arm.$version.zip" '@../../../ReleaseIncludes/listfile.linux.txt'
+
+
 cd "../../.."
 
 get-childitem -Path "./Releases" -Recurse
