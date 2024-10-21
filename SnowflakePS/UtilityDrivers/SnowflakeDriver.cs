@@ -261,21 +261,13 @@ $@"{{
         public static Tuple<string, CookieContainer, HttpStatusCode> GetOrganizationAndUserContext(AppUserContext authContext)
         {
 
-            using(MemoryStream stream = new MemoryStream())
-            {
-                BinaryFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(stream, authContext.Cookies);
-                stream.Seek(0, SeekOrigin.Begin);
-                CookieContainer cookies = (CookieContainer)formatter.Deserialize(stream);
-                
-                return apiGET(
-                    authContext.AppServerUrl,
-                    "bootstrap",
-                    snowflakeContext: authContext.ContextUserNameUrl,
-                    referer: String.Format("{0}/", authContext.MainAppUrl),
-                    cookies: cookies
-                );
-            } 
+            return apiGET(
+                authContext.AppServerUrl,
+                "bootstrap",
+                snowflakeContext: authContext.ContextUserNameUrl,
+                referer: String.Format("{0}/", authContext.MainAppUrl),
+                cookies: authContext.Cookies
+            );
         }
 
         #endregion
