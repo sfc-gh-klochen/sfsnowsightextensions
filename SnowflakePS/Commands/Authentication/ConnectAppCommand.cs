@@ -716,14 +716,42 @@ namespace Snowflake.Powershell
                 }
 
                 JObject organizationAndUserContextObject = JObject.Parse(organizationAndUserContextResult.Item1);
-                appUserContext.UserID = JSONHelper.getLongValueFromJToken(organizationAndUserContextObject["User"], "id").ToString();
+                
+                // Parse UserID - check both old structure (User.id) and new structure (UserId at root)
+                if (organizationAndUserContextObject["User"] != null)
+                {
+                    // Old structure
+                    appUserContext.UserID = JSONHelper.getLongValueFromJToken(organizationAndUserContextObject["User"], "id").ToString();
+                }
+                else
+                {
+                    // New structure - UserId at root level
+                    appUserContext.UserID = JSONHelper.getLongValueFromJToken(organizationAndUserContextObject, "UserId").ToString();
+                }
+                
+                // Parse OrganizationID - check old structure first, then try models.users[userId].defaultOrgId
                 appUserContext.OrganizationID = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["Org"], "id");
+                
                 if (appUserContext.OrganizationID.Length == 0)
                 {
-                    // Sometimes the Org parameter is empty, in this case, get it from the User property
-                    appUserContext.OrganizationID = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["User"], "defaultOrgId");
+                    // Try old fallback first
+                    if (organizationAndUserContextObject["User"] != null)
+                    {
+                        appUserContext.OrganizationID = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["User"], "defaultOrgId");
+                    }
+                    else
+                    {
+                        // New structure fallback - get from models.users[userId].defaultOrgId
+                        var userModels = organizationAndUserContextObject["PageParams"]["models"]["users"];
+                        if (userModels != null && userModels[appUserContext.UserID] != null)
+                        {
+                            appUserContext.OrganizationID = JSONHelper.getStringValueFromJToken(userModels[appUserContext.UserID], "defaultOrgId");
+                        }
+                    }
                 }
+                
                 appUserContext.CSRFToken = JSONHelper.getStringValueFromJToken(organizationAndUserContextObject["PageParams"], "csrfToken");
+                
                 if (appUserContext.UserID.Length == 0 || appUserContext.OrganizationID.Length == 0)
                 {
                     throw new ItemNotFoundException(String.Format("Unable to parse Organization and User Context for user {0}@{1}", appUserContext.UserName, appUserContext.AccountName));
@@ -772,11 +800,19 @@ namespace Snowflake.Powershell
 
         private static int GetRandomUnusedPort()
         {
+            // Check for SF_AUTH_SOCKET_PORT environment variable (for cloud workspace compatibility)
+            string envPort = Environment.GetEnvironmentVariable("SF_AUTH_SOCKET_PORT");
+            if (!string.IsNullOrEmpty(envPort) && int.TryParse(envPort, out int port))
+            {
+                return port;
+            }
+            
+            // Fall back to random unused port logic
             var listener = new TcpListener(IPAddress.Loopback, 0);
             listener.Start();
-            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            var randomPort = ((IPEndPoint)listener.LocalEndpoint).Port;
             listener.Stop();
-            return port;
+            return randomPort;
         }
 
         private static HttpListener GetHttpListener(int port)
